@@ -87,16 +87,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :chef_solo do |chef|
 
       chef.json = {
-              postgresql: {
-                            password: {
-                              postgres: 'yourpassword'
-                            },
-                            pg_hba: [
-                              {type: 'local', db: 'all', user: 'all', addr: nil, method: 'trust'},
-                              {type: 'host', db: 'all', user: 'all', addr: '127.0.0.1/32', method: 'trust'},
-                              {type: 'host', db: 'all', user: 'all', addr: '::1/128', method: 'trust'}
-                            ]
-                          },
+              python:{install_method:'source', version:'2.7.3', checksum: 'c57477edd6d18bd9eeca2f21add73919'}
                   }
     chef.cookbooks_path = "./chef-recipes/cookbooks"
     chef.add_recipe "apt"
@@ -106,10 +97,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     chef.add_recipe "git"
     chef.add_recipe "vim"
     chef.add_recipe "openssl"
-    chef.add_recipe "postgresql"
-    chef.add_recipe "postgresql::server"
-    #chef.add_recipe "yum"
+    #chef.add_recipe "postgresql"
+    #chef.add_recipe "postgresql::server"
+    chef.add_recipe "yum"
     chef.add_recipe "python"
+    chef.add_recipe "iptables::disabled"
   end
 
 
