@@ -89,7 +89,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       chef.json = {
               python:{install_method:'source', version:'2.7.3', checksum: 'c57477edd6d18bd9eeca2f21add73919'}
                   }
-    chef.cookbooks_path = "./chef-recipes/cookbooks"
+    chef.cookbooks_path = "./chef-recipes"
     chef.add_recipe "apt"
     chef.add_recipe "apache2"
     chef.add_recipe "apache2::mod_wsgi"

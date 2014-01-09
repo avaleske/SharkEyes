@@ -1,0 +1,42 @@
+[submodule "chef-recipes/apache2"]
+	path = chef-recipes/apache2
+	url = https://github.com/opscode-cookbooks/apache2.git
+[submodule "chef-recipes/apt"]
+	path = chef-recipes/apt
+	url = https://github.com/opscode-cookbooks/apt.git
+[submodule "chef-recipes/build-essential"]
+	path = chef-recipes/build-essential
+	url = https://github.com/opscode-cookbooks/build-essential.git
+[submodule "chef-recipes/chef_handler"]
+	path = chef-recipes/chef_handler
+	url = https://github.com/opscode-cookbooks/chef_handler.git
+[submodule "chef-recipes/dmg"]
+	path = chef-recipes/dmg
+	url = https://github.com/opscode-cookbooks/dmg.git
+[submodule "chef-recipes/git"]
+	path = chef-recipes/git
+	url = https://github.com/opscode-cookbooks/git.git
+[submodule "chef-recipes/iptables"]
+	path = chef-recipes/iptables
+	url = https://github.com/opscode-cookbooks/iptables.git
+[submodule "chef-recipes/openssl"]
+	path = chef-recipes/openssl
+	url = https://github.com/opscode-cookbooks/openssl.git
+[submodule "chef-recipes/python"]
+	path = chef-recipes/python
+	url = https://github.com/opscode-cookbooks/python.git
+[submodule "chef-recipes/runit"]
+	path = chef-recipes/runit
+	url = https://github.com/opscode-cookbooks/runit.git
+[submodule "chef-recipes/vim"]
+	path = chef-recipes/vim
+	url = https://github.com/opscode-cookbooks/vim.git
+[submodule "chef-recipes/windows"]
+	path = chef-recipes/windows
+	url = https://github.com/opscode-cookbooks/windows.git
+[submodule "chef-recipes/yum"]
+	path = chef-recipes/yum
+	url = https://github.com/opscode-cookbooks/yum.git
+[submodule "chef-recipes/yum-epel"]
+	path = chef-recipes/yum-epel
+	url = https://github.com/opscode-cookbooks/yum-epel.git
