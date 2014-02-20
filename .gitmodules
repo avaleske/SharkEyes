@@ -40,3 +40,6 @@
 [submodule "chef-recipes/yum-epel"]
 	path = chef-recipes/yum-epel
 	url = https://github.com/opscode-cookbooks/yum-epel.git
+[submodule "chef-recipes/scipy"]
+	path = chef-recipes/scipy
+	url = https://github.com/bflad/chef-scipy.git

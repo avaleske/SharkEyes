@@ -102,6 +102,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     chef.add_recipe "yum"
     chef.add_recipe "python"
     chef.add_recipe "iptables::disabled"
+    chef.add_recipe "scipy"
   end
 
 
