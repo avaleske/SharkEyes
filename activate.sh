@@ -1,2 +1,2 @@
 #!/bin/bash
-source ~/py2.7/bin/activate
+source /home/vagrant/virtualenvs/sharkeyes/bin/activate
