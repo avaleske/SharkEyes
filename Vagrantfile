@@ -86,9 +86,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision :chef_solo do |chef|
 
-      chef.json = {
-              python:{install_method:'source', version:'2.7.3', checksum: 'c57477edd6d18bd9eeca2f21add73919'}
-                  }
+    chef.data_bags_path = "./chef-recipes/data_bags"
+        chef.json = {
+            :python => {
+                :install_method => 'source',
+                :version => '2.7.3',
+                :checksum => 'c57477edd6d18bd9eeca2f21add73919'
+            }
+        }
     chef.cookbooks_path = "./chef-recipes"
     chef.add_recipe "apt"
     chef.add_recipe "apache2"
@@ -97,12 +102,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     chef.add_recipe "git"
     chef.add_recipe "vim"
     chef.add_recipe "openssl"
-    #chef.add_recipe "postgresql"
-    #chef.add_recipe "postgresql::server"
     chef.add_recipe "yum"
     chef.add_recipe "python"
     chef.add_recipe "iptables::disabled"
-    chef.add_recipe "scipy"
+    #chef.add_recipe "scipy"
+    chef.add_recipe "sharkeyes"
   end
 
 
