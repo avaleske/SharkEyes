@@ -13,4 +13,5 @@ default['sharkeyes']['pip_packages'] = %w{
     matplotlib>=1.1
     pandas>=0.8
     django>=1.6.2
+    pygdal==1.10.1.0
 }

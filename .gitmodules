@@ -43,3 +43,6 @@
 [submodule "chef-recipes/scipy"]
 	path = chef-recipes/scipy
 	url = https://github.com/bflad/chef-scipy.git
+[submodule "chef-recipes/source_package"]
+	path = chef-recipes/source_package
+	url = https://github.com/averell23/source_package.git
