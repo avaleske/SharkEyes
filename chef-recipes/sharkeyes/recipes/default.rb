@@ -19,8 +19,28 @@ yum_repository 'epel' do
   action :create
 end
 
+yum_repository 'elgis' do
+    description 'Enterprise Linux GIS'
+    baseurl 'http://elgis.argeo.org/repos/6/elgis/x86_64/'
+    gpgkey 'http://elgis.argeo.org/RPM-GPG-KEY-ELGIS'
+end
+
 node['sharkeyes']['packages'].each do |p|
   package p
+end
+
+source_package 'gdal-1.10.1' do
+  download_url "http://download.osgeo.org/gdal/1.10.1/"
+  checksum '86b2c71a910d826a7fe6ebb43a532fb7'
+  prefix '/usr/local'
+end
+
+execute 'link_gdal' do
+    command "if grep -Fxq '/usr/local/lib' '/etc/ld.so.conf'; then :; else echo '/usr/local/lib' | tee -a /etc/ld.so.conf; fi"
+end
+
+execute 'ldconfig' do
+    user 'root'
 end
 
 node['sharkeyes']['pip_packages'].each do |pp|
@@ -30,11 +50,3 @@ node['sharkeyes']['pip_packages'].each do |pp|
   end
 end
 
-python_pip "-e git+https://github.com/matplotlib/basemap#egg=basemap" do
-    virtualenv "/home/vagrant/virtualenvs/sharkeyes"
-    action :install
-end
-
-link "/home/vagrant/virtualenvs/sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap" do
-  to "/home/vagrant/virtualenvs/sharkeyes/src/basemap/lib/mpl_toolkits/basemap/"
-end
