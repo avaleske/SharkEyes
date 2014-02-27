@@ -51,6 +51,7 @@ end
 node['sharkeyes']['pip_packages'].each do |pp|
   python_pip pp do
     virtualenv "/home/vagrant/virtualenvs/sharkeyes"
+    timeout 1800
     action :install
   end
 end

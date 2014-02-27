@@ -86,14 +86,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision :chef_solo do |chef|
 
-    chef.data_bags_path = "./chef-recipes/data_bags"
-        chef.json = {
-            :python => {
-                :install_method => 'source',
-                :version => '2.7.3',
-                :checksum => 'c57477edd6d18bd9eeca2f21add73919'
-            }
+    chef.json = {
+        :python => {
+            :install_method => 'source',
+            :version => '2.7.3',
+            :checksum => 'c57477edd6d18bd9eeca2f21add73919'
         }
+    }
     chef.cookbooks_path = "./chef-recipes"
     chef.add_recipe "apt"
     chef.add_recipe "apache2"
@@ -115,7 +114,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # config.vm.provision :chef_solo do |chef|
   #   chef.cookbooks_path = "../my-recipes/cookbooks"
   #   chef.roles_path = "../my-recipes/roles"
-  #   chef.data_bags_path = "../my-recipes/data_bags"
   #   chef.add_recipe "mysql"
   #   chef.add_role "web"
   #
