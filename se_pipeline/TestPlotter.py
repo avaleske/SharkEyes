@@ -12,4 +12,4 @@ class PlotterTestCase(TestCase):
     def test_plotter_can_plot(self):
         plotter = Plotter()
         data_file = plotter.load_file(FILE_NAME)
-        plot = plotter.make_temp_plot(data_file)
+        plotter.make_plot(data_file, plotter.temp_method)
