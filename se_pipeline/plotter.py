@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import os
-import io
 from PIL import Image
 
 #definitely a temporary option
@@ -45,11 +44,16 @@ class Plotter:
         #print("max/min lon:", longs[0], longs[-1])
         #print("max/min lat:", lats[0], lats[-1])
 
+        #make a figure to plot on
+        fig = plt.figure()
+        ax = fig.add_subplot(111)   # one subplot in the figure
+
         # window cropped by picking lat and lon corners
         temp_map = Basemap(projection='merc',
                            resolution='h', area_thresh=1.0,
                            llcrnrlat=lats[0], urcrnrlat=lats[-1],
-                           llcrnrlon=longs[0], urcrnrlon=longs[-1])
+                           llcrnrlon=longs[0], urcrnrlon=longs[-1],
+                           ax=ax)
 
         # convert temperature data into format for our map
         longs, lats = temp_map.makegrid(
@@ -58,25 +62,10 @@ class Plotter:
 
         # calculate and plot colored contours for TEMPERATURE data
         contour_range_inc = (max_temp - min_temp)/NUM_COLOR_LEVELS
-        color_levs = []
+        color_levels = []
         for i in xrange(NUM_COLOR_LEVELS):
-            color_levs.append(min_temp + i*contour_range_inc)
-        overlay1 = temp_map.contourf(x, y, surface_temp, color_levs)
+            color_levels.append(min_temp + i*contour_range_inc)
+        overlay1 = temp_map.contourf(x, y, surface_temp, color_levels, ax=ax)
 
-        #buffer for image manipulation
-        buff = io.BytesIO()
-
-        plt.savefig(buff, dpi=800, bbox_inches='tight', pad_inches=0)
-        plt.clf()
-
-        # make white transparent, while we are at it
-        buff.seek(0)
-        tmp_img = Image.open(buff)
-        tmp_img = tmp_img.convert("RGBA")
-        pixel_data = tmp_img.load()
-        for y in xrange(tmp_img.size[1]):
-            for x in xrange(tmp_img.size[0]):
-                if pixel_data[x, y] == (255, 255, 255, 255):
-                    pixel_data[x, y] = (255, 255, 255, 0)
-        tmp_img.save(os.path.join(UNCHOPPED_STORAGE_DIR, 'out.png'))
-        buff.close()
+        fig.savefig(os.path.join(UNCHOPPED_STORAGE_DIR, 'out.png'), dpi=800, bbox_inches='tight', pad_inches=0, transparent=True, frameon=False)
+        plt.close(fig)
