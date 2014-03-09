@@ -21,11 +21,9 @@ class Plotter:
         return data_file
 
     def make_plot(self, data_file, plot_method):
-        #make a figure to plot on
         fig = plt.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure
 
-        #get lat and long
         longs = data_file.variables['lon_rho'][0, :]
         lats = data_file.variables['lat_rho'][:, 0]
 
@@ -37,8 +35,8 @@ class Plotter:
                        ax=ax)
 
         plot_method(ax, data_file, bmap)
-
-        fig.savefig(os.path.join(UNCHOPPED_STORAGE_DIR, 'out.png'), dpi=800, bbox_inches='tight', pad_inches=0,
+        fig.savefig(os.path.join(UNCHOPPED_STORAGE_DIR, 'out.png'),
+                    dpi=800, bbox_inches='tight', pad_inches=0,
                     transparent=True, frameon=False)
         plt.close(fig)
 

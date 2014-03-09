@@ -1,6 +1,6 @@
 __author__ = 'avaleske'
 from django.test import TestCase
-from se_pipeline.plotter import Plotter
+from se_pipeline_plotter.plotter import Plotter
 
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
 
