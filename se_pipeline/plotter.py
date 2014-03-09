@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import os
-from PIL import Image
 
 #definitely a temporary option
 NETCDF_STORAGE_DIR = "/home/vagrant/generated_files/netcdf"
@@ -24,7 +23,7 @@ class Plotter:
     def make_plot(self, data_file, plot_method):
         #make a figure to plot on
         fig = plt.figure()
-        ax = fig.add_subplot(111)   # one subplot in the figure
+        ax = fig.add_subplot(111)  # one subplot in the figure
 
         #get lat and long
         longs = data_file.variables['lon_rho'][0, :]
@@ -32,10 +31,10 @@ class Plotter:
 
         # window cropped by picking lat and lon corners
         bmap = Basemap(projection='merc',
-                           resolution='h', area_thresh=1.0,
-                           llcrnrlat=lats[0], urcrnrlat=lats[-1],
-                           llcrnrlon=longs[0], urcrnrlon=longs[-1],
-                           ax=ax)
+                       resolution='h', area_thresh=1.0,
+                       llcrnrlat=lats[0], urcrnrlat=lats[-1],
+                       llcrnrlon=longs[0], urcrnrlon=longs[-1],
+                       ax=ax)
 
         plot_method(ax, data_file, bmap)
 
@@ -65,9 +64,9 @@ class Plotter:
         x, y = bmap(longs, lats)
 
         # calculate and plot colored contours for TEMPERATURE data
-        contour_range_inc = (max_temp - min_temp)/NUM_COLOR_LEVELS
+        contour_range_inc = (max_temp - min_temp) / NUM_COLOR_LEVELS
         color_levels = []
         for i in xrange(NUM_COLOR_LEVELS):
-            color_levels.append(min_temp + i*contour_range_inc)
+            color_levels.append(min_temp + i * contour_range_inc)
 
         overlay1 = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
