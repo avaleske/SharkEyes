@@ -14,4 +14,5 @@ default['sharkeyes']['pip_packages'] = %w{
     pandas>=0.8
     django>=1.6.2
     pygdal==1.10.1.0
+    pillow==2.3.0
 }
