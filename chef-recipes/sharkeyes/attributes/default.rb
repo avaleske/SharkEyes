@@ -5,6 +5,7 @@ default['sharkeyes']['packages'] = %w{
     libpng-devel
     python-devel
     geos-devel
+    rabbitmq-server
 }
 default['sharkeyes']['pip_packages'] = %w{
     numpy>=1.6
@@ -15,4 +16,6 @@ default['sharkeyes']['pip_packages'] = %w{
     django>=1.6.2
     pygdal==1.10.1.0
     pillow==2.3.0
+    celery==3.1.9
+    django-celery==3.1.9
 }

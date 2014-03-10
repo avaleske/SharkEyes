@@ -15,3 +15,10 @@ class PlotterTestCase(TestCase):
         plotter = Plotter()
         data_file = plotter.load_file(FILE_NAME)
         plotter.make_plot(data_file, pm.temp_method)
+
+class SimpleTest(TestCase):
+    def test_basic_addition(self):
+        """
+        Tests that 1 + 1 always equals 2.
+        """
+        self.assertEqual(1 + 1, 2)
