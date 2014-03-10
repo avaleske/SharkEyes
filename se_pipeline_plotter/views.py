@@ -1,9 +1,15 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from tasks import add
+from se_pipeline_plotter.tasks import add
+from tasks import test_temp_plot
 
 
 def testfunc(request):
-    result = add.apply_async(args=[3, 4], kwargs={})
+    result = add.delay(3, 4)
     print(result.get())
-    return HttpResponse("the result was " + result.get())
+    return HttpResponse("the result was {0}".format(str(result.get())))
+
+
+def testplot(request):
+    result = test_temp_plot.delay()
+    return HttpResponse(result.get())
