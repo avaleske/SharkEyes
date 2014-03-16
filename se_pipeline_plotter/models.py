@@ -1,14 +1,30 @@
 from django.db import models
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
+from celery import group
+from datetime import datetime
+from se_pipeline_plotter.tasks import make_plot
 
 print('models!')
 
 
 class OverlayManager(models.Manager):
     @staticmethod
-    def get_all_base_definitions():
-        return OverlayDefinition.objects.filter(is_base=True)
+    def get_all_base_definition_ids():
+        return [oid[0] for oid in OverlayDefinition.objects.values_list('id').filter(is_base=True)]
+
+    @classmethod
+    def make_all_base_plots(cls):
+        task_list = [make_plot.s(oid) for oid in cls.get_all_base_definition_ids()]
+        job = group(task_list)
+        results = job.apply_async()
+        for result in results.get():
+            overlay = Overlay()
+            overlay.file = result[0]
+            overlay.date_created = datetime.now()
+            overlay.definition_id = result[1]
+            overlay.save()
+
 
 
 class OverlayDefinition(models.Model):

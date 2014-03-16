@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from se_pipeline_plotter.tasks import add
-from se_pipeline_plotter.base import PlotManager
+from se_pipeline_plotter.models import OverlayManager
 
 
 def testfunc(request):
@@ -11,6 +11,5 @@ def testfunc(request):
 
 
 def testplot(request):
-    plotmanager = PlotManager()
-    plotmanager.make_all_base_plots()
+    OverlayManager.make_all_base_plots()
     return HttpResponse("hope that worked...")
