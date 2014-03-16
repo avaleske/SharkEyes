@@ -2,8 +2,7 @@ from django.test import TestCase
 
 # Create your tests here.
 from se_pipeline_plotter.plotter import Plotter
-import se_pipeline_plotter.plot_methods as pm
-
+from se_pipeline_plotter import plot_functions
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
 
 
@@ -14,7 +13,8 @@ class PlotterTestCase(TestCase):
     def test_plotter_can_plot(self):
         plotter = Plotter()
         data_file = plotter.load_file(FILE_NAME)
-        plotter.make_plot(data_file, pm.temp_method)
+        plotter.make_plot(data_file, plot_functions.sst_method())
+
 
 class SimpleTest(TestCase):
     def test_basic_addition(self):

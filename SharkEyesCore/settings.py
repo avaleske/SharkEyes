@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'celery',
     'djcelery',
+    'south',
     'se_pipeline_plotter',
 )
 
@@ -84,6 +85,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# other files
+#definitely a temporary option
+NETCDF_STORAGE_DIR = "netcdf"
+UNCHOPPED_STORAGE_DIR = "unchopped"
+
+MEDIA_ROOT = "/home/vagrant/media_root/"
 
 # For celery
 BROKER_HOST = "127.0.0.1"

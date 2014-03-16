@@ -1,34 +1,49 @@
 __author__ = 'avaleske'
 from scipy.io import netcdf
-import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot
 from mpl_toolkits.basemap import Basemap
 import os
-
-#definitely a temporary option
-NETCDF_STORAGE_DIR = "/home/vagrant/generated_files/netcdf"
-UNCHOPPED_STORAGE_DIR = "/home/vagrant/generated_files/unchopped"
+import datetime
+from django.conf import settings
+from se_pipeline_plotter.models import Overlay, OverlayDefinition, OverlayManager
 
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
+
+
+class PlotManager():
+    def make_all_base_plots(self):
+        # todo find a way to not reload the netcdf file for every plot maybe?
+        plotter = self.Plotter(FILE_NAME)
+
+        for overlay_definition in OverlayManager.get_all_base_definitions():
+            
+            overlay = Overlay(overlay_definition=overlay_definition)
+            overlay.date_created = datetime.datetime.now()
+            overlay
 
 
 class Plotter:
     data_file = None
 
-    def __init__(self):
-        pass
+    def __init__(self, file_name):
+        self.load_file(file_name)
 
+    # todo: after the download pipeline step is done, convert this to grab the
+    # filename from the database.
     def load_file(self, file_name):
-        #file_name = FILE_NAME;
-        data_file = netcdf.netcdf_file(os.path.join(NETCDF_STORAGE_DIR, file_name))
-        return data_file
+        self.data_file = netcdf.netcdf_file(os.path.join(settings.MEDIA_ROOT,
+                                       settings.NETCDF_STORAGE_DIR, file_name))
 
-    def make_plot(self, data_file, plot_method):
-        fig = plt.figure()
+    def start
+
+    def make_plot(self, plot_method):
+        overlay = Overlay()
+
+        fig = pyplot.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure
 
-        longs = data_file.variables['lon_rho'][0, :]
-        lats = data_file.variables['lat_rho'][:, 0]
+        longs = self.data_file.variables['lon_rho'][0, :]
+        lats = self.data_file.variables['lat_rho'][:, 0]
 
         # window cropped by picking lat and lon corners
         bmap = Basemap(projection='merc',
@@ -37,8 +52,8 @@ class Plotter:
                        llcrnrlon=longs[0], urcrnrlon=longs[-1],
                        ax=ax)
 
-        plot_method(ax, data_file, bmap)
-        fig.savefig(os.path.join(UNCHOPPED_STORAGE_DIR, 'out.png'),
+        plot_method(ax, self.data_file, bmap)
+        fig.savefig(os.path.join(settings.UNCHOPPED_STORAGE_DIR, 'out.png'),
                     dpi=800, bbox_inches='tight', pad_inches=0,
                     transparent=True, frameon=False)
-        plt.close(fig)
+        pyplot.close(fig)
