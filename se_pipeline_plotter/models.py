@@ -22,8 +22,7 @@ class OverlayDefinition(models.Model):
     function_name = models.CharField(max_length=64, unique=True)
     is_base = models.BooleanField(default=False)
 
-
-#this acts as a dictionary for the definition, so we can provide additional parameters.
+# this acts as a dictionary for the definition, so we can provide additional parameters.
 class Parameters(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
     key = models.CharField(max_length=240)

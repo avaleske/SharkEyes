@@ -3,23 +3,10 @@ from scipy.io import netcdf
 from matplotlib import pyplot
 from mpl_toolkits.basemap import Basemap
 import os
-import datetime
+from uuid import uuid4
 from django.conf import settings
-from se_pipeline_plotter.models import Overlay, OverlayDefinition, OverlayManager
 
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
-
-
-class PlotManager():
-    def make_all_base_plots(self):
-        # todo find a way to not reload the netcdf file for every plot maybe?
-        plotter = self.Plotter(FILE_NAME)
-
-        for overlay_definition in OverlayManager.get_all_base_definitions():
-            
-            overlay = Overlay(overlay_definition=overlay_definition)
-            overlay.date_created = datetime.datetime.now()
-            overlay
 
 
 class Plotter:
@@ -34,11 +21,7 @@ class Plotter:
         self.data_file = netcdf.netcdf_file(os.path.join(settings.MEDIA_ROOT,
                                        settings.NETCDF_STORAGE_DIR, file_name))
 
-    def start
-
-    def make_plot(self, plot_method):
-        overlay = Overlay()
-
+    def make_plot(self, plot_function):
         fig = pyplot.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure
 
@@ -52,8 +35,14 @@ class Plotter:
                        llcrnrlon=longs[0], urcrnrlon=longs[-1],
                        ax=ax)
 
-        plot_method(ax, self.data_file, bmap)
-        fig.savefig(os.path.join(settings.UNCHOPPED_STORAGE_DIR, 'out.png'),
-                    dpi=800, bbox_inches='tight', pad_inches=0,
-                    transparent=True, frameon=False)
+        plot_function(ax, self.data_file, bmap)
+
+        filename = "{0}-{1}{2}".format(plot_function.__name__, uuid4(), '.png')
+
+        fig.savefig(
+            os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR, filename),
+            dpi=800, bbox_inches='tight', pad_inches=0,
+            transparent=True, frameon=False)
         pyplot.close(fig)
+
+        return filename

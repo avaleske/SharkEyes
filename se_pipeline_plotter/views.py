@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from se_pipeline_plotter.tasks import add
-from tasks import test_temp_plot
+from se_pipeline_plotter.base import PlotManager
 
 
 def testfunc(request):
@@ -11,5 +11,6 @@ def testfunc(request):
 
 
 def testplot(request):
-    result = test_temp_plot.delay()
-    return HttpResponse(result.get())
+    plotmanager = PlotManager()
+    plotmanager.make_all_base_plots()
+    return HttpResponse("hope that worked...")

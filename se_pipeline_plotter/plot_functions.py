@@ -6,7 +6,7 @@ import numpy
 NUM_COLOR_LEVELS = 20
 
 
-def sst_function(self, ax, data_file, bmap):
+def sst_function(ax, data_file, bmap):
         # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
         # s_rho corresponds to layers, of which there are 30, so we take the top one.
         surface_temp = data_file.variables['temp'][0][29]
