@@ -3,28 +3,41 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from celery import group
 from datetime import datetime
-from se_pipeline_plotter.tasks import make_plot
+from celery import shared_task
+from se_pipeline_plotter import plot_functions
+from se_pipeline_plotter.plotter import Plotter
 
 print('models!')
+FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
 
 
 class OverlayManager(models.Manager):
     @staticmethod
     def get_all_base_definition_ids():
-        return [oid[0] for oid in OverlayDefinition.objects.values_list('id').filter(is_base=True)]
+        return OverlayDefinition.objects.values_list('id').filter(is_base=True)
 
     @classmethod
     def make_all_base_plots(cls):
-        task_list = [make_plot.s(oid) for oid in cls.get_all_base_definition_ids()]
+        task_list = [make_plot.subtask(args=od_id, link=save_overlay.s()) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         results = job.apply_async()
-        for result in results.get():
-            overlay = Overlay()
-            overlay.file = result[0]
-            overlay.date_created = datetime.now()
-            overlay.definition_id = result[1]
-            overlay.save()
 
+
+@shared_task(name='se_pipeline_plotter.make_plot')
+def make_plot(overlay_definition_id):
+    plotter = Plotter(FILE_NAME)
+    overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+    filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
+    return filename, overlay_definition_id
+
+@shared_task
+def save_overlay((filename, od_id)):
+    overlay = Overlay(
+        file=filename,
+        date_created=datetime.now(),
+        definition_id=od_id,
+    )
+    overlay.save()
 
 
 class OverlayDefinition(models.Model):
@@ -37,6 +50,7 @@ class OverlayDefinition(models.Model):
     display_name_short = models.CharField(max_length=64)
     function_name = models.CharField(max_length=64, unique=True)
     is_base = models.BooleanField(default=False)
+
 
 # this acts as a dictionary for the definition, so we can provide additional parameters.
 class Parameters(models.Model):
