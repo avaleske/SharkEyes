@@ -1,0 +1,13 @@
+[
+    {
+        "model": "pl_plot.overlaydefinition",
+        "pk": 1,
+        "fields": {
+            "display_name_long": "Sea Surface Temperature",
+            "is_base": true,
+            "type": "V",
+            "display_name_short": "SST",
+            "function_name": "sst_function"
+        }
+    }
+]
