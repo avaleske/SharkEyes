@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'celery',
     'djcelery',
     'south',
+    'pl_download',
     'pl_plot',
 )
 
@@ -73,11 +74,8 @@ DATABASES = {
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 

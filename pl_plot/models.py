@@ -3,6 +3,8 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from celery import group
 from datetime import datetime
+from django.utils.timezone import utc
+from django.utils import timezone
 from celery import shared_task
 from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
@@ -30,11 +32,11 @@ def make_plot(overlay_definition_id):
     filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
     return filename, overlay_definition_id
 
-@shared_task
+@shared_task(name='pl_plot.save_overlay')
 def save_overlay((filename, od_id)):
     overlay = Overlay(
         file=filename,
-        date_created=datetime.now(),
+        date_created=timezone.now(),
         definition_id=od_id,
     )
     overlay.save()

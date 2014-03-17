@@ -37,7 +37,7 @@ class Plotter:
 
         plot_function(ax, self.data_file, bmap)
 
-        filename = "{0}-{1}{2}".format(plot_function.__name__, uuid4(), '.png')
+        filename = "{0}-{1}.png".format(plot_function.__name__, uuid4())
 
         fig.savefig(
             os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR, filename),
