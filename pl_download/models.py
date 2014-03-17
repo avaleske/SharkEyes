@@ -2,9 +2,8 @@ from django.db import models
 from django.conf import settings
 from celery import shared_task
 from urlparse import urljoin
-from os import path
 from django.utils import timezone
-import urllib
+import urllib, os
 from uuid import uuid4
 
 BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
@@ -17,12 +16,12 @@ def fetch_new_file():
     server_filename = "ocean_his_3362_16-Mar-2014.nc"
     local_filename = "{0}-{1}.nc".format(timezone.now().date().strftime('%m-%d-%Y'), uuid4())
 
+    dest = settings.MEDIA_ROOT+settings.NETCDF_STORAGE_DIR
+    if not os.path.exists(dest):
+        os.makedirs(dest)
+
     url = urljoin(BASE_NETCDF_URL, server_filename)
-    urllib.urlretrieve(url=url, filename=path.join(
-        settings.MEDIA_ROOT,
-        settings.NETCDF_STORAGE_DIR,
-        local_filename)
-    )
+    urllib.urlretrieve(url=url, filename=dest+'/'+local_filename)
 
     datafile = DataFile(
         type='NCDF',

@@ -10,7 +10,6 @@ from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
 from pl_download.models import DataFile
 
-print('models!')
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
 
 

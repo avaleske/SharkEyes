@@ -7,8 +7,9 @@ default['sharkeyes']['packages'] = %w{
     geos-devel
     rabbitmq-server
 }
+
 default['sharkeyes']['pip_packages'] = %w{
-    numpy==1.6
+    numpy==1.8
     scipy==0.10
     nose==1.1
     matplotlib==1.1
