@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from celery import shared_task
 import time
-from se_pipeline_plotter import plot_functions
-from se_pipeline_plotter.plotter import Plotter
+from pl_plot import plot_functions
+from pl_plot.plotter import Plotter
 
 
 

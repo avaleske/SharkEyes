@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from se_pipeline_plotter.tasks import add
-from se_pipeline_plotter.models import OverlayManager
+from pl_plot.tasks import add
+from pl_plot.models import OverlayManager
 
 
 def testfunc(request):

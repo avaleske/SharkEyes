@@ -1,8 +1,8 @@
 from django.test import TestCase
 
 # Create your tests here.
-from se_pipeline_plotter.plotter import Plotter
-from se_pipeline_plotter import plot_functions
+from pl_plot.plotter import Plotter
+from pl_plot import plot_functions
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
 
 

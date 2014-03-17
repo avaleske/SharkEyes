@@ -40,7 +40,7 @@ INSTALLED_APPS = (
     'celery',
     'djcelery',
     'south',
-    'se_pipeline_plotter',
+    'pl_plot',
 )
 
 MIDDLEWARE_CLASSES = (

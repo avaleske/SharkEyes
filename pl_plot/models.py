@@ -4,8 +4,8 @@ from django.conf import settings
 from celery import group
 from datetime import datetime
 from celery import shared_task
-from se_pipeline_plotter import plot_functions
-from se_pipeline_plotter.plotter import Plotter
+from pl_plot import plot_functions
+from pl_plot.plotter import Plotter
 
 print('models!')
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
@@ -23,7 +23,7 @@ class OverlayManager(models.Manager):
         results = job.apply_async()
 
 
-@shared_task(name='se_pipeline_plotter.make_plot')
+@shared_task(name='pl_plot.make_plot')
 def make_plot(overlay_definition_id):
     plotter = Plotter(FILE_NAME)
     overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
