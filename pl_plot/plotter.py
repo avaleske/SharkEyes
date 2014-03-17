@@ -6,8 +6,6 @@ import os
 from uuid import uuid4
 from django.conf import settings
 
-FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
-
 
 class Plotter:
     data_file = None

@@ -8,6 +8,7 @@ from django.utils import timezone
 from celery import shared_task
 from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
+from pl_download.models import DataFile
 
 print('models!')
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
@@ -27,7 +28,9 @@ class OverlayManager(models.Manager):
 
 @shared_task(name='pl_plot.make_plot')
 def make_plot(overlay_definition_id):
-    plotter = Plotter(FILE_NAME)
+    # this just grabs the most recent file. Should the file be tied to the overlay model?
+    datafile = DataFile.objects.latest('download_date')
+    plotter = Plotter(datafile.file.name)
     overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
     filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
     return filename, overlay_definition_id
@@ -65,3 +68,4 @@ class Overlay(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
     date_created = models.DateTimeField()
     file = models.ImageField(upload_to=settings.UNCHOPPED_STORAGE_DIR, null=True)
+    tile_dir = models.CharField(max_length=240, null=True)
