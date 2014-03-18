@@ -1,6 +1,6 @@
 ##SharkEyes
 
-NVS Development Project
+##NVS Development Project
 
 Add setup instructions here at some point...
 
@@ -22,3 +22,14 @@ The celery console won't give you a prompt back, so you'll have to open a new te
 And if you change a task, you have to restart celery or it won't see it. This was really confusing for awhile when I had swapped the order of the return arguments.
 
 Also, you can run `sqlite3 db.sqlite3` to get a sql promp and see the database. `.tables` gets you a list of tables, `.headers on` turns on headers for the output when you run a query, and `.mode column` columnates the output so it's actually usable.
+
+
+###DB Schema
+I should probably also explain my thinking regarding the db schema as well.
+For netcdf files it's pretty straightforward. At some point I want to add a field for the generated date as well, not just the downloaded date, and we'll have to do a south migration for that and such.
+
+For Overlays, there's Overlays, OverlayDefinitions, and Parameters. An OverlayDefinition knows everything about the type, the name, the function that it needs to call to run it, and whether it's one of the base overlays that are automatically run. (Any overlay someone makes custom won't be a base overlay.)
+
+Parameters will be a way to list the custom parameters that an overlay uses when building it, like temperature range, number of gradient levels, etc. These act like a dictionary, with the OverlayDefinition as the containing object (hence the foreign key.)
+
+An Overlay, then, is an instance of an OverlayDefinition, and knows when it was created and where it's stuff is. Should be easy to get a list of overlay definitions, and then ask for the newest of each corresponding Overlay to display to the user. I imagine this will be done when the view for the menu is built, so the javascript just knows what directory to go to for the tiles...

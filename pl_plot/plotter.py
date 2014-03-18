@@ -16,8 +16,13 @@ class Plotter:
     # todo: after the download pipeline step is done, convert this to grab the
     # filename from the database.
     def load_file(self, file_name):
-        self.data_file = netcdf.netcdf_file(os.path.join(settings.MEDIA_ROOT,
-                                       settings.NETCDF_STORAGE_DIR, file_name))
+        self.data_file = netcdf.netcdf_file(
+            os.path.join(
+                settings.MEDIA_ROOT,
+                settings.NETCDF_STORAGE_DIR,
+                file_name
+            )
+        )
 
     def make_plot(self, plot_function):
         fig = pyplot.figure()
@@ -37,12 +42,12 @@ class Plotter:
 
         filename = "{0}-{1}.png".format(plot_function.__name__, uuid4())
 
-        dest = settings.MEDIA_ROOT+settings.UNCHOPPED_STORAGE_DIR
+        dest = os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR)
         if not os.path.exists(dest):
             os.makedirs(dest)
 
         fig.savefig(
-            dest+'/'+filename,
+            os.path.join(dest, filename),
             dpi=800, bbox_inches='tight', pad_inches=0,
             transparent=True, frameon=False)
         pyplot.close(fig)

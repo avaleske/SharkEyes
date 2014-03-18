@@ -11,5 +11,5 @@ def testfunc(request):
 
 
 def testplot(request):
-    OverlayManager.make_all_base_plots()
-    return HttpResponse("hope that worked...")
+    name_list = OverlayManager.make_all_base_plots()
+    return HttpResponse("plotted files " + name_list.__str__())

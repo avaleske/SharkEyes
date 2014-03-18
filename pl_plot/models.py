@@ -10,8 +10,6 @@ from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
 from pl_download.models import DataFile
 
-FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
-
 
 class OverlayManager(models.Manager):
     @staticmethod
@@ -22,7 +20,8 @@ class OverlayManager(models.Manager):
     def make_all_base_plots(cls):
         task_list = [make_plot.subtask(args=od_id, link=save_overlay.s()) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
-        results = job.apply_async()
+        results = job.apply_async()  # this might just be returning results from the first task in each chain
+        return [result[0] for result in results.get()]
 
 
 @shared_task(name='pl_plot.make_plot')
@@ -42,6 +41,7 @@ def save_overlay((filename, od_id)):
         definition_id=od_id,
     )
     overlay.save()
+    return overlay.id
 
 
 class OverlayDefinition(models.Model):
@@ -50,6 +50,7 @@ class OverlayDefinition(models.Model):
         ('FC', 'Filled Contour'),
     )
     type = models.CharField(max_length=4, choices=OVERLAY_TYPES)
+        #it might turn out that these don't have to be unique
     display_name_long = models.CharField(max_length=240, unique=True)
     display_name_short = models.CharField(max_length=64)
     function_name = models.CharField(max_length=64, unique=True)

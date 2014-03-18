@@ -88,6 +88,7 @@ STATIC_URL = '/static/'
 #definitely a temporary option
 NETCDF_STORAGE_DIR = "netcdf"
 UNCHOPPED_STORAGE_DIR = "unchopped"
+BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 
 MEDIA_ROOT = "/home/vagrant/media_root/"
 

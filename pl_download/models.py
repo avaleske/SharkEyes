@@ -3,10 +3,10 @@ from django.conf import settings
 from celery import shared_task
 from urlparse import urljoin
 from django.utils import timezone
-import urllib, os
+import urllib
+import os
 from uuid import uuid4
-
-BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
+from django.conf import settings
 
 @shared_task(name='pl_download.fetch_new_file')
 def fetch_new_file():
@@ -16,12 +16,12 @@ def fetch_new_file():
     server_filename = "ocean_his_3362_16-Mar-2014.nc"
     local_filename = "{0}-{1}.nc".format(timezone.now().date().strftime('%m-%d-%Y'), uuid4())
 
-    dest = settings.MEDIA_ROOT+settings.NETCDF_STORAGE_DIR
+    dest = os.path.join(settings.MEDIA_ROOT, settings.NETCDF_STORAGE_DIR)
     if not os.path.exists(dest):
         os.makedirs(dest)
 
-    url = urljoin(BASE_NETCDF_URL, server_filename)
-    urllib.urlretrieve(url=url, filename=dest+'/'+local_filename)
+    url = urljoin(settings.BASE_NETCDF_URL, server_filename)
+    urllib.urlretrieve(url=url, filename=os.path.join(dest, local_filename))
 
     datafile = DataFile(
         type='NCDF',
@@ -29,7 +29,7 @@ def fetch_new_file():
         file=local_filename,
     )
     datafile.save()
-    return datafile.id
+    return datafile.file.name
 
 
 class DataFile(models.Model):
