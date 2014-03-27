@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.files.storage import FileSystemStorage
+from django.core.files import File
+import os
 from django.conf import settings
 from celery import group
 from datetime import datetime
@@ -36,7 +38,7 @@ def make_plot(overlay_definition_id):
 @shared_task(name='pl_plot.save_overlay')
 def save_overlay((filename, od_id)):
     overlay = Overlay(
-        file=filename,
+        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, filename),
         date_created=timezone.now(),
         definition_id=od_id,
     )

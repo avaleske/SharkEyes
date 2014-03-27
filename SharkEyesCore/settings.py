@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'south',
     'pl_download',
     'pl_plot',
+    'pl_chop',
 )
 
 MIDDLEWARE_CLASSES = (
