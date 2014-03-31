@@ -14,12 +14,6 @@ def chop_overlay(overlay_id):
     width = image.width
     height = image.height
 
-    # make sure we have a place to put stuff.
-    for directory in [settings.VRT_STORAGE_DIR, settings.TILE_STORAGE_DIR]:
-        dest = os.path.join(settings.MEDIA_ROOT, directory)
-        if not os.path.exists(dest):
-            os.makedirs(dest)
-
     image_name = os.path.splitext(os.path.split(image.path)[-1])[0] # using a uuid instead to avoid file conflicts
     tile_dir = "tiles-{0}".format(uuid4())
     full_tile_dir = os.path.join(settings.MEDIA_ROOT, settings.TILE_STORAGE_DIR, tile_dir)

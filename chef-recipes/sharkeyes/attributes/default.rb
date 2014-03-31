@@ -22,4 +22,5 @@ default['sharkeyes']['pip_packages'] = %w{
     celery==3.1.9
     django-celery==3.1.9
     south==0.8.4
+    defusedxml==0.4.1
 }
