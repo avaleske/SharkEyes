@@ -6,6 +6,7 @@ default['sharkeyes']['packages'] = %w{
     python-devel
     geos-devel
     rabbitmq-server
+    proj
 }
 
 default['sharkeyes']['pip_packages'] = %w{

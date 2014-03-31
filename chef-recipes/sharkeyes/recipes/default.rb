@@ -65,3 +65,7 @@ end
 link "/home/vagrant/virtualenvs/sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap" do
   to "/home/vagrant/virtualenvs/sharkeyes/src/basemap/lib/mpl_toolkits/basemap/"
 end
+
+link "/usr/lib64/libproj.so" do
+    to "/usr/lib64/libproj.so.0"
+end
