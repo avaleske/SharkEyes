@@ -502,7 +502,6 @@ class GDAL2Tiles(object):
 
     # -------------------------------------------------------------------------
     def __init__(self, arguments ):
-        print(arguments)
 
         """Constructor function - initialization"""
 
