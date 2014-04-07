@@ -29,7 +29,7 @@ class OverlayManager(models.Manager):
 @shared_task(name='pl_plot.make_plot')
 def make_plot(overlay_definition_id):
     # this just grabs the most recent file. Should the file be tied to the overlay model?
-    datafile = DataFile.objects.latest('download_date')
+    datafile = DataFile.objects.latest('model_date')
     plotter = Plotter(datafile.file.name)
     overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
     filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))

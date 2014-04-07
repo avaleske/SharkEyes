@@ -65,4 +65,3 @@ class DataFile(models.Model):
     generated_date = models.DateTimeField()
     model_date = models.DateField()
     file = models.FileField(upload_to=settings.NETCDF_STORAGE_DIR, null=True)
-    #todo we should add a date-generated field that we pull from the catalog xml
