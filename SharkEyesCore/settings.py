@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'south',
     'pl_download',
     'pl_plot',
+    'pl_chop',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -88,6 +89,9 @@ STATIC_URL = '/static/'
 #definitely a temporary option
 NETCDF_STORAGE_DIR = "netcdf"
 UNCHOPPED_STORAGE_DIR = "unchopped"
+VRT_STORAGE_DIR = "vrt_files"
+TILE_STORAGE_DIR = "tiles"
+
 BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 
 MEDIA_ROOT = "/home/vagrant/media_root/"

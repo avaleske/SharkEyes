@@ -42,12 +42,8 @@ class Plotter:
 
         filename = "{0}-{1}.png".format(plot_function.__name__, uuid4())
 
-        dest = os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR)
-        if not os.path.exists(dest):
-            os.makedirs(dest)
-
         fig.savefig(
-            os.path.join(dest, filename),
+            os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR, filename),
             dpi=800, bbox_inches='tight', pad_inches=0,
             transparent=True, frameon=False)
         pyplot.close(fig)

@@ -28,6 +28,7 @@ def sst_function(ax, data_file, bmap):
         x, y = bmap(longs, lats)
 
         # calculate and plot colored contours for TEMPERATURE data
+        # is there an integer division issue we need to think about here?
         contour_range_inc = (max_temp - min_temp) / NUM_COLOR_LEVELS
         color_levels = []
         for i in xrange(NUM_COLOR_LEVELS):

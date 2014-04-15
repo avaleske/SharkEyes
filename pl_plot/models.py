@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.files.storage import FileSystemStorage
+from django.core.files import File
+import os
 from django.conf import settings
 from celery import group
 from datetime import datetime
@@ -27,7 +29,7 @@ class OverlayManager(models.Manager):
 @shared_task(name='pl_plot.make_plot')
 def make_plot(overlay_definition_id):
     # this just grabs the most recent file. Should the file be tied to the overlay model?
-    datafile = DataFile.objects.latest('download_date')
+    datafile = DataFile.objects.latest('model_date')
     plotter = Plotter(datafile.file.name)
     overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
     filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
@@ -36,7 +38,7 @@ def make_plot(overlay_definition_id):
 @shared_task(name='pl_plot.save_overlay')
 def save_overlay((filename, od_id)):
     overlay = Overlay(
-        file=filename,
+        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, filename),
         date_created=timezone.now(),
         definition_id=od_id,
     )
