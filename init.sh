@@ -7,4 +7,4 @@ $pypath -u /vagrant/manage.py migrate djcelery
 $pypath -u /vagrant/manage.py migrate pl_plot
 $pypath -u /vagrant/manage.py migrate pl_download
 
-sudo rabbitmq-server -detatched
+sudo rabbitmq-server -detatched &
