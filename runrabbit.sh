@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo rabbitmq-server -detatched
+sudo rabbitmq-server -detatched &
