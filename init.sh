@@ -1,3 +1,4 @@
+#!/bin/sh
 source /home/vagrant/virtualenvs/sharkeyes/bin/activate
 
 pypath="/home/vagrant/virtualenvs/sharkeyes/bin/python"
