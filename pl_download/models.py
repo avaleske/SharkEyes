@@ -16,6 +16,7 @@ from dateutil import parser, tz
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
 
+# delete() - https://docs.djangoproject.com/en/1.7/ref/contrib/admin/actions/
 
 def get_ingria_xml_tree():
     # todo: need to handle if the xml file isn't available
