@@ -65,7 +65,7 @@ def fetch_new_files():
         if not server_filename.startswith('ocean_his'):
             continue
         date_string_from_filename = server_filename.split('_')[-1]
-        model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc")   # this could fail, need error handling badly
+        model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
         modified_date = extract_modified_date_from_xml(elem)
 
         for day_to_retrieve in days_to_retrieve:
@@ -76,7 +76,7 @@ def fetch_new_files():
 
     for server_filename, model_date, modified_date in files_to_retrieve:
         url = urljoin(settings.BASE_NETCDF_URL, server_filename)
-        local_filename = "{0}-{1}.nc".format(timezone.now().date().strftime('%m-%d-%Y'), uuid4())
+        local_filename = "{0}-{1}.nc".format(model_date, uuid4())
         urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
         datafile = DataFile(

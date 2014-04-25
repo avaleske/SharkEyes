@@ -4,4 +4,4 @@ from pl_download.models import DataFile, fetch_new_files
 
 def test_fetch(request):
     result = fetch_new_files.delay()
-    return HttpResponse("Downloaded file: " + result.get())
+    return HttpResponse("Downloaded file: " + str(result.get()))
