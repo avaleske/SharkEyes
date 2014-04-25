@@ -1,6 +1,6 @@
-__author__ = 'avaleske'
-from django.http import HttpResponse
-
+from django.shortcuts import render
+from pl_plot.models import *
 
 def home(request):
-    return HttpResponse("Welcome to the home page. We need to have this part work...")
+    context = {'overlays': OverlayDefinition.objects.all()}
+    return render(request, 'index.html', context)

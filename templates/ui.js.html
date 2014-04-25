@@ -1,0 +1,51 @@
+{% load staticfiles %}
+
+<script>
+
+/* a little redundant grabbing this for both js script ? */
+var overlayList = [
+ {% for item in overlays %}
+"{{item.function_name}}",
+ {% endfor %}
+ ];
+
+$('#sidebar-left-btn').on('click', function() {
+      $('#sidebar-left').toggleClass('clicked');
+      $('#sidebar-left-btn').toggleClass('arrow-left');
+      $('#sidebar-left-btn').toggleClass('arrow-right');
+      $(this).text(function(i, text){
+        return text === "Hide" ? "Menu" : "Hide";
+    })
+  });
+
+  /* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
+  $("tr").click(function() {
+      var checkBoxes = $(this).find('.toggle-checkbox');
+      checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+  });    
+
+  /* alerts */
+  $("#login").click(function() {alert("This feature hasn't been added yet"); });
+
+
+ /* toggle button logic is still kind of broken... I need to find the bug! */
+
+  var states = []
+  for (i in overlayList){ states[i] = 0; }
+
+ {% for item in overlays %}
+$("#o{{ forloop.counter0 }}").click(function() {
+          if (states[{{ forloop.counter0 }}]){
+
+               map.overlayMapTypes.removeAt({{ forloop.counter0 }});
+          } else {
+
+              map.overlayMapTypes.setAt({{ forloop.counter0 }},overlayList[{{ forloop.counter0 }}]); 
+          }
+          states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
+  });
+ {% endfor %}
+
+
+
+  </script>

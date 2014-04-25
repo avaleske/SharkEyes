@@ -9,5 +9,17 @@
             "display_name_short": "SST",
             "function_name": "sst_function"
         }
-    }
+    },
+
+    {
+        "model": "pl_plot.overlaydefinition",
+        "pk": 2,
+        "fields": {
+            "display_name_long": "Salinity",
+            "is_base": true,
+            "type": "V",
+            "display_name_short": "Salt",
+            "function_name": "salt_function"
+        }
+    },
 ]

@@ -33,6 +33,7 @@ def extract_modified_date_from_xml(elem):
 
 
 def is_new_published_netcdf_file():
+
     last_generated_time = DataFile.objects.filter(model_date__lte=timezone.now().date()).latest('generated_date').generated_date
 
     tree = get_ingria_xml_tree()
@@ -46,6 +47,8 @@ def is_new_published_netcdf_file():
             return False
         else:
             return True
+
+    return True
 
 
 @shared_task(name='pl_download.fetch_new_files')
