@@ -39,7 +39,7 @@ def make_plot(overlay_definition_id):
 def save_overlay((filename, od_id)):
     overlay = Overlay(
         file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, filename),
-        date_created=timezone.now(),
+        datetime_created=timezone.now(),
         definition_id=od_id,
     )
     overlay.save()
@@ -68,6 +68,7 @@ class Parameters(models.Model):
 
 class Overlay(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
-    date_created = models.DateTimeField()
+    datetime_created = models.DateTimeField()
     file = models.ImageField(upload_to=settings.UNCHOPPED_STORAGE_DIR, null=True)
     tile_dir = models.CharField(max_length=240, null=True)
+# todo: add field for datetime overlay applies to.

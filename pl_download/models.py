@@ -26,16 +26,23 @@ def get_ingria_xml_tree():
     return tree
 
 
-def extract_modified_date_from_xml(elem):
-    modified_date_string = elem.find(XML_NAMESPACE + 'date').text
-    naive_date = parser.parse(modified_date_string)  # the date in the xml file follows iso standards, so we're gold.
-    modified_date = timezone.make_aware(naive_date, timezone.utc)
-    return modified_date
+def extract_modified_datetime_from_xml(elem):
+    modified_datetime_string = elem.find(XML_NAMESPACE + 'date').text
+    naive_datetime = parser.parse(modified_datetime_string)  # the date in the xml file follows iso standards, so we're gold.
+    modified_datetime = timezone.make_aware(naive_datetime, timezone.utc)
+    return modified_datetime
 
 
-def is_new_published_netcdf_file():
+def is_new_file_to_download():
+    three_days_ago = timezone.now().date()-timedelta(days=3)
+    today = timezone.now().date()
+    recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today])
 
-    last_generated_time = DataFile.objects.filter(model_date__lte=timezone.now().date()).latest('generated_date').generated_date
+    # empty lists return false
+    if not recent_netcdf_files:
+        return True
+
+    local_file_modified_datetime = recent_netcdf_files.latest('generated_datetime').generated_datetime
 
     tree = get_ingria_xml_tree()
     tags = tree.iter(XML_NAMESPACE + 'dataset')
@@ -43,11 +50,9 @@ def is_new_published_netcdf_file():
     for elem in tags:
         if not elem.get('name').startswith('ocean_his'):
             continue
-        modified_date = extract_modified_date_from_xml(elem)
-        if modified_date <= last_generated_time:
+        server_file_modified_datetime = extract_modified_datetime_from_xml(elem)
+        if server_file_modified_datetime <= local_file_modified_datetime:
             return False
-        else:
-            return True
 
     return True
 
@@ -55,7 +60,7 @@ def is_new_published_netcdf_file():
 @shared_task(name='pl_download.fetch_new_files')
 # grabs file for today only, for now.
 def fetch_new_files():
-    if not is_new_published_netcdf_file():
+    if not is_new_file_to_download():
         return False
 
     # download new file for today and tomorrow
@@ -70,24 +75,24 @@ def fetch_new_files():
             continue
         date_string_from_filename = server_filename.split('_')[-1]
         model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
-        modified_date = extract_modified_date_from_xml(elem)
+        modified_datetime = extract_modified_datetime_from_xml(elem)
 
         for day_to_retrieve in days_to_retrieve:
             if model_date - day_to_retrieve == timedelta(days=0):
-                files_to_retrieve.append((server_filename, model_date, modified_date))
+                files_to_retrieve.append((server_filename, model_date, modified_datetime))
 
     destination_directory = os.path.join(settings.MEDIA_ROOT, settings.NETCDF_STORAGE_DIR)
 
-    for server_filename, model_date, modified_date in files_to_retrieve:
+    for server_filename, model_date, modified_datetime in files_to_retrieve:
         url = urljoin(settings.BASE_NETCDF_URL, server_filename)
         local_filename = "{0}-{1}.nc".format(model_date, uuid4())
         urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
         datafile = DataFile(
             type='NCDF',
-            download_date=timezone.now(),
-            generated_date = modified_date,
-            model_date = model_date,
+            download_datetime=timezone.now(),
+            generated_datetime=modified_datetime,
+            model_date=model_date,
             file=local_filename,
         )
         datafile.save()
@@ -100,7 +105,7 @@ class DataFile(models.Model):
         ('NCDF', "NetCDF"),
     )
     type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
-    download_date = models.DateTimeField()
-    generated_date = models.DateTimeField()
+    download_datetime = models.DateTimeField()
+    generated_datetime = models.DateTimeField()
     model_date = models.DateField()
     file = models.FileField(upload_to=settings.NETCDF_STORAGE_DIR, null=True)

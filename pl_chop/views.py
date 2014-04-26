@@ -5,6 +5,6 @@ from pl_chop.tasks import chop_overlay
 
 
 def test_chop(request):
-    overlay = Overlay.objects.latest('date_created')
+    overlay = Overlay.objects.latest('datetime_created')
     result = chop_overlay.delay(overlay.id)
     return HttpResponse(result.get())
