@@ -11,7 +11,7 @@ class PlotterTestCase(TestCase):
         None
 
     def test_plotter_can_plot(self):
-        plotter = Plotter()
+        plotter = Plotter(  FILE_NAME)
         data_file = plotter.load_file(FILE_NAME)
         plotter.make_plot(data_file, plot_functions.sst_method())
 
