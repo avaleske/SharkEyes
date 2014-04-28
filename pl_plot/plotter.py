@@ -38,7 +38,7 @@ class Plotter:
                        llcrnrlon=longs[0], urcrnrlon=longs[-1],
                        ax=ax)
 
-        plot_function(ax, self.data_file, bmap)
+        plot_function(ax, self.data_file, bmap, fig)
 
         filename = "{0}_{1}.png".format(plot_function.__name__, uuid4())
 

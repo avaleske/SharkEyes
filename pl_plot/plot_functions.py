@@ -1,12 +1,13 @@
 __author__ = 'avaleske'
 import numpy
+from matplotlib import pyplot
 
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
 NUM_COLOR_LEVELS = 20
 
 
-def sst_function(ax, data_file, bmap):
+def sst_function(ax, data_file, bmap, fig):
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
     surface_temp = data_file.variables['temp'][0][29]
@@ -34,13 +35,13 @@ def sst_function(ax, data_file, bmap):
     for i in xrange(NUM_COLOR_LEVELS):
         color_levels.append(min_temp + i * contour_range_inc)
 
-    overlay1 = bmap.contourf(x, y, surface_temp, color_levels, ax=ax, )
+    overlay1 = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
     # add colorbar.
-    cbar = bmap.colorbar(overlay1,location='bottom',pad="5%")
+    cbar = pyplot.colorbar(overlay1, orientation='vertical', pad=.05, ax=ax, shrink=0.625)
     cbar.set_label('C')
 
 
-def salt_function(ax, data_file, bmap):
+def salt_function(ax, data_file, bmap, fig):
     salt = data_file.variables["salt"][:]
     salt_layer = salt[0][29]
     min_salt = numpy.amin(salt_layer)
