@@ -40,10 +40,11 @@ def make_plot(overlay_definition_id):
     datafile = DataFile.objects.latest('model_date')
     plotter = Plotter(datafile.file.name)
     overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-    filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
+    plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
 
     overlay = Overlay(
-        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, filename),
+        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+        key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
         created_datetime=timezone.now(),
         definition_id=overlay_definition_id,
         # we're grabbing the one for 4 am for now. I don't know what timezone it's supposed to be, though.
@@ -79,4 +80,4 @@ class Overlay(models.Model):
     file = models.ImageField(upload_to=settings.UNCHOPPED_STORAGE_DIR, null=True)
     tile_dir = models.CharField(max_length=240, null=True)
     key = models.ImageField(upload_to=settings.KEY_STORAGE_DIR, null=True)
-    applies_at_datetime = models.DateTimeField(null=True)
+    applies_at_datetime = models.DateTimeField(null=False)
