@@ -28,7 +28,7 @@ class Plotter:
         fig = pyplot.figure()
         key_fig = pyplot.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure
-        key_ax = key_fig.add_axes([0.1, 0.2, 0.6, 0.05])
+        key_ax = key_fig.add_axes([0.1, 0.2, 0.6, 0.05]) # this might be bad for when we have other types of plots
 
         longs = self.data_file.variables['lon_rho'][0, :]
         lats = self.data_file.variables['lat_rho'][:, 0]

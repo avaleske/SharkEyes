@@ -43,7 +43,7 @@ def sst_function(ax, data_file, bmap, key_ax):
     # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
     cbar.ax.tick_params(labelsize=10)
-    cbar.set_label('C')
+    cbar.set_label('Celsius')
 
 
 def salt_function(ax, data_file, bmap, key_ax):
