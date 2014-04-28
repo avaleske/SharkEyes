@@ -11,16 +11,24 @@ from celery import shared_task
 from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
 from pl_download.models import DataFile
+from django.db.models.aggregates import Max
 
 
 class OverlayManager(models.Manager):
     @staticmethod
     def get_all_base_definition_ids():
-        return OverlayDefinition.objects.values_list('id').filter(is_base=True)
+        return OverlayDefinition.objects.values_list('id', flat=True).filter(is_base=True)
+
+    @staticmethod
+    def get_newest_untiled_overlay_ids():
+        # assuming newer overlays have higher primary keys. Seems reasonable.
+        overlay_definitions = OverlayDefinition.objects.annotate(newest_overlay_id=Max('overlay__id'))
+        newest_overlays = Overlay.objects.filter(id__in=[od.newest_overlay_id for od in overlay_definitions])
+        return newest_overlays.filter(tile_dir__isnull=True).values_list('id', flat=True)
 
     @classmethod
     def make_all_base_plots(cls):
-        task_list = [make_plot.subtask(args=od_id, link=save_overlay.s()) for od_id in cls.get_all_base_definition_ids()]
+        task_list = [make_plot.subtask(args=(od_id,), link=save_overlay.s()) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         results = job.apply_async()  # this might just be returning results from the first task in each chain
         return [result[0] for result in results.get()]
