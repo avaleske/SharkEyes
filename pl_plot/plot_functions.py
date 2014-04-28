@@ -34,7 +34,10 @@ def sst_function(ax, data_file, bmap):
     for i in xrange(NUM_COLOR_LEVELS):
         color_levels.append(min_temp + i * contour_range_inc)
 
-    overlay1 = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
+    overlay1 = bmap.contourf(x, y, surface_temp, color_levels, ax=ax, )
+    # add colorbar.
+    cbar = bmap.colorbar(overlay1,location='bottom',pad="5%")
+    cbar.set_label('C')
 
 
 def salt_function(ax, data_file, bmap):
