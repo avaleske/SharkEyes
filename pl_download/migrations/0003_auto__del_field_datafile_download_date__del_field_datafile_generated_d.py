@@ -17,4 +17,16 @@ class Migration(SchemaMigration):
         db.rename_column('pl_download_datafile', 'download_datetime', 'download_date')
         db.rename_column('pl_download_datafile', 'generated_datetime', 'generated_date')
 
+    models = {
+        u'pl_download.datafile': {
+            'Meta': {'object_name': 'DataFile'},
+            'download_datetime': ('django.db.models.fields.DateTimeField', [], {}),
+            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True'}),
+            'generated_datetime': ('django.db.models.fields.DateTimeField', [], {}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'model_date': ('django.db.models.fields.DateField', [], {}),
+            'type': ('django.db.models.fields.CharField', [], {'default': "'NCDF'", 'max_length': '10'})
+        }
+    }
+
     complete_apps = ['pl_download']
