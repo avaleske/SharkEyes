@@ -4,7 +4,7 @@ from django.core.files import File
 import os
 from django.conf import settings
 from celery import group
-from datetime import datetime
+from datetime import datetime, time, tzinfo
 from django.utils.timezone import utc
 from django.utils import timezone
 from celery import shared_task
@@ -28,7 +28,7 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def make_all_base_plots(cls):
-        task_list = [make_plot.subtask(args=(od_id,), link=save_overlay.s()) for od_id in cls.get_all_base_definition_ids()]
+        task_list = [make_plot.s(od_id) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         results = job.apply_async()  # this might just be returning results from the first task in each chain
         return [result[0] for result in results.get()]
@@ -40,15 +40,15 @@ def make_plot(overlay_definition_id):
     datafile = DataFile.objects.latest('model_date')
     plotter = Plotter(datafile.file.name)
     overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-    filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
-    return filename, overlay_definition_id
+    plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
 
-@shared_task(name='pl_plot.save_overlay')
-def save_overlay((filename, od_id)):
     overlay = Overlay(
-        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, filename),
-        datetime_created=timezone.now(),
-        definition_id=od_id,
+        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+        key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+        created_datetime=timezone.now(),
+        definition_id=overlay_definition_id,
+        # we're grabbing the one for 4 am for now. I don't know what timezone it's supposed to be, though.
+        applies_at_datetime=datetime.combine(datafile.model_date, time(4)),
     )
     overlay.save()
     return overlay.id
@@ -76,7 +76,8 @@ class Parameters(models.Model):
 
 class Overlay(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
-    datetime_created = models.DateTimeField()
+    created_datetime = models.DateTimeField()
     file = models.ImageField(upload_to=settings.UNCHOPPED_STORAGE_DIR, null=True)
     tile_dir = models.CharField(max_length=240, null=True)
-# todo: add field for datetime overlay applies to.
+    key = models.ImageField(upload_to=settings.KEY_STORAGE_DIR, null=True)
+    applies_at_datetime = models.DateTimeField(null=False)

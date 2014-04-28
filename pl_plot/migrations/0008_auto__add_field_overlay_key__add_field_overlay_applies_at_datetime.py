@@ -8,20 +8,34 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Rename 'name' field to 'full_name'
-        db.rename_column('pl_plot_overlay', 'date_created', 'datetime_created')
+        # Adding field 'Overlay.key'
+        db.add_column(u'pl_plot_overlay', 'key',
+                      self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True),
+                      keep_default=False)
+
+        # Adding field 'Overlay.applies_at_datetime'
+        db.add_column(u'pl_plot_overlay', 'applies_at_datetime',
+                      self.gf('django.db.models.fields.DateTimeField')(null=True),
+                      keep_default=False)
+
 
     def backwards(self, orm):
-        # Rename 'full_name' field to 'name'
-        db.rename_column('app_foo', 'datetime_created', 'date_created')
+        # Deleting field 'Overlay.key'
+        db.delete_column(u'pl_plot_overlay', 'key')
+
+        # Deleting field 'Overlay.applies_at_datetime'
+        db.delete_column(u'pl_plot_overlay', 'applies_at_datetime')
+
 
     models = {
         u'pl_plot.overlay': {
             'Meta': {'object_name': 'Overlay'},
+            'applies_at_datetime': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'datetime_created': ('django.db.models.fields.DateTimeField', [], {}),
             'definition': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['pl_plot.OverlayDefinition']"}),
             'file': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'key': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
             'tile_dir': ('django.db.models.fields.CharField', [], {'max_length': '240', 'null': 'True'})
         },
         u'pl_plot.overlaydefinition': {

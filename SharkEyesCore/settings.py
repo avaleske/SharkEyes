@@ -98,6 +98,7 @@ NETCDF_STORAGE_DIR = "netcdf"
 UNCHOPPED_STORAGE_DIR = "unchopped"
 VRT_STORAGE_DIR = "vrt_files"
 TILE_STORAGE_DIR = "tiles"
+KEY_STORAGE_DIR = "keys"
 
 BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 

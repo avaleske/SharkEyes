@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import SchemaMigration
+from south.v2 import DataMigration
 from django.db import models
 
-
-class Migration(SchemaMigration):
+class Migration(DataMigration):
 
     def forwards(self, orm):
-        # Rename 'name' field to 'full_name'
-        db.rename_column('pl_plot_overlay', 'date_created', 'datetime_created')
+        for overlay in orm.Overlay.objects.all():
+            overlay.applies_at_datetime = overlay.datetime_created
+            overlay.save()
 
     def backwards(self, orm):
-        # Rename 'full_name' field to 'name'
-        db.rename_column('app_foo', 'datetime_created', 'date_created')
+        for overlay in orm.Overlay.objects.all():
+            overlay.applies_at_datetime = None
+            overlay.save()
 
     models = {
         u'pl_plot.overlay': {
             'Meta': {'object_name': 'Overlay'},
+            'applies_at_datetime': ('django.db.models.fields.DateTimeField', [], {}),
             'datetime_created': ('django.db.models.fields.DateTimeField', [], {}),
             'definition': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['pl_plot.OverlayDefinition']"}),
             'file': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'key': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
             'tile_dir': ('django.db.models.fields.CharField', [], {'max_length': '240', 'null': 'True'})
         },
         u'pl_plot.overlaydefinition': {
@@ -43,3 +46,4 @@ class Migration(SchemaMigration):
     }
 
     complete_apps = ['pl_plot']
+    symmetrical = True

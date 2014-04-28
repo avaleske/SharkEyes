@@ -26,7 +26,9 @@ class Plotter:
 
     def make_plot(self, plot_function):
         fig = pyplot.figure()
+        key_fig = pyplot.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure
+        key_ax = key_fig.add_axes([0.1, 0.2, 0.6, 0.05]) # this might be bad for when we have other types of plots
 
         longs = self.data_file.variables['lon_rho'][0, :]
         lats = self.data_file.variables['lat_rho'][:, 0]
@@ -38,14 +40,21 @@ class Plotter:
                        llcrnrlon=longs[0], urcrnrlon=longs[-1],
                        ax=ax)
 
-        plot_function(ax, self.data_file, bmap)
+        plot_function(ax=ax, data_file=self.data_file, bmap=bmap, key_ax=key_ax)
 
-        filename = "{0}_{1}.png".format(plot_function.__name__, uuid4())
+        plot_filename = "{0}_{1}.png".format(plot_function.__name__, uuid4())
+        key_filename = "{0}_key_{1}.png".format(plot_function.__name__, uuid4())
 
         fig.savefig(
-            os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR, filename),
+            os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR, plot_filename),
             dpi=800, bbox_inches='tight', pad_inches=0,
             transparent=True, frameon=False)
         pyplot.close(fig)
 
-        return filename
+        key_fig.savefig(
+            os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
+            dpi=800, bbox_inches='tight', pad_inches=0,
+            transparent=True)
+        pyplot.close(key_fig)
+
+        return plot_filename, key_filename
