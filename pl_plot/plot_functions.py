@@ -73,5 +73,13 @@ def salt_function(ax, data_file, bmap, key_ax):
     cbar.set_label('Salinity add units')
 
 
-def testtest():
-    print("Yay!")
+def currents_function(ax, data_file, bmap, key_ax):
+    currents_u = data_file.variables['u'][0][29]
+    currents_v = data_file.variables['v'][0][29]
+
+    longs, lats = bmap.makegrid(currents_u.shape[1], currents_u.shape[0])
+    x, y = bmap(longs, lats)
+
+    print(currents_u.shape, currents_v.shape)
+
+    overlay = bmap.quiver(x, y, currents_u, currents_v, ax=ax)
