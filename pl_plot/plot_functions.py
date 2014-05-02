@@ -38,6 +38,7 @@ def sst_function(ax, data_file, bmap, key_ax):
     for i in xrange(NUM_COLOR_LEVELS):
         color_levels.append(low_temp_range + i * contour_range_inc)
 
+    ax1 = plt.axes(frameon=False)
     overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
 
     # add colorbar.
@@ -60,12 +61,17 @@ def salt_function(ax, data_file, bmap, key_ax):
     x, y = bmap(longs, lats)
 
     contour_range_inc = (math.ceil(max_salt) - math.floor(min_salt)) / NUM_COLOR_LEVELS
-    print contour_range_inc
+
     color_levs = []
     for i in xrange(NUM_COLOR_LEVELS):
         color_levs.append(math.floor(min_salt) + i*contour_range_inc)
 
-    overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax)
+
+    ax(frameon=False) # I can't seem to get the frame to hide... 
+    pyplot.ax(frameon=False)
+    overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax,bbox_inches='tight',pad_inches=0, transparent=True, frameon=False)
+
+
 
      # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
