@@ -10,7 +10,18 @@ var overlayList = [
  ];
 
 $('#sidebar-left-btn').on('click', function() {
-      $('#sidebar-left').toggleClass('clicked');
+
+        if (! $('#sidebar-left').hasClass('clicked')){
+      $('#sidebar-left').toggleClass('clicked').delay(200).queue(
+          function(next){
+          $('#sidebar-left').css("display","none");
+          next();
+          });
+      }else{
+          $('#sidebar-left').show().toggleClass('clicked');
+      }
+
+
       $('#sidebar-left-btn').toggleClass('arrow-left');
       $('#sidebar-left-btn').toggleClass('arrow-right');
       $(this).text(function(i, text){
@@ -18,31 +29,64 @@ $('#sidebar-left-btn').on('click', function() {
     })
   });
 
+
+
+
   /* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
   $("tr").click(function() {
       var checkBoxes = $(this).find('.toggle-checkbox');
       checkBoxes.prop("checked", !checkBoxes.prop("checked"));
-  });    
 
-  /* alerts */
-  $("#login").click(function() {alert("This feature hasn't been added yet"); });
+  });
 
 
- /* toggle button logic is still kind of broken... I need to find the bug! */
+// stupid checkbox registering click twice bug
+/* explanation: i wanted the whole TR to be the click target, so this event is sent to the checkbox..
+ but if the tr over the checkbox is clicked, we get two click events */
+ /*
+$('.toggle').click(function(e) {
+    false;
+}); */
 
-  var states = []
-  for (i in overlayList){ states[i] = 0; }
+
+  var states = [];
+  for (i in overlayList){ states[i] = false; }
+
+    /* check first one on -> on load */
+    $('#o0 .toggle-checkbox').prop("checked", true);
+  states[0] = true; /* just turning the first overlay on as default */
+
+
+    console.log(states);
 
  {% for item in overlays %}
 $("#o{{ forloop.counter0 }}").click(function() {
-          if (states[{{ forloop.counter0 }}]){
 
-               map.overlayMapTypes.removeAt({{ forloop.counter0 }});
-          } else {
 
-              map.overlayMapTypes.setAt({{ forloop.counter0 }},overlayList[{{ forloop.counter0 }}]); 
-          }
-          states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
+    console.log('clicked')
+
+
+              if (states[{{ forloop.counter0 }}]){
+
+                if (map.overlayMapTypes.j[{{ forloop.counter0 }}]){ //check for existance
+
+                   map.overlayMapTypes.removeAt({{ forloop.counter0 }});
+
+                   //layers[{{ forloop.counter0 }}].setMap(null);
+                   //map.overlayMapTypes.j[0].setMap(null);
+               }
+
+              } else {
+                  console.log('inserted?');
+                  map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
+              }
+
+              states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
+
+
+
+
+
   });
  {% endfor %}
 
