@@ -66,27 +66,37 @@ $('.toggle').click(function(e) {
 $("#o{{ forloop.counter0 }}").click(function() {
 
 
-    console.log('clicked')
+    console.log('clicked');
+    console.log('init states' + states);
 
 
               if (states[{{ forloop.counter0 }}]){ //state = true for this row
 
                 console.log('{{ forloop.counter0 }}')
 
-                if (map.overlayMapTypes.j[{{ forloop.counter0 }}]){ //check for existance
+                if (map.overlayMapTypes.j[0]){ //check for existance
 
                   console.log('removing...')
 
-                   map.overlayMapTypes.removeAt({{ forloop.counter0 }});
+                   //map.overlayMapTypes.removeAt({{ forloop.counter0 }});
+                   map.overlayMapTypes.removeAt(0);
+
+
+
                    $("#key-img").attr("src","");
 
-                   //layers[{{ forloop.counter0 }}].setMap(null);
-                   //map.overlayMapTypes.j[0].setMap(null);
                }
 
            } else { //state = false for this row
-                  console.log("adding" + layers[0]);
-                  map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
+                  console.log("adding" + layers[{{ forloop.counter0 }}]);
+
+
+                  //map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
+
+
+                 // ah ha... it works like a stack, and we can't have 1 without 0
+                 //map.overlayMapTypes.removeAt(1,layers[1]);
+                 map.overlayMapTypes.insertAt(0,layers[{{ forloop.counter0 }}]);
 
                   // display first key
                   $("#key-img").attr("src","{% static 'keys/'%}"+overlayList[{{ forloop.counter0 }}]+"_key.png");
@@ -96,7 +106,7 @@ $("#o{{ forloop.counter0 }}").click(function() {
               states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
 
 
-
+    console.log('final states' + states);
 
 
   });
