@@ -4,114 +4,73 @@
 
 /* a little redundant grabbing this for both js script ? */
 var overlayList = [
- {% for item in overlays %}
+{% for item in overlays %}
 "{{item.function_name}}",
- {% endfor %}
- ];
+{% endfor %}
+];
 
 $('#sidebar-left-btn').on('click', function() {
 
-        if (! $('#sidebar-left').hasClass('clicked')){
-      $('#sidebar-left').toggleClass('clicked').delay(200).queue(
-          function(next){
-          $('#sidebar-left').css("display","none");
-          next();
-          });
-      }else{
-          $('#sidebar-left').show().toggleClass('clicked');
-      }
+    if (! $('#sidebar-left').hasClass('clicked')){
+        //ensures that we get that click realesate back -
+        //since the ani doesn't fully move the sidebar offscreen
+        $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
+            $('#sidebar-left').css("display","none");
+            next();
+        });
+    } else {
+        $('#sidebar-left').show().toggleClass('clicked');
+};
 
 
-      $('#sidebar-left-btn').toggleClass('arrow-left');
-      $('#sidebar-left-btn').toggleClass('arrow-right');
-      $(this).text(function(i, text){
-        return text === "Hide" ? "Menu" : "Hide";
-    })
-  });
+$('#sidebar-left-btn').toggleClass('arrow-left');
+$('#sidebar-left-btn').toggleClass('arrow-right');
+$(this).text(function(i, text){
+    return text === "Hide" ? "Menu" : "Hide";})
+});
 
+/* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
+$("tr").click(function() {
+    var checkBoxes = $(this).find('.toggle-checkbox');
+    checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+});
 
+$(".toggle-checkbox").click(function(e) { //fixing the duplex clicked issue
+    return false;
+});
 
+// init
+var states = [];
+for (i in overlayList){ states[i] = false; }
+$('#o0 .toggle-checkbox').prop("checked", true);
+states[0] = true;
+$("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
 
-  /* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
-  $("tr").click(function() {
-      var checkBoxes = $(this).find('.toggle-checkbox');
-      checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+{% for item in overlays %}
 
-  });
+    $("#o{{ forloop.counter0 }}").click(function() {
 
+        if (states[{{ forloop.counter0 }}]){ //state = true for this row
 
-// stupid checkbox registering click twice bug
-/* explanation: i wanted the whole TR to be the click target, so this event is sent to the checkbox..
- but if the tr over the checkbox is clicked, we get two click events */
- /*
-$('.toggle').click(function(e) {
-    false;
-}); */
+            if (map.overlayMapTypes.j[0]){ //check for existance
 
+                map.overlayMapTypes.removeAt(0);
 
-  var states = [];
-  for (i in overlayList){ states[i] = false; }
+            }
 
-    /* check first one on -> on load */
-    $('#o0 .toggle-checkbox').prop("checked", true);
-  states[0] = true; /* just turning the first overlay on as default */
-  // display first key
-  $("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
+        } else { //state = false for this row
 
+            map.overlayMapTypes.insertAt(0,layers[{{ forloop.counter0 }}]);
 
+            //update key
+            $("#key-img").attr("src","{% static 'keys/'%}"+overlayList[{{ forloop.counter0 }}]+"_key.png");
 
-    console.log(states);
+        }
 
- {% for item in overlays %}
-$("#o{{ forloop.counter0 }}").click(function() {
+        //update states
+        states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
 
+    });
+{% endfor %}
 
-    console.log('clicked');
-    console.log('init states' + states);
-
-
-              if (states[{{ forloop.counter0 }}]){ //state = true for this row
-
-                console.log('{{ forloop.counter0 }}')
-
-                if (map.overlayMapTypes.j[0]){ //check for existance
-
-                  console.log('removing...')
-
-                   //map.overlayMapTypes.removeAt({{ forloop.counter0 }});
-                   map.overlayMapTypes.removeAt(0);
-
-
-
-                   $("#key-img").attr("src","");
-
-               }
-
-           } else { //state = false for this row
-                  console.log("adding" + layers[{{ forloop.counter0 }}]);
-
-
-                  //map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
-
-
-                 // ah ha... it works like a stack, and we can't have 1 without 0
-                 //map.overlayMapTypes.removeAt(1,layers[1]);
-                 map.overlayMapTypes.insertAt(0,layers[{{ forloop.counter0 }}]);
-
-                  // display first key
-                  $("#key-img").attr("src","{% static 'keys/'%}"+overlayList[{{ forloop.counter0 }}]+"_key.png");
-
-              }
-
-              states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
-
-
-    console.log('final states' + states);
-
-
-  });
- {% endfor %}
-
-
-
-  </script>
+</script>
