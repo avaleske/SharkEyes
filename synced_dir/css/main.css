@@ -25,7 +25,11 @@ body {
   opacity: 1;
   -webkit-transition: .2s ease-out;
   overflow-x: hidden;
-  overflow-y: auto; }
+  overflow-y: auto;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+}
 
 
 .coords{
