@@ -55,6 +55,9 @@ $('.toggle').click(function(e) {
     /* check first one on -> on load */
     $('#o0 .toggle-checkbox').prop("checked", true);
   states[0] = true; /* just turning the first overlay on as default */
+  // display first key
+  $("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
+
 
 
     console.log(states);
@@ -74,11 +77,15 @@ $("#o{{ forloop.counter0 }}").click(function() {
 
                    //layers[{{ forloop.counter0 }}].setMap(null);
                    //map.overlayMapTypes.j[0].setMap(null);
+               } else {
+                   console.log('inserted?');
+                   map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
+
+                   // display first key
+                   $("#key-img").attr("src","{% static 'keys/'%}"+overlayList[{{ forloop.counter0 }}]+"_key.png");
+
                }
 
-              } else {
-                  console.log('inserted?');
-                  map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
               }
 
               states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
