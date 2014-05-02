@@ -1,0 +1,60 @@
+Install CentOS-6.4-x86_64-minimal.iso
+
+## Configure Networking
+	in /etc/sysconfig/network
+	NETWORKING=yes
+
+	in /etc/sysconfig/network-scripts/ifcfg-eth0
+	DEVICE=eth0
+	BOOTPROTO=dhcp
+	ONBOOT=yes
+
+
+## Create Users
+	$ useradd <username>
+	$ passwd <username>
+
+
+## Allow users to sudo (must log in as root)
+	$ visudo
+	
+	at bottom of sudoers file add the following line(s):
+	<username> ALL=(ALL) ALL
+
+	Optionallay, allow users to execute sudo without authentication 
+	NOTE: dangerous
+	<username> ALL=(ALL:ALL) NOPASSWD: ALL
+
+
+## Set up SSH
+	Install ssh server
+	$ yum install -y openssh-server
+
+	Configure server to start at runtime
+	$ chkconfig sshd on
+
+	Start server (or just restart system)
+	$ /sbin/service sshd start
+
+	Verify telnet, rsh, rlogin, and vsftpd are disabled
+	$ chkconfig
+
+
+## Download repository
+	install git
+	$ yum install -y git
+
+	create vagrant user
+	$ useradd vagrant
+	$ passwd vagrant
+	
+	download repository
+	$ /home/vagrant/
+	$ git checkout https://<username>@github.com/avaleske/SharkEyes
+
+	move repository, necessary because git won't download without empty dir
+	$ mv /SharkEyes/* /home/vagrant/
+	$ mv /SharkEyes/.git /home/vagrant/
+
+	verify it's working here
+	$ git pull
