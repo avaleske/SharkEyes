@@ -2,6 +2,8 @@ __author__ = 'avaleske'
 import numpy
 from matplotlib import pyplot
 import math
+from scipy import ndimage
+import scipy
 
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
@@ -80,12 +82,32 @@ def salt_function(ax, data_file, bmap, key_ax):
 
 
 def currents_function(ax, data_file, bmap, key_ax):
+    def compute_average(array):
+        avg = numpy.average(array)
+        return float('nan') if avg > 10**3 else avg
+
     currents_u = data_file.variables['u'][0][29]
     currents_v = data_file.variables['v'][0][29]
 
+
     longs, lats = bmap.makegrid(currents_u.shape[1], currents_u.shape[0])
-    x, y = bmap(longs, lats)
+    x, y = bmap(longs[::10, ::10], lats[::10, ::10])
 
-    print(currents_u.shape, currents_v.shape)
+    #print(currents_u.shape, currents_v.shape)
+    #print(x.shape, y.shape)
 
-    overlay = bmap.quiver(x, y, currents_u, currents_v, ax=ax)
+    currents_u_adjusted = ndimage.generic_filter(currents_u, compute_average, footprint=[numpy.ones(10)], mode='reflect')
+    right_column = currents_u[:, -1:]
+    currents_u_adjusted = scipy.hstack((currents_u_adjusted, right_column))
+
+    currents_v_adjusted = ndimage.generic_filter(currents_v, compute_average, footprint=[[1],[1]], mode='reflect')
+    bottom_row = currents_v[-1:, :]
+    currents_v_adjusted = scipy.vstack((currents_v_adjusted, bottom_row))
+
+    #print(currents_u_adjusted.shape, currents_v_adjusted.shape)
+
+    #print(currents_u_adjusted[::10, ::10].shape, currents_v_adjusted[::10, ::10].shape)
+
+    overlay = bmap.quiver(x, y, currents_u_adjusted[::10, ::10], currents_v_adjusted[::10, ::10], ax=ax)
+
+    #bmap.drawcoastlines()
