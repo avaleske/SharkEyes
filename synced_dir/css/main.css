@@ -125,15 +125,31 @@ body {
  }
 
 
+
+
 #key{
     position:absolute;
     bottom:10px;
     left:0px;
     right:0px;
     z-index: 10;
-    width:30%;
     margin:auto;
+}
 
+
+
+@media screen and (max-width: 500px) {
+    #key{
+        width:100%;
+    }
+}
+
+@media only screen
+and (min-width : 500px) {
+
+    #key{
+        width:500px;
+    }
 }
 
 #key-img{
