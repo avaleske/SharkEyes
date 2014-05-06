@@ -5,7 +5,7 @@
       <table>
         {% for item in overlays %}
         <tr id="o{{ forloop.counter0 }}">
-          <td class="col-one">{{ item.display_name_long }}</td>
+          <td class="col-one">{{ item.definition.display_name_long }}</td>
           <td class="col-two">
             <div class="toggle">
               <input type="checkbox" class="toggle-checkbox" id="toggle1"></input>
