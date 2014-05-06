@@ -16,7 +16,6 @@ def chop_overlay(overlay_id):
 
     tile_dir = "tiles_{0}_{1}".format(overlay.definition.function_name, uuid4())
 
-
     full_tile_dir = os.path.join(settings.MEDIA_ROOT, settings.TILE_STORAGE_DIR, tile_dir)
     vrt_path = os.path.join(settings.MEDIA_ROOT, settings.VRT_STORAGE_DIR, "{0}.vrt".format(uuid4()))
 
