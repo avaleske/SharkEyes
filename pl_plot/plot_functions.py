@@ -84,30 +84,28 @@ def salt_function(ax, data_file, bmap, key_ax):
 def currents_function(ax, data_file, bmap, key_ax):
     def compute_average(array):
         avg = numpy.average(array)
-        return float('nan') if avg > 10**3 else avg
+        return 0 if avg > 10**3 else avg
 
     currents_u = data_file.variables['u'][0][29]
     currents_v = data_file.variables['v'][0][29]
 
-
-    longs, lats = bmap.makegrid(currents_u.shape[1], currents_u.shape[0])
-    x, y = bmap(longs[::10, ::10], lats[::10, ::10])
-
-    #print(currents_u.shape, currents_v.shape)
-    #print(x.shape, y.shape)
-
-    currents_u_adjusted = ndimage.generic_filter(currents_u, compute_average, footprint=[numpy.ones(10)], mode='reflect')
+    # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
-    currents_u_adjusted = scipy.hstack((currents_u_adjusted, right_column))
-
-    currents_v_adjusted = ndimage.generic_filter(currents_v, compute_average, footprint=[[1],[1]], mode='reflect')
+    currents_u_adjusted = ndimage.generic_filter(scipy.hstack((currents_u, right_column)), compute_average, footprint=[[1], [1]], mode='reflect')
     bottom_row = currents_v[-1:, :]
-    currents_v_adjusted = scipy.vstack((currents_v_adjusted, bottom_row))
+    currents_v_adjusted = ndimage.generic_filter(scipy.vstack((currents_v, bottom_row)), compute_average, footprint=[[1], [1]], mode='reflect')
 
-    #print(currents_u_adjusted.shape, currents_v_adjusted.shape)
+    # zoom
+    zoom_level = .2
+    u_zoomed = ndimage.interpolation.zoom(currents_u_adjusted, zoom_level)
+    v_zoomed = ndimage.interpolation.zoom(currents_v_adjusted, zoom_level)
 
-    #print(currents_u_adjusted[::10, ::10].shape, currents_v_adjusted[::10, ::10].shape)
+    longs, lats = bmap.makegrid(u_zoomed.shape[1], v_zoomed.shape[0])
+    x, y = bmap(longs, lats)
 
-    overlay = bmap.quiver(x, y, currents_u_adjusted[::10, ::10], currents_v_adjusted[::10, ::10], ax=ax)
+    u_zoomed[u_zoomed <= 10**-5] = float('nan')
+    v_zoomed[v_zoomed <= 10**-5] = float('nan')
+    print u_zoomed
+    overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
 
     #bmap.drawcoastlines()
