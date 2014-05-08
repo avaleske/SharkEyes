@@ -9,6 +9,8 @@ var overlayList = [
 {% endfor %}
 ];
 
+
+$('#sidebar-left').css("display","none"); //init
 $('#sidebar-left-btn').on('click', function() {
 
     if (! $('#sidebar-left').hasClass('clicked')){
@@ -44,7 +46,7 @@ var states = [];
 for (i in overlayList){ states[i] = false; }
 $('#o0 .toggle-checkbox').prop("checked", true);
 states[0] = true;
-$("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
+//$("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
 
 {% for item in overlays %}
 
@@ -63,7 +65,7 @@ $("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
             map.overlayMapTypes.insertAt(0,layers[{{ forloop.counter0 }}]);
 
             //update key
-            $("#key-img").attr("src","{% static 'keys/'%}"+overlayList[{{ forloop.counter0 }}]+"_key.png");
+            $("#key-img").attr("src","{% static ''%}"+"{{item.key}}");
 
         }
 
