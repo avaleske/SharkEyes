@@ -40,7 +40,7 @@ def sst_function(ax, data_file, bmap, key_ax):
     for i in xrange(NUM_COLOR_LEVELS):
         color_levels.append(low_temp_range + i * contour_range_inc)
 
-    ax1 = plt.axes(frameon=False)
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
 
     # add colorbar.
@@ -69,9 +69,8 @@ def salt_function(ax, data_file, bmap, key_ax):
         color_levs.append(math.floor(min_salt) + i*contour_range_inc)
 
 
-    ax(frameon=False) # I can't seem to get the frame to hide... 
-    pyplot.ax(frameon=False)
-    overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax,bbox_inches='tight',pad_inches=0, transparent=True, frameon=False)
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
+    overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax, bbox_inches='tight', pad_inches=0)
 
 
 
@@ -106,6 +105,8 @@ def currents_function(ax, data_file, bmap, key_ax):
     u_zoomed[u_zoomed <= 10**-5] = float('nan')
     v_zoomed[v_zoomed <= 10**-5] = float('nan')
     print u_zoomed
+    
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
 
     #bmap.drawcoastlines()
