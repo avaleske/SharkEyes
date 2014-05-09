@@ -4,48 +4,75 @@
 
 /* a little redundant grabbing this for both js script ? */
 var overlayList = [
- {% for item in overlays %}
+{% for item in overlays %}
 "{{item.function_name}}",
- {% endfor %}
- ];
+{% endfor %}
+];
 
+
+$('#sidebar-left').css("display","none"); //init
 $('#sidebar-left-btn').on('click', function() {
-      $('#sidebar-left').toggleClass('clicked');
-      $('#sidebar-left-btn').toggleClass('arrow-left');
-      $('#sidebar-left-btn').toggleClass('arrow-right');
-      $(this).text(function(i, text){
-        return text === "Hide" ? "Menu" : "Hide";
-    })
-  });
 
-  /* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
-  $("tr").click(function() {
-      var checkBoxes = $(this).find('.toggle-checkbox');
-      checkBoxes.prop("checked", !checkBoxes.prop("checked"));
-  });    
-
-  /* alerts */
-  $("#login").click(function() {alert("This feature hasn't been added yet"); });
+    if (! $('#sidebar-left').hasClass('clicked')){
+        //ensures that we get that click realesate back -
+        //since the ani doesn't fully move the sidebar offscreen
+        $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
+            $('#sidebar-left').css("display","none");
+            next();
+        });
+    } else {
+        $('#sidebar-left').show().toggleClass('clicked');
+};
 
 
- /* toggle button logic is still kind of broken... I need to find the bug! */
+$('#sidebar-left-btn').toggleClass('arrow-left');
+$('#sidebar-left-btn').toggleClass('arrow-right');
+$(this).text(function(i, text){
+    return text === "Hide" ? "Menu" : "Hide";})
+});
 
-  var states = []
-  for (i in overlayList){ states[i] = 0; }
+/* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
+$("tr").click(function() {
+    var checkBoxes = $(this).find('.toggle-checkbox');
+    checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+});
 
- {% for item in overlays %}
-$("#o{{ forloop.counter0 }}").click(function() {
-          if (states[{{ forloop.counter0 }}]){
+$(".toggle-checkbox").click(function(e) { //fixing the duplex clicked issue
+    return false;
+});
 
-               map.overlayMapTypes.removeAt({{ forloop.counter0 }});
-          } else {
+// init
+var states = [];
+for (i in overlayList){ states[i] = false; }
+$('#o0 .toggle-checkbox').prop("checked", true);
+states[0] = true;
+//$("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
 
-              map.overlayMapTypes.setAt({{ forloop.counter0 }},overlayList[{{ forloop.counter0 }}]); 
-          }
-          states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
-  });
- {% endfor %}
+{% for item in overlays %}
 
+    $("#o{{ forloop.counter0 }}").click(function() {
 
+        if (states[{{ forloop.counter0 }}]){ //state = true for this row
 
-  </script>
+            if (map.overlayMapTypes.j[0]){ //check for existance
+
+                map.overlayMapTypes.removeAt(0);
+
+            }
+
+        } else { //state = false for this row
+
+            map.overlayMapTypes.insertAt(0,layers[{{ forloop.counter0 }}]);
+
+            //update key
+            $("#key-img").attr("src","{% static ''%}"+"{{item.key}}");
+
+        }
+
+        //update states
+        states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
+
+    });
+{% endfor %}
+
+</script>

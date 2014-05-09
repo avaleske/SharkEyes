@@ -85,11 +85,11 @@ USE_TZ = True
 
 TEMPLATE_DIRS = BASE_DIR + '/templates/'
 
-STATIC_URL = '/static/'
+STATIC_URL = '/synced_dir/'
 
 STATICFILES_DIRS = (
-    BASE_DIR + '/static/',
-     '/var/www/static/',
+    BASE_DIR + '/synced_dir/',
+     '/var/www/synced_dir/',
 )
 
 # other files

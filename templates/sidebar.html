@@ -1,11 +1,11 @@
     <button id="sidebar-left-btn" class="btn left arrow-right">Menu</button>
 
     <div class="sidebar left clicked" id="sidebar-left">
-      <button id="advanced" class="btn">advanced</button>
+      <button id="advanced" class="btn">Advanced</button>
       <table>
         {% for item in overlays %}
         <tr id="o{{ forloop.counter0 }}">
-          <td class="col-one">{{ item.display_name_long }}</td>
+          <td class="col-one">{{ item.definition.display_name_long }}</td>
           <td class="col-two">
             <div class="toggle">
               <input type="checkbox" class="toggle-checkbox" id="toggle1"></input>
@@ -18,6 +18,12 @@
         </tr>
         {% endfor %}
       </table>
-      <div id="coords-lat">lat?</div>
-      <div id="coords-lon">lon?</div>
-    </div> 
+
+      <div id="coords-lat" class="coords"></div>
+      <div id="coords-lon" class="coords"></div>
+
+
+      {{MEDIA_URL}}
+
+
+    </div>

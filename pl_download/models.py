@@ -85,7 +85,7 @@ def fetch_new_files():
 
     for server_filename, model_date, modified_datetime in files_to_retrieve:
         url = urljoin(settings.BASE_NETCDF_URL, server_filename)
-        local_filename = "{0}-{1}.nc".format(model_date, uuid4())
+        local_filename = "{0}_{1}.nc".format(model_date, uuid4())
         urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
         datafile = DataFile(
