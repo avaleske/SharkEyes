@@ -33,6 +33,16 @@ class OverlayManager(models.Manager):
         results = job.apply_async()  # this might just be returning results from the first task in each chain
         return [result[0] for result in results.get()]
 
+    @classmethod
+    def get_current_overlays(cls):
+        # 'current' is defined as the closest overlay to now, forward or backwards.
+        None
+
+    @classmethod
+    def get_next_overlays(cls):
+        # 'next' is defined as the overlay after the closest overlay to now.
+        None
+
 
 @shared_task(name='pl_plot.make_plot')
 def make_plot(overlay_definition_id):
@@ -47,8 +57,8 @@ def make_plot(overlay_definition_id):
         key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
         created_datetime=timezone.now(),
         definition_id=overlay_definition_id,
-        # we're grabbing the one for 4 am for now. I don't know what timezone it's supposed to be, though.
-        applies_at_datetime=datetime.combine(datafile.model_date, time(4)),
+        # we're grabbing the one for 4 am for now. Assuming utc...
+        applies_at_datetime=timezone.make_aware(datetime.combine(datafile.model_date, time(4)), timezone.utc),
     )
     overlay.save()
     return overlay.id
