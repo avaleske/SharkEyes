@@ -2,6 +2,8 @@ __author__ = 'avaleske'
 import numpy
 from matplotlib import pyplot
 import math
+from scipy import ndimage
+import scipy
 
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
@@ -38,6 +40,7 @@ def sst_function(ax, data_file, bmap, key_ax):
     for i in xrange(NUM_COLOR_LEVELS):
         color_levels.append(low_temp_range + i * contour_range_inc)
 
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
 
     # add colorbar.
@@ -60,12 +63,16 @@ def salt_function(ax, data_file, bmap, key_ax):
     x, y = bmap(longs, lats)
 
     contour_range_inc = (math.ceil(max_salt) - math.floor(min_salt)) / NUM_COLOR_LEVELS
-    print contour_range_inc
+
     color_levs = []
     for i in xrange(NUM_COLOR_LEVELS):
         color_levs.append(math.floor(min_salt) + i*contour_range_inc)
 
-    overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax)
+
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
+    overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax, bbox_inches='tight', pad_inches=0)
+
+
 
      # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
@@ -73,5 +80,33 @@ def salt_function(ax, data_file, bmap, key_ax):
     cbar.set_label('Salinity add units')
 
 
-def testtest():
-    print("Yay!")
+def currents_function(ax, data_file, bmap, key_ax):
+    def compute_average(array):
+        avg = numpy.average(array)
+        return 0 if avg > 10**3 else avg
+
+    currents_u = data_file.variables['u'][0][29]
+    currents_v = data_file.variables['v'][0][29]
+
+    # average nearby points to align grid, and add the edge column/row so it's the right size.
+    right_column = currents_u[:, -1:]
+    currents_u_adjusted = ndimage.generic_filter(scipy.hstack((currents_u, right_column)), compute_average, footprint=[[1], [1]], mode='reflect')
+    bottom_row = currents_v[-1:, :]
+    currents_v_adjusted = ndimage.generic_filter(scipy.vstack((currents_v, bottom_row)), compute_average, footprint=[[1], [1]], mode='reflect')
+
+    # zoom
+    zoom_level = .2
+    u_zoomed = ndimage.interpolation.zoom(currents_u_adjusted, zoom_level)
+    v_zoomed = ndimage.interpolation.zoom(currents_v_adjusted, zoom_level)
+
+    longs, lats = bmap.makegrid(u_zoomed.shape[1], v_zoomed.shape[0])
+    x, y = bmap(longs, lats)
+
+    u_zoomed[u_zoomed <= 10**-5] = float('nan')
+    v_zoomed[v_zoomed <= 10**-5] = float('nan')
+    print u_zoomed
+    
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
+    overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
+
+    #bmap.drawcoastlines()

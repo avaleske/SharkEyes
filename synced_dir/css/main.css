@@ -4,12 +4,6 @@ body, html {
   overflow: hidden; }
 
 
-.empty {
-  position: absolute;
-  width: 90%;
-  left: -100px;
-
-}
 
 body {
   font: 100% "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
@@ -31,21 +25,17 @@ body {
   opacity: 1;
   -webkit-transition: .2s ease-out;
   overflow-x: hidden;
-  overflow-y: auto; }
-
-.sidebar #coords-lat{
-  float: left;
-  margin-left: 5px;
-  margin-top: 5px; }
-
+  overflow-y: auto;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
 }
 
-.sidebar #coords-lon{
-  clear: both;
-  float: left;
-  margin-left: 5px;
-  margin-top: 5px; }
 
+.coords{
+    display:block;
+    margin-left: 12px;
+    margin-top: 5px;
 }
 
 #sidebar-left {
@@ -54,6 +44,11 @@ body {
 #sidebar-left.clicked {
   left: -61px;
   opacity: 0; }
+
+
+#sidebar-left.hidden {
+    display:none;
+}
 
 #sidebar-right {
   right: 0px; }
@@ -98,7 +93,7 @@ body {
 }
 
  #line-lat {
- 
+
    position: absolute;
   background-color:#fff;
    border: 1px solid #666;
@@ -114,13 +109,13 @@ body {
  }
 
   #line-lon {
- 
+
     position: absolute;
   background-color:#fff;
    border: 1px solid #666;
   border-radius: 2px;
   z-index: 2;
- 
+
   width: 1px;
   height: 100%;
   z-index: 1;
@@ -128,6 +123,39 @@ body {
   top: -30px;
   z-index: 2;
  }
+
+
+
+
+#key{
+    position:absolute;
+    bottom:10px;
+    left:0px;
+    right:0px;
+    z-index: 10;
+    margin:auto;
+}
+
+
+
+@media screen and (max-width: 500px) {
+    #key{
+        width:100%;
+    }
+}
+
+@media only screen
+and (min-width : 500px) {
+
+    #key{
+        width:500px;
+    }
+}
+
+#key-img{
+    width:100%;
+    height:auto;
+}
 
 button.btn {
   line-height: 20px;
