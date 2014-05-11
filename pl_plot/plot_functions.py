@@ -8,12 +8,13 @@ import scipy
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
 NUM_COLOR_LEVELS = 20
+TIME = 0
 
 
 def sst_function(ax, data_file, bmap, key_ax):
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
-    surface_temp = data_file.variables['temp'][0][29]
+    surface_temp = data_file.variables['temp'][TIME][29]
 
     min_temp = numpy.amin(surface_temp)
 
@@ -51,7 +52,7 @@ def sst_function(ax, data_file, bmap, key_ax):
 
 def salt_function(ax, data_file, bmap, key_ax):
     salt = data_file.variables["salt"][:]
-    salt_layer = salt[0][29]
+    salt_layer = salt[TIME][29]
     min_salt = numpy.amin(salt_layer)
     max_salt = -100
     for i in xrange(250):
@@ -85,8 +86,8 @@ def currents_function(ax, data_file, bmap, key_ax):
         avg = numpy.average(array)
         return 0 if avg > 10**3 else avg
 
-    currents_u = data_file.variables['u'][0][29]
-    currents_v = data_file.variables['v'][0][29]
+    currents_u = data_file.variables['u'][TIME][29]
+    currents_v = data_file.variables['v'][TIME][29]
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
@@ -104,8 +105,7 @@ def currents_function(ax, data_file, bmap, key_ax):
 
     u_zoomed[u_zoomed <= 10**-5] = float('nan')
     v_zoomed[v_zoomed <= 10**-5] = float('nan')
-    print u_zoomed
-    
+
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
 

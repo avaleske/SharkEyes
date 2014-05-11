@@ -4,7 +4,7 @@ from django.core.files import File
 import os
 from django.conf import settings
 from celery import group
-from datetime import datetime, time, tzinfo
+from datetime import datetime, time, tzinfo, timedelta
 from django.utils.timezone import utc
 from django.utils import timezone
 from celery import shared_task
@@ -31,7 +31,24 @@ class OverlayManager(models.Manager):
         task_list = [make_plot.s(od_id) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         results = job.apply_async()  # this might just be returning results from the first task in each chain
-        return [result[0] for result in results.get()]
+        return results
+
+    @classmethod
+    def get_next_few_days_of_tiled_overlays(cls):
+        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 3 days or
+        # however far we have data
+
+        next_few_days_of_overlays = Overlay.objects.filter(applies_at_datetime__gte=timezone.now()-timedelta(hours=2))
+        that_are_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=False)
+        # here assuming that the primary keys for the overlays are only monotonically increasing
+        # and that the newer one is better. I suppose that's not always the case.
+        # todo add knowledge about source file to Overlay
+        and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
+        ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
+        # (Yay lazy evaluation...)
+
+        overlays_to_display = Overlay.objects.filter(id__in=ids_of_these)
+        return overlays_to_display
 
 
 @shared_task(name='pl_plot.make_plot')
@@ -47,8 +64,8 @@ def make_plot(overlay_definition_id):
         key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
         created_datetime=timezone.now(),
         definition_id=overlay_definition_id,
-        # we're grabbing the one for 4 am for now. I don't know what timezone it's supposed to be, though.
-        applies_at_datetime=datetime.combine(datafile.model_date, time(4)),
+        # we're grabbing the one for 4 am for now. Assuming utc...
+        applies_at_datetime=timezone.make_aware(datetime.combine(datafile.model_date, time(4)), timezone.utc),
     )
     overlay.save()
     return overlay.id
