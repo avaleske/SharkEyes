@@ -28,17 +28,19 @@ function initialize() {
         position: google.maps.ControlPosition.TOP_RIGHT
     },
     mapTypeControl: false,
-    scaleControl: false,
+    scaleControl: true,
     streetViewControl: false,
     overviewMapControl: false,
-    draggableCursor: 'crosshair'
+    draggableCursor: 'crosshair',
+    mapTypeId: google.maps.MapTypeId.HYBRID
 
   }
 
 
 
   map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
-
+  map.fitBounds(mapBounds);
+  //map.setMapTypeId('hybrid');
 
   grid = new Graticule(map, true);
 
@@ -47,17 +49,70 @@ function initialize() {
 
 
 
+
+
+  // cursor lat/long updated on mousemove over map
   google.maps.event.addListener(map, 'mousemove', function(event) {
 
-    $("#coords-lat").html("lat:  " + event.latLng.lat().toFixed(2));
-     $("#coords-lon").html("lon:  " + event.latLng.lng().toFixed(2));
+    var ret = {lat:"", long:""};
+
+      var temp_lat0 = event.latLng.lat();
+      var temp_long0 = event.latLng.lng();
+
+      lat = temp_lat0.toString();
+      long = temp_long0.toString();
+
+
+
+
+
+
+    //LAT
+
+    //hours
+    temp_lat = lat.split(".");
+    ret.lat += temp_lat[0];
+
+    //minutes
+    lat_remainder = ("0." + temp_lat[1]) * 60;
+    temp_lat = lat_remainder.toString().split(".");
+    ret.lat += "°" + temp_lat[0];
+
+    //seconds
+    temp_lat2 = ("0." + temp_lat[1]) * 60;
+    ret.lat += "'" + Math.round(temp_lat2) + '"';
+
+    //LONG
+
+    //hours
+    temp_long = long.split(".");
+    ret.long += temp_long[0];
+
+    //minutes
+    lat_remainder = ("0." + temp_long[1]) * 60;
+    temp_long = lat_remainder.toString().split(".");
+    ret.long += "°" + temp_long[0];
+
+    //seconds
+    temp_long2 = ("0." + temp_long[1]) * 60;
+    ret.long += "'" + Math.round(temp_long2) + '"';
+
+
+    $("#coords-lat").html(ret.lat);
+     $("#coords-long").html(ret.long);
+
+
 
   });
 
 
 
-  map.fitBounds(mapBounds);
-  map.setMapTypeId('satellite');
+
+
+
+
+
+
 
 var overlayList = [
  {% for item in overlays %}

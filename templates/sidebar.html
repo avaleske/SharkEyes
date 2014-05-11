@@ -1,15 +1,30 @@
     <button id="sidebar-left-btn" class="btn left arrow-right">Menu</button>
 
     <div class="sidebar left clicked" id="sidebar-left">
-      <button id="advanced" class="btn">Advanced</button>
+
+
+        <h2>Forecast Date/Time</h2>
+
+        <select id ="date-time">
+          <option value="0">Sunday, 2pm</option>
+          <option value="1">Sunday, 6pm</option>
+          <option value="2">Sunday, 10pm</option>
+          <option value="3">Monday, 2am</option>
+          <option value="4">Monday, 6am</option>
+        </select>
+
+
+        <h2>Map Data Layers</h2>
+
       <table>
+
         {% for item in overlays %}
-        <tr id="o{{ forloop.counter0 }}">
+        <tr id="o{{ forloop.counter0 }}" class="option">
           <td class="col-one">{{ item.definition.display_name_long }}</td>
           <td class="col-two">
             <div class="toggle">
-              <input type="checkbox" class="toggle-checkbox" id="toggle1"></input>
-              <label class="toggle-label" for="toggle1">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
               <div class="toggle-inner"></div>
               <div class="toggle-switch"></div>
               </label>
@@ -17,13 +32,68 @@
           </td>
         </tr>
         {% endfor %}
+
+        <!-- more overlays to come... -->
+        <tr class="disabled">
+          <td class="col-one">Wave Height</td>
+          <td class="col-two">
+            <div class="toggle toggle-disabled">
+              <input type="checkbox" class="toggle-checkbox-disabled" id="t1" disabled></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="disabled">
+          <td class="col-one">Chlorophyll</td>
+          <td class="col-two">
+            <div class="toggle toggle-disabled">
+              <input type="checkbox" class="toggle-checkbox-disabled" id="t1" disabled></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
       </table>
 
-      <div id="coords-lat" class="coords"></div>
-      <div id="coords-lon" class="coords"></div>
+        <h2>Options</h2>
 
+    <table>
 
-      {{MEDIA_URL}}
+        <tr id="lat-long-toggle" class="option">
+          <td class="col-one">Lat/Long Lines</td>
+          <td class="col-two">
+            <div class="toggle toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+    </table>
 
+        <h2>Cursor Coordinates:</h2>
+
+    <table>
+        <tr>
+            <td class="col-one">Lat:</td>
+            <td class="col-two">
+                <div id="coords-lat" class="coords"></div>
+            </td>
+        </tr>
+            <td class="col-one">Long:</td>
+            <td class="col-two">
+                <div id="coords-long" class="coords"></div>
+            </td>
+        <tr>
+    </table>
 
     </div>
