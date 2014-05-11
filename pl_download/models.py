@@ -63,8 +63,11 @@ def fetch_new_files():
     if not is_new_file_to_download():
         return False
 
-    # download new file for today and tomorrow
-    days_to_retrieve = [timezone.now().date(), timezone.now().date()+timedelta(days=1)]
+    # download new file for next few days
+    days_to_retrieve = [timezone.now().date(),
+                        timezone.now().date()+timedelta(days=1),
+                        timezone.now().date()+timedelta(days=2),
+                        timezone.now().date()+timedelta(days=3)]
     files_to_retrieve = []
     tree = get_ingria_xml_tree()    # yes, we just did this to see if there's a new file. refactor later.
     tags = tree.iter(XML_NAMESPACE + 'dataset')
@@ -86,7 +89,7 @@ def fetch_new_files():
     for server_filename, model_date, modified_datetime in files_to_retrieve:
         url = urljoin(settings.BASE_NETCDF_URL, server_filename)
         local_filename = "{0}_{1}.nc".format(model_date, uuid4())
-        urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
+        urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename)) # this also needs a try/catch
 
         datafile = DataFile(
             type='NCDF',

@@ -31,7 +31,7 @@ class OverlayManager(models.Manager):
         task_list = [make_plot.s(od_id) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         results = job.apply_async()  # this might just be returning results from the first task in each chain
-        return [result[0] for result in results.get()]
+        return results.get()
 
     @classmethod
     def get_current_overlays(cls):
