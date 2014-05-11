@@ -3,5 +3,6 @@ from django.http import HttpResponse
 from pl_plot.models import OverlayManager
 
 def testplot(request):
-    name_list = OverlayManager.make_all_base_plots()
+    results = OverlayManager.make_all_base_plots()
+    name_list = results.get()
     return HttpResponse("plotted files " + name_list.__str__())
