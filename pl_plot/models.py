@@ -5,12 +5,11 @@ import os
 from django.conf import settings
 from celery import group
 from datetime import datetime, time, tzinfo, timedelta
-from django.utils.timezone import utc
 from django.utils import timezone
 from celery import shared_task
 from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
-from pl_download.models import DataFile
+from pl_download.models import DataFile, DataFileManager
 from django.db.models.aggregates import Max
 
 
@@ -27,22 +26,33 @@ class OverlayManager(models.Manager):
         return newest_overlays.filter(tile_dir__isnull=True).values_list('id', flat=True)
 
     @classmethod
-    def make_all_base_plots(cls):
-        task_list = [make_plot.s(od_id) for od_id in cls.get_all_base_definition_ids()]
-        job = group(task_list)
-        results = job.apply_async()  # this might just be returning results from the first task in each chain
-        return results
+    def get_next_few_days_of_untiled_overlay_ids(cls):
+        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 4 days or
+        # however far we have data, whichever is less
+        # here assuming that the primary keys for the overlays are only monotonically increasing
+        # and that the newer one is better.
+
+        next_few_days_of_overlays = Overlay.objects.filter(
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__lte=timezone.now()+timedelta(days=4)
+        )
+        that_are_not_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=True)
+        and_the_newest_for_each = that_are_not_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
+        ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
+        return ids_of_these
 
     @classmethod
     def get_next_few_days_of_tiled_overlays(cls):
-        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 3 days or
-        # however far we have data
-
-        next_few_days_of_overlays = Overlay.objects.filter(applies_at_datetime__gte=timezone.now()-timedelta(hours=2))
-        that_are_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=False)
+        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 4 days or
+        # however far we have data, whichever is less
         # here assuming that the primary keys for the overlays are only monotonically increasing
-        # and that the newer one is better. I suppose that's not always the case.
-        # todo add knowledge about source file to Overlay
+        # and that the newer one is better.
+
+        next_few_days_of_overlays = Overlay.objects.filter(
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__lte=timezone.now()+timedelta(days=4)
+        )
+        that_are_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=False)
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
         # (Yay lazy evaluation...)
@@ -50,25 +60,58 @@ class OverlayManager(models.Manager):
         overlays_to_display = Overlay.objects.filter(id__in=ids_of_these)
         return overlays_to_display
 
+    @classmethod
+    def make_all_base_plots(cls, time_index=0, file_id=None):
+        task_list = [cls.make_plot.s(od_id, time_index, file_id) for od_id in cls.get_all_base_definition_ids()]
+        job = group(task_list)
+        results = job.apply_async()  # this might just be returning results from the first task in each chain
+        return results
 
-@shared_task(name='pl_plot.make_plot')
-def make_plot(overlay_definition_id):
-    # this just grabs the most recent file. Should the file be tied to the overlay model?
-    datafile = DataFile.objects.latest('model_date')
-    plotter = Plotter(datafile.file.name)
-    overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-    plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
+    @classmethod
+    def make_all_base_plots_in_file(cls, file_id):
+        datafile = DataFile.objects.get(pk=file_id)
+        plotter = Plotter(datafile.file.name)
+        number_of_times = plotter.get_number_of_model_times() # yeah, loading the plotter just for this isn't ideal...
+        group_results_list = []
+        for t in xrange(number_of_times):
+            group_result = cls.make_all_base_plots(time_index=t, file_id=file_id)
+            group_results_list.append(group_result)
+        return group_results_list
 
-    overlay = Overlay(
-        file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
-        key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
-        created_datetime=timezone.now(),
-        definition_id=overlay_definition_id,
-        # we're grabbing the one for 4 am for now. Assuming utc...
-        applies_at_datetime=timezone.make_aware(datetime.combine(datafile.model_date, time(4)), timezone.utc),
-    )
-    overlay.save()
-    return overlay.id
+    @classmethod
+    def make_all_base_plots_in_files(cls, file_ids):
+        group_results_list = []
+        for file_id in file_ids:
+            group_results = cls.make_all_base_plots_in_file(file_id)
+            group_results_list.extend(group_results)
+        return group_results_list
+
+    @classmethod
+    def make_all_base_plots_for_next_few_days(cls):
+        file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
+        return cls.make_all_base_plots_in_files(file_ids)
+
+    @staticmethod
+    @shared_task(name='pl_plot.make_plot')
+    def make_plot(overlay_definition_id, time_index=0, file_id=None):
+        datafile = None
+        if file_id is None:
+            datafile = DataFile.objects.latest('model_date')
+        else:
+            datafile = DataFile.objects.get(pk=file_id)
+        plotter = Plotter(datafile.file.name)
+        overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+        plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name), time_index)
+
+        overlay = Overlay(
+            file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+            key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+            created_datetime=timezone.now(),
+            definition_id=overlay_definition_id,
+            applies_at_datetime=plotter.get_time_at_oceantime_index(time_index)
+        )
+        overlay.save()
+        return overlay.id
 
 
 class OverlayDefinition(models.Model):

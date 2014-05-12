@@ -8,13 +8,12 @@ import scipy
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
 NUM_COLOR_LEVELS = 20
-TIME = 0
 
 
-def sst_function(ax, data_file, bmap, key_ax):
+def sst_function(ax, data_file, bmap, key_ax, time_index):
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
-    surface_temp = data_file.variables['temp'][TIME][29]
+    surface_temp = data_file.variables['temp'][time_index][29]
 
     min_temp = numpy.amin(surface_temp)
 
@@ -50,9 +49,9 @@ def sst_function(ax, data_file, bmap, key_ax):
     cbar.set_label('Celsius')
 
 
-def salt_function(ax, data_file, bmap, key_ax):
+def salt_function(ax, data_file, bmap, key_ax, time_index):
     salt = data_file.variables["salt"][:]
-    salt_layer = salt[TIME][29]
+    salt_layer = salt[time_index][29]
     min_salt = numpy.amin(salt_layer)
     max_salt = -100
     for i in xrange(250):
@@ -81,13 +80,13 @@ def salt_function(ax, data_file, bmap, key_ax):
     cbar.set_label('Salinity add units')
 
 
-def currents_function(ax, data_file, bmap, key_ax):
+def currents_function(ax, data_file, bmap, key_ax, time_index):
     def compute_average(array):
         avg = numpy.average(array)
         return 0 if avg > 10**3 else avg
 
-    currents_u = data_file.variables['u'][TIME][29]
-    currents_v = data_file.variables['v'][TIME][29]
+    currents_u = data_file.variables['u'][time_index][29]
+    currents_v = data_file.variables['v'][time_index][29]
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
