@@ -46,6 +46,8 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
     cbar.ax.tick_params(labelsize=10)
+    cbar.ax.xaxis.label.set_color('white')
+    cbar.ax.xaxis.set_tick_params(labelcolor='white')
     cbar.set_label('Celsius')
 
 
@@ -77,7 +79,9 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
      # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
     cbar.ax.tick_params(labelsize=10)
-    cbar.set_label('Salinity add units')
+    cbar.ax.xaxis.label.set_color('white')
+    cbar.ax.xaxis.set_tick_params(labelcolor='white')
+    cbar.set_label('Salinity (PSU)')
 
 
 def currents_function(ax, data_file, bmap, key_ax, time_index):
@@ -107,5 +111,3 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
-
-    #bmap.drawcoastlines()
