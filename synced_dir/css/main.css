@@ -78,7 +78,6 @@ h2 {
   cursor: crosshair !important;
  }
 
-
 #label-lat{
    position: absolute;
    text-align: center;
@@ -92,7 +91,6 @@ h2 {
   bottom:18px;
   color:#222;
 }
-
 
 #label-lon{
    position: absolute;
@@ -149,6 +147,7 @@ h2 {
     z-index: 10;
     z-index: 1;
     margin:auto;
+
 }
 
 @media screen and (max-width: 500px) {
@@ -166,6 +165,7 @@ and (min-width : 500px) {
 }
 
 #key-img{
+    display:none;
     width:100%;
     height:auto;
 }
