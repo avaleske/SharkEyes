@@ -8,15 +8,24 @@ body, html {
 body {
   font: 100% "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
   -webkit-font-smoothing: antialiased;
-  color: #444444;
+  color: #444;
   overflow: hidden;
   /*background-color: #bdf;*/
   margin: 0px;
   padding: 0px; }
 
+
+h2 {
+    margin-left:5px;
+    margin-top:10px;
+    font-size: 18pt;
+    color: #222;
+    font-weight: bold;
+}
+
 .sidebar {
   box-shadow: 0 0 7px rgba(0, 0, 0, 0.5);
-  background-color: rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, .85);
   width: 280px;
   height: 100%;
   position: absolute;
@@ -29,13 +38,20 @@ body {
 -webkit-user-select: none;
 -moz-user-select: none;
 -ms-user-select: none;
+ padding-top:60px;
+
 }
 
 
 .coords{
-    display:block;
-    margin-left: 12px;
-    margin-top: 5px;
+    color: #000;
+    font-weight:300;
+
+}
+
+#date-time{
+    margin-top:5px;
+    margin-left:18px;
 }
 
 #sidebar-left {
@@ -62,7 +78,6 @@ body {
   cursor: crosshair !important;
  }
 
-
 #label-lat{
    position: absolute;
    text-align: center;
@@ -76,7 +91,6 @@ body {
   bottom:18px;
   color:#222;
 }
-
 
 #label-lon{
    position: absolute;
@@ -124,19 +138,17 @@ body {
   z-index: 2;
  }
 
-
-
-
 #key{
     position:absolute;
     bottom:10px;
+    bottom:15px;
     left:0px;
     right:0px;
     z-index: 10;
+    z-index: 1;
     margin:auto;
+
 }
-
-
 
 @media screen and (max-width: 500px) {
     #key{
@@ -153,6 +165,7 @@ and (min-width : 500px) {
 }
 
 #key-img{
+    display:none;
     width:100%;
     height:auto;
 }
@@ -175,8 +188,8 @@ button.btn {
   top: 3px; }
 
 #sidebar-left-btn {
-  left: 3px;
-  top: 3px; }
+  left: 15px;
+  top: 15px; }
 
 #advanced {
   float: right;
@@ -260,17 +273,21 @@ input.effect, input.effect:focus {
   background-color: #fafafa; }
 
 table {
-  margin-top: 60px;
+  margin-top: 5px;
   padding-left: 5px;
   width: 280px;
   font: 100% "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
   font-weight: bold;
-  color: #444444; }
+  color: #444; }
 
 table tr {
   height: 36px; }
 
-table tr:hover {
+table tr.disabled {
+    color: #888;
+}
+
+table tr.option:hover {
   background-color: #fff;
   cursor: pointer;
   color: #000; }
@@ -281,7 +298,7 @@ table td.col-two {
 
 table td.col-one {
   text-align: left;
-  padding-left: 10px; }
+  padding-left: 15px; }
 
 .lbl {
   display: inline-block;

@@ -2,10 +2,9 @@
 
 <script>
 
-/* a little redundant grabbing this for both js script ? */
-var overlayList = [
+var keys = [
 {% for item in overlays %}
-"{{item.function_name}}",
+"{{item.key}}",
 {% endfor %}
 ];
 
@@ -41,31 +40,66 @@ $(".toggle-checkbox").click(function(e) { //fixing the duplex clicked issue
     return false;
 });
 
-// init
+
+//state machine
 var states = [];
-for (i in overlayList){ states[i] = false; }
+for (i in keys){ states[i] = false; }
+
+//lat long line toggle
+$('#latlong-toggle .toggle-checkbox').prop("checked", true); //show on load
+$("#latlong-toggle").click(function(e) {
+    var temp = $(this).find('.toggle-checkbox');
+    if (temp.prop("checked")){
+        grid.show();
+    } else {
+        grid.hide();
+    }
+});
+
+//using a stack for the key
+
 $('#o0 .toggle-checkbox').prop("checked", true);
 states[0] = true;
-//$("#key-img").attr("src","{% static 'keys/'%}"+"salt_function"+"_key.png");
-
 {% for item in overlays %}
-
+    {% if forloop.first %}
+        $("#key-img").attr("src","{% static ''%}"+"{{item.key}}");
+        $("#key-img").show();{% else %}
+    {% endif %}
     $("#o{{ forloop.counter0 }}").click(function() {
-
         if (states[{{ forloop.counter0 }}]){ //state = true for this row
+            if (map.overlayMapTypes.j[{{ forloop.counter0 }}]){ //check for existance
 
-            if (map.overlayMapTypes.j[0]){ //check for existance
+                //hackish check to see if we hide the last overlay, then we remove key, too.
+                num_visible = 0;
+                last_visible = 0
+                for (i in states){
+                    if (states[i]) num_visible += 1;
+                    last_visible = i;
+                }
+                if (num_visible == 1){
+                    $("#key-img").attr("src","");
+                    $("#key-img").hide();
+                } else{
+                    console.log(keys,last_visible);
+                    console.log(keys[last_visible]);
+                    $("#key-img").attr("src","{% static ''%}"+keys[last_visible-1]);
+                    $("#key-img").show();
+                }
 
-                map.overlayMapTypes.removeAt(0);
+                map.overlayMapTypes.removeAt({{ forloop.counter0 }});
+                map.overlayMapTypes.insertAt({{ forloop.counter0 }}, place_holder);
+
 
             }
 
         } else { //state = false for this row
 
-            map.overlayMapTypes.insertAt(0,layers[{{ forloop.counter0 }}]);
+            map.overlayMapTypes.removeAt({{ forloop.counter0 }});
+            map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
 
-            //update key
             $("#key-img").attr("src","{% static ''%}"+"{{item.key}}");
+            $("#key-img").show();
+
 
         }
 

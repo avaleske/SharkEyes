@@ -256,7 +256,7 @@ var Graticule = (function() {
 
         // lngs
         var crosslng = l + 2 * dLng;
-        // labels on second column to avoid peripheral controls
+        // labels on second to bottom row
         var y = latLngToPixel(this, b + 2 * dLat, l).y + 2;
 
         // lo<r to skip printing 180/-180
@@ -276,8 +276,8 @@ var Graticule = (function() {
 
         // lats
         var crosslat = b + 2 * dLat;
-        // labels on second row to avoid controls
-        var x = latLngToPixel(this, b, l + 2 * dLng).x + 3;
+        // labels on 5th column
+        var x = latLngToPixel(this, b, l + 5 * dLng).x + 3;
 
         for (; b <= t; b += dLat) {
             var py = latLngToPixel(this, b, l).y;
