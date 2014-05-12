@@ -27,13 +27,32 @@ class OverlayManager(models.Manager):
         return newest_overlays.filter(tile_dir__isnull=True).values_list('id', flat=True)
 
     @classmethod
-    def get_next_few_days_of_tiled_overlays(cls):
-        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 3 days or
-        # however far we have data
+    def get_next_few_days_of_untiled_overlay_ids(cls):
+        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 4 days or
+        # however far we have data, whichever is less
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
 
-        next_few_days_of_overlays = Overlay.objects.filter(applies_at_datetime__gte=timezone.now()-timedelta(hours=2))
+        next_few_days_of_overlays = Overlay.objects.filter(
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__lte=timezone.now()+timedelta(days=4)
+        )
+        that_are_not_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=True)
+        and_the_newest_for_each = that_are_not_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
+        ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
+        return ids_of_these
+
+    @classmethod
+    def get_next_few_days_of_tiled_overlays(cls):
+        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 4 days or
+        # however far we have data, whichever is less
+        # here assuming that the primary keys for the overlays are only monotonically increasing
+        # and that the newer one is better.
+
+        next_few_days_of_overlays = Overlay.objects.filter(
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__lte=timezone.now()+timedelta(days=4)
+        )
         that_are_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=False)
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
