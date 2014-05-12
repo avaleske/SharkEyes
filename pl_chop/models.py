@@ -26,4 +26,4 @@ class TileManager():
             job = group(task_list)
             results = job.apply_async()  # this might just be returning results from the first task in each chain
             return results
-        return []
+        return None
