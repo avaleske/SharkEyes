@@ -1,5 +1,6 @@
 __author__ = 'avaleske'
 from scipy.io import netcdf
+import numpy
 from matplotlib import pyplot
 from mpl_toolkits.basemap import Basemap
 import os
@@ -30,7 +31,10 @@ class Plotter:
         seconds_since_epoch = timedelta(seconds=self.data_file.variables['ocean_time'][index])
         return ocean_time_epoch + seconds_since_epoch
 
-    def make_plot(self, plot_function, time_index):
+    def get_number_of_model_times(self):
+        return numpy.shape(self.data_file.variables['ocean_time'])[0]
+
+    def make_plot(self, plot_function, time_index=0):
         fig = pyplot.figure()
         key_fig = pyplot.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure

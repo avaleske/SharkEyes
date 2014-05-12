@@ -43,28 +43,41 @@ class OverlayManager(models.Manager):
         return overlays_to_display
 
     @classmethod
-    def make_all_base_plots(cls):
-        task_list = [cls.make_plot.s(od_id) for od_id in cls.get_all_base_definition_ids()]
+    def make_all_base_plots(cls, time_index=0, file_id=None):
+        task_list = [cls.make_plot.s(od_id, time_index, file_id) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         results = job.apply_async()  # this might just be returning results from the first task in each chain
         return results
 
+    @classmethod
+    def make_all_base_plots_in_file(cls, file_id):
+        datafile = DataFile.objects.get(pk=file_id)
+        plotter = Plotter(datafile.file.name)
+        number_of_times = plotter.get_number_of_model_times() # yeah, loading the plotter just for this isn't ideal...
+        group_results_list = []
+        for t in xrange(number_of_times):
+            group_result = cls.make_all_base_plots(time_index=t, file_id=file_id)
+            group_results_list.append(group_result)
+        return group_results_list
+
+    @staticmethod
     @shared_task(name='pl_plot.make_plot')
-    def make_plot(self, overlay_definition_id):
-        datafile = DataFile.objects.latest('model_date')
+    def make_plot(overlay_definition_id, time_index=0, file_id=None):
+        datafile = None
+        if file_id is None:
+            datafile = DataFile.objects.latest('model_date')
+        else:
+            datafile = DataFile.objects.get(pk=file_id)
         plotter = Plotter(datafile.file.name)
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-        plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name))
+        plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name), time_index)
 
         overlay = Overlay(
             file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
             key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
             created_datetime=timezone.now(),
             definition_id=overlay_definition_id,
-            # we're grabbing the one for 4 am for now. also, the 6th time is midnight of the next day
-            applies_at_datetime=timezone.make_aware(
-                datetime.combine(datafile.model_date, plotter.get_time_at_oceantime_index(0)),
-                timezone.utc),
+            applies_at_datetime=plotter.get_time_at_oceantime_index(time_index)
         )
         overlay.save()
         return overlay.id
