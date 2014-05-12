@@ -6,5 +6,5 @@ from pl_chop.models import TileManager
 
 
 def test_chop(request):
-    result = TileManager.tile_most_recent_overlays()
+    result = TileManager.tile_next_few_days_of_untiled_overlays()
     return HttpResponse(result.get())

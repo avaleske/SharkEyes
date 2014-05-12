@@ -28,6 +28,6 @@ def chop_overlay(overlay_id):
     tile_generator = GDAL2Tiles(params)
     tile_generator.process()
 
-    overlay.tile_dir = tile_dir
+    overlay.tile_dir = tile_dir # this could be a overlay.update(tile_dir=tile_dir) in django 1.7
     overlay.save()
     return tile_dir

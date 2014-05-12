@@ -5,12 +5,11 @@ import os
 from django.conf import settings
 from celery import group
 from datetime import datetime, time, tzinfo, timedelta
-from django.utils.timezone import utc
 from django.utils import timezone
 from celery import shared_task
 from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
-from pl_download.models import DataFile
+from pl_download.models import DataFile, DataFileManager
 from django.db.models.aggregates import Max
 
 
@@ -79,6 +78,19 @@ class OverlayManager(models.Manager):
             group_results_list.append(group_result)
         return group_results_list
 
+    @classmethod
+    def make_all_base_plots_in_files(cls, file_ids):
+        group_results_list = []
+        for file_id in file_ids:
+            group_results = cls.make_all_base_plots_in_file(file_id)
+            group_results_list.extend(group_results)
+        return group_results_list
+
+    @classmethod
+    def make_all_base_plots_for_next_few_days(cls):
+        file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
+        return cls.make_all_base_plots_in_files(file_ids)
+
     @staticmethod
     @shared_task(name='pl_plot.make_plot')
     def make_plot(overlay_definition_id, time_index=0, file_id=None):
@@ -100,11 +112,6 @@ class OverlayManager(models.Manager):
         )
         overlay.save()
         return overlay.id
-
-    # okay, so we need to plot all the base plots, for all the hours, in all the future files.
-    # do we want to have the plotter just take a file and then figure out how to make all the plots for that file? Then
-    # it'd have to be responsible for spinning off the tasks... That's a lot of things for the plotter to do.
-    # also remember that the last index of a file is midnight the next night.
 
 
 class OverlayDefinition(models.Model):

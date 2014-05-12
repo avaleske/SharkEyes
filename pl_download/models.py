@@ -12,6 +12,9 @@ import urllib2
 from defusedxml import ElementTree
 from datetime import datetime, timedelta
 from dateutil import parser, tz
+from django.db.models.aggregates import Max
+from django.db.models import Q
+from operator import __or__ as OR
 
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
@@ -58,10 +61,11 @@ def is_new_file_to_download():
 
 
 @shared_task(name='pl_download.fetch_new_files')
-# grabs file for today only, for now.
+# grabs file for next few days.
+# todo make each file download in a separate task
 def fetch_new_files():
     if not is_new_file_to_download():
-        return False
+       return False
 
     # download new file for next few days
     days_to_retrieve = [timezone.now().date(),
@@ -101,6 +105,27 @@ def fetch_new_files():
         datafile.save()
 
     return True
+
+
+class DataFileManager(models.Manager):
+    @staticmethod
+    def get_next_few_days_files_from_db():
+        next_few_days_of_files = DataFile.objects.filter(
+            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
+            model_date__lte=(timezone.now()+timedelta(days=4)).date()
+        )
+        and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(
+            newest_generation_time=Max('generated_datetime'))
+
+        # if we expected a lot of new files, this would be bad (we're making a Q object for each file we want, basically)
+        q_objects = []
+        for filedata in and_the_newest_for_each_model_date:
+            new_q = Q(type=filedata.get('type'), model_date=filedata.get('model_date'), generated_datetime=filedata.get('newest_generation_time'))
+            q_objects.append(new_q)
+
+        # assumes you're not redownloading the same file for the same model and generation dates.
+        actual_datafile_objects = DataFile.objects.filter(reduce(OR, q_objects))
+        return actual_datafile_objects
 
 
 class DataFile(models.Model):
