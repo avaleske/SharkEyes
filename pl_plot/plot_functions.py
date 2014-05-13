@@ -14,6 +14,8 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
     surface_temp = data_file.variables['temp'][time_index][29]
+    longs = data_file.variables['lon_rho'][:]
+    lats = data_file.variables['lat_rho'][:]
 
     min_temp = numpy.amin(surface_temp)
 
@@ -28,7 +30,7 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     # convert temperature data into format for our map
     # get lat/longs of ny by nx evenly space grid.
     # then compute map proj coordinates.
-    longs, lats = bmap.makegrid(surface_temp.shape[1], surface_temp.shape[0])
+    #longs, lats = bmap.makegrid(surface_temp.shape[1], surface_temp.shape[0])
     x, y = bmap(longs, lats)
 
     # calculate and plot colored contours for TEMPERATURE data
@@ -37,7 +39,7 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     low_temp_range = math.floor(min_temp)
     contour_range_inc = (high_temp_range - low_temp_range) / NUM_COLOR_LEVELS
     color_levels = []
-    for i in xrange(NUM_COLOR_LEVELS):
+    for i in xrange(NUM_COLOR_LEVELS+1):
         color_levels.append(low_temp_range + i * contour_range_inc)
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
@@ -67,7 +69,7 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
     contour_range_inc = (math.ceil(max_salt) - math.floor(min_salt)) / NUM_COLOR_LEVELS
 
     color_levs = []
-    for i in xrange(NUM_COLOR_LEVELS):
+    for i in xrange(NUM_COLOR_LEVELS+1):
         color_levs.append(math.floor(min_salt) + i*contour_range_inc)
 
 

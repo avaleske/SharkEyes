@@ -49,7 +49,7 @@ class Plotter:
                        resolution='h', area_thresh=1.0,
                        llcrnrlat=lats[0], urcrnrlat=lats[-1],
                        llcrnrlon=longs[0], urcrnrlon=longs[-1],
-                       ax=ax)
+                       ax=ax, epsg=4326)
 
         plot_function(ax=ax, data_file=self.data_file, time_index=time_index, bmap=bmap, key_ax=key_ax)
 
