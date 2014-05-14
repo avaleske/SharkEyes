@@ -57,7 +57,7 @@ class OverlayManager(models.Manager):
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
         # (Yay lazy evaluation...)
 
-        overlays_to_display = Overlay.objects.filter(id__in=ids_of_these)
+        overlays_to_display = Overlay.objects.filter(id__in=ids_of_these).order_by('definition', 'applies_at_datetime')
         return overlays_to_display
 
     @classmethod

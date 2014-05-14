@@ -89,7 +89,7 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
 def currents_function(ax, data_file, bmap, key_ax, time_index):
     def compute_average(array):
         avg = numpy.average(array)
-        return 0 if avg > 10**3 else avg
+        return numpy.nan if avg > 10**3 else avg
 
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
@@ -104,13 +104,24 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
     currents_v_adjusted = ndimage.generic_filter(scipy.vstack((currents_v, bottom_row)), compute_average, footprint=[[1], [1]], mode='reflect')
 
     # zoom
-    zoom_level = .5
-    u_zoomed = ndimage.interpolation.zoom(currents_u_adjusted, zoom_level)
-    v_zoomed = ndimage.interpolation.zoom(currents_v_adjusted, zoom_level)
-    u_mask_zoomed = ndimage.interpolation.zoom(u_mask, zoom_level)
-    v_mask_zoomed = ndimage.interpolation.zoom(v_mask, zoom_level)
-    #rho_mask_zoomed = ndimage.interpolation.zoom(rho_mask, zoom_level)
-    rho_mask_zoomed = rho_mask[::2, ::2]
+    zoom_level = 4
+    ys, xs = currents_u_adjusted.shape
+    u_cropped = currents_u_adjusted[:ys-(ys % int(zoom_level)), :xs-(xs % int(zoom_level))]
+    v_cropped = currents_v_adjusted[:ys-(ys % int(zoom_level)), :xs-(xs % int(zoom_level))]
+    u_zoomed = scipy.nanmean(numpy.concatenate([[u_cropped[i::zoom_level,j::zoom_level]
+        for i in range(zoom_level)]
+        for j in range(zoom_level)]), axis=0)
+    v_zoomed = scipy.nanmean(numpy.concatenate([[v_cropped[i::zoom_level,j::zoom_level]
+        for i in range(zoom_level)]
+        for j in range(zoom_level)]), axis=0)
+
+
+    rho_mask_cropped = numpy.array(rho_mask[:ys-(ys % int(zoom_level)), :xs-(xs % int(zoom_level))])
+    rho_mask_cropped[rho_mask_cropped == 0] = numpy.nan
+    rho_mask_zoomed = scipy.nanmean(numpy.concatenate([[rho_mask_cropped[i::zoom_level, j::zoom_level]
+        for i in range(zoom_level)]
+        for j in range(zoom_level)]), axis=0)
+    #rho_mask_zoomed = rho_mask[::4, ::4]
 
     longs, lats = bmap.makegrid(u_zoomed.shape[1], v_zoomed.shape[0])
     x, y = bmap(longs, lats)
@@ -120,5 +131,10 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
     #print u_zoomed
     #print rho_mask_zoomed
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
-    #bmap.drawcoastlines()
+    #linewidths=(0.05,), edgecolors=('white')
+    overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
+    quiverkey = key_ax.quiverkey(overlay, 2.5, .5, 0.5*.5144, "0.5 knots", labelpos='S', labelcolor='white', color='white', labelsep=.5)
+    quiverkey1 = key_ax.quiverkey(overlay, 5, .5, 1*.5144, "1 knot", labelpos='S', labelcolor='white', color='white', labelsep=.5)
+    quiverkey2 = key_ax.quiverkey(overlay, 7.5, .5, 2*.5144, "2 knots", labelpos='S', labelcolor='white', color='white', labelsep=.5)
+    key_ax.set_axis_off()
+
