@@ -93,6 +93,9 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
 
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
+    u_mask = data_file.variables['mask_u'][:]
+    v_mask = data_file.variables['mask_v'][:]
+    rho_mask = data_file.variables['mask_rho'][:]
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
@@ -101,15 +104,21 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
     currents_v_adjusted = ndimage.generic_filter(scipy.vstack((currents_v, bottom_row)), compute_average, footprint=[[1], [1]], mode='reflect')
 
     # zoom
-    zoom_level = .2
+    zoom_level = .5
     u_zoomed = ndimage.interpolation.zoom(currents_u_adjusted, zoom_level)
     v_zoomed = ndimage.interpolation.zoom(currents_v_adjusted, zoom_level)
+    u_mask_zoomed = ndimage.interpolation.zoom(u_mask, zoom_level)
+    v_mask_zoomed = ndimage.interpolation.zoom(v_mask, zoom_level)
+    #rho_mask_zoomed = ndimage.interpolation.zoom(rho_mask, zoom_level)
+    rho_mask_zoomed = rho_mask[::2, ::2]
 
     longs, lats = bmap.makegrid(u_zoomed.shape[1], v_zoomed.shape[0])
     x, y = bmap(longs, lats)
 
-    u_zoomed[u_zoomed <= 10**-5] = float('nan')
-    v_zoomed[v_zoomed <= 10**-5] = float('nan')
-
+    u_zoomed[rho_mask_zoomed == 0] = numpy.nan
+    v_zoomed[rho_mask_zoomed == 0] = numpy.nan
+    #print u_zoomed
+    #print rho_mask_zoomed
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax)
+    #bmap.drawcoastlines()
