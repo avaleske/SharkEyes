@@ -9,8 +9,50 @@ var keys = [
 ];
 
 
-$('#sidebar-left').css("display","none"); //init
+// show sidebar on load -> hide after two seconds
+// if sidebar is clicked before then, don't hide it!
+var timer;
+jQuery(document).ready(function () {
+    timer = setTimeout( "ToggleSidebar()",4000 );
+});
+$('#sidebar-left').on('click', function() {
+    clearTimeout(timer);
+});
+
+
+
+
+
+$('#sidebar-left-btn').click(function() {
+  clearTimeout(timer);
+  ToggleSidebar();
+});
+
+
+function ToggleSidebar(){
+
+    //animate sidebar
+    if (! $('#sidebar-left').hasClass('clicked')){
+        $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
+            $('#sidebar-left').css("display","none");
+            next();
+        });
+    } else {
+        $('#sidebar-left').show().toggleClass('clicked');
+    };
+
+    //update menu button text+style
+    $('#sidebar-left-btn').text(function(i, text){
+        return text === "Hide" ? "Menu" : "Hide";})
+    $('#sidebar-left-btn').toggleClass('arrow-left');
+    $('#sidebar-left-btn').toggleClass('arrow-right');
+}
+
+/*
 $('#sidebar-left-btn').on('click', function() {
+
+
+
 
     if (! $('#sidebar-left').hasClass('clicked')){
         //ensures that we get that click realesate back -
@@ -24,11 +66,16 @@ $('#sidebar-left-btn').on('click', function() {
 };
 
 
-$('#sidebar-left-btn').toggleClass('arrow-left');
-$('#sidebar-left-btn').toggleClass('arrow-right');
-$(this).text(function(i, text){
-    return text === "Hide" ? "Menu" : "Hide";})
-});
+
+    $('#sidebar-left-btn').text(function(i, text){
+        return text === "Hide" ? "Menu" : "Hide";})
+    $('#sidebar-left-btn').toggleClass('arrow-left');
+    $('#sidebar-left-btn').toggleClass('arrow-right');
+});*/
+
+
+
+
 
 /* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
 $("tr").click(function() {

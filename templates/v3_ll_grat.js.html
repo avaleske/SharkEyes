@@ -15,19 +15,21 @@
 //
 // Reworked some more by Bill Chadwick ...
 //
+// This version was tweaked slightly by Ryan Phillips (2014)
+
 var Graticule = (function() {
     function _(map, sexagesimal) {
         // default to decimal intervals
         this.sex_ = sexagesimal || false;
         this.set('container', document.createElement('DIV'));
-
         this.show();
-
         this.setMap(map);
     }
     _.prototype = new google.maps.OverlayView();
     _.prototype.addDiv = function(div) {
         this.get('container').appendChild(div);
+        div.style.zIndex="100"; //we want lines to be on top of overlays
+        div.style.textShadow="0px 0px 3px #000000";
     },
   _.prototype.decToLonSex = function(d) {
       var degs = Math.floor(Math.abs(d));

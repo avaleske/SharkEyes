@@ -1,8 +1,6 @@
-/* for setting colors globally */
-/* hack */
 body, html {
-  overflow: hidden; }
-
+    overflow: hidden;
+}
 
 
 body {
@@ -25,7 +23,7 @@ h2 {
 
 .sidebar {
   box-shadow: 0 0 7px rgba(0, 0, 0, 0.5);
-  background-color: rgba(255, 255, 255, .85);
+  background-color: rgba(255, 255, 255, 1);
   width: 280px;
   height: 100%;
   position: absolute;
