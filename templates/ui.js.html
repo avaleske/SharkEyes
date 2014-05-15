@@ -31,6 +31,11 @@ var x;
 
 function initialize() {
 
+
+$(function() {
+    FastClick.attach(document.body);
+});
+
   var mapOptions = {
     panControl: true,
     panControlOptions: {
@@ -160,15 +165,13 @@ visible_overlays_idx = 0;
 
 $(".overlay-toggle").click(function(e) {
 
+    //grab toggle + visible state
     var toggle = $(this).find('.toggle-checkbox');
     previous_state = !(toggle.prop("checked"));
-    console.log(previous_state);
 
-    //locate in 'data' by 2d indexing
+    //locate corresponding overlay in 'data' by 2d indexing
     defs_idx = data.defs.indexOf(this.id); //
     idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
-
-    console.log(idx, data.keys[idx]);
 
     //turn overlay on
     if (previous_state == false){
@@ -194,11 +197,10 @@ $(".overlay-toggle").click(function(e) {
           });
 
             visible_overlays.push(x);
-
           map.overlayMapTypes.insertAt(visible_overlays_idx, x);
           visible_overlays_idx += 1;
 
-
+            //show key
             visible_keys.push(data.keys[idx]);
           $("#key-img").attr("src",loc+data.keys[idx]);
           $("#key-img").show();
