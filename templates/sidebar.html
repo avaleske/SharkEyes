@@ -2,25 +2,21 @@
 
     <div class="sidebar left" id="sidebar-left">
 
-
         <h2>Forecast Date/Time</h2>
 
         <select id ="date-time">
-          <option value="0">Sunday, 2pm</option>
-          <option value="1">Sunday, 6pm</option>
-          <option value="2">Sunday, 10pm</option>
-          <option value="3">Monday, 2am</option>
-          <option value="4">Monday, 6am</option>
+          {% for item in times %}
+          <option value="{{forloop.counter0}}">{{ item }}</option>
+          {% endfor %}
         </select>
-
 
         <h2>Map Data Layers</h2>
 
       <table>
 
-        {% for item in overlays %}
-        <tr id="o{{ forloop.counter0 }}" class="option">
-          <td class="col-one">{{ item.definition.display_name_long }}</td>
+        {% for item in defs %}
+        <tr id="{{ item.function_name }}" class="option overlay-toggle">
+          <td class="col-one">{{ item.display_name_long }}</td>
           <td class="col-two">
             <div class="toggle">
               <input type="checkbox" class="toggle-checkbox" id="t1"></input>

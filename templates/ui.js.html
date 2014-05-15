@@ -2,12 +2,105 @@
 
 <script>
 
-var keys = [
+// init js data (from DB)
+var data = {'keys':[], 'tiles':[], 'defs':[]};
 {% for item in overlays %}
-"{{item.key}}",
+data.keys.push("{{item.key}}");
+data.tiles.push("{{item.tile_dir}}")
 {% endfor %}
-];
+{% for item in defs %}
+data.defs.push("{{item.function_name}}");
+{% endfor %}
 
+var loc = "{% static ''%}";
+
+
+
+// global variables
+var map;
+var mapBounds = new google.maps.LatLngBounds(
+  new google.maps.LatLng(40.5840806224, -129.0),
+  new google.maps.LatLng(47.499, -123.726199391));
+var mapMinZoom = 4;
+var mapMaxZoom = 10;
+var layers = [];
+var place_holder;
+
+
+var time_idx = 1; //no bigger than data.keys.length
+var old_idx = 1;
+
+
+
+function initialize() {
+
+  var mapOptions = {
+    panControl: true,
+    panControlOptions: {
+        position: google.maps.ControlPosition.TOP_RIGHT
+    },
+
+    zoomControl: true,
+    zoomControlOptions: {
+        style: google.maps.ZoomControlStyle.LARGE,
+        position: google.maps.ControlPosition.TOP_RIGHT
+    },
+    mapTypeControl: false,
+    scaleControl: true,
+    streetViewControl: false,
+    overviewMapControl: false,
+    draggableCursor: 'crosshair',
+    mapTypeId: google.maps.MapTypeId.HYBRID
+
+  }
+
+  map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
+  map.fitBounds(mapBounds);
+
+  grid = new Graticule(map, true); // lat long lines
+
+  // cursor lat/long updated on mousemove over map
+  google.maps.event.addListener(map, 'mousemove', function(event) {
+    var ret = {lat:"", long:""};
+      var temp_lat0 = event.latLng.lat();
+      var temp_long0 = event.latLng.lng();
+      lat = temp_lat0.toString();
+      long = temp_long0.toString();
+
+    //LAT
+
+    //hours
+    temp_lat = lat.split(".");
+    ret.lat += temp_lat[0];
+
+    //minutes
+    lat_remainder = ("0." + temp_lat[1]) * 60;
+    temp_lat = lat_remainder.toString().split(".");
+    ret.lat += "°" + temp_lat[0];
+
+    //seconds
+    temp_lat2 = ("0." + temp_lat[1]) * 60;
+    ret.lat += "'" + Math.round(temp_lat2) + '"';
+
+    //LONG
+
+    //hours
+    temp_long = long.split(".");
+    ret.long += temp_long[0];
+
+    //minutes
+    lat_remainder = ("0." + temp_long[1]) * 60;
+    temp_long = lat_remainder.toString().split(".");
+    ret.long += "°" + temp_long[0];
+
+    //seconds
+    temp_long2 = ("0." + temp_long[1]) * 60;
+    ret.long += "'" + Math.round(temp_long2) + '"';
+
+    $("#coords-lat").html(ret.lat);
+    $("#coords-long").html(ret.long);
+  });
+ }
 
 // show sidebar on load -> hide after two seconds
 // if sidebar is clicked before then, don't hide it!
@@ -18,19 +111,12 @@ jQuery(document).ready(function () {
 $('#sidebar-left').on('click', function() {
     clearTimeout(timer);
 });
-
-
-
-
-
 $('#sidebar-left-btn').click(function() {
   clearTimeout(timer);
   ToggleSidebar();
 });
 
-
 function ToggleSidebar(){
-
     //animate sidebar
     if (! $('#sidebar-left').hasClass('clicked')){
         $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
@@ -46,51 +132,17 @@ function ToggleSidebar(){
         return text === "Hide" ? "Menu" : "Hide";})
     $('#sidebar-left-btn').toggleClass('arrow-left');
     $('#sidebar-left-btn').toggleClass('arrow-right');
+    $('#key').toggleClass('transpose');
 }
-
-/*
-$('#sidebar-left-btn').on('click', function() {
-
-
-
-
-    if (! $('#sidebar-left').hasClass('clicked')){
-        //ensures that we get that click realesate back -
-        //since the ani doesn't fully move the sidebar offscreen
-        $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
-            $('#sidebar-left').css("display","none");
-            next();
-        });
-    } else {
-        $('#sidebar-left').show().toggleClass('clicked');
-};
-
-
-
-    $('#sidebar-left-btn').text(function(i, text){
-        return text === "Hide" ? "Menu" : "Hide";})
-    $('#sidebar-left-btn').toggleClass('arrow-left');
-    $('#sidebar-left-btn').toggleClass('arrow-right');
-});*/
-
-
-
-
 
 /* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
 $("tr").click(function() {
     var checkBoxes = $(this).find('.toggle-checkbox');
     checkBoxes.prop("checked", !checkBoxes.prop("checked"));
 });
-
 $(".toggle-checkbox").click(function(e) { //fixing the duplex clicked issue
     return false;
 });
-
-
-//state machine
-var states = [];
-for (i in keys){ states[i] = false; }
 
 //lat long line toggle
 $('#latlong-toggle .toggle-checkbox').prop("checked", true); //show on load
@@ -103,57 +155,129 @@ $("#latlong-toggle").click(function(e) {
     }
 });
 
-//using a stack for the key
+visible_keys = [];
+visible_overlays = [];
 
-$('#o0 .toggle-checkbox').prop("checked", true);
-states[0] = true;
-{% for item in overlays %}
-    {% if forloop.first %}
-        $("#key-img").attr("src","{% static ''%}"+"{{item.key}}");
-        $("#key-img").show();{% else %}
-    {% endif %}
-    $("#o{{ forloop.counter0 }}").click(function() {
-        if (states[{{ forloop.counter0 }}]){ //state = true for this row
-            if (map.overlayMapTypes.j[{{ forloop.counter0 }}]){ //check for existance
+//add to our stack of overlays
+visible_overlays_idx = 0;
 
-                //hackish check to see if we hide the last overlay, then we remove key, too.
-                num_visible = 0;
-                last_visible = 0
-                for (i in states){
-                    if (states[i]) num_visible += 1;
-                    last_visible = i;
-                }
-                if (num_visible == 1){
-                    $("#key-img").attr("src","");
-                    $("#key-img").hide();
-                } else{
-                    console.log(keys,last_visible);
-                    console.log(keys[last_visible]);
-                    $("#key-img").attr("src","{% static ''%}"+keys[last_visible-1]);
-                    $("#key-img").show();
-                }
+$(".overlay-toggle").click(function(e) {
 
-                map.overlayMapTypes.removeAt({{ forloop.counter0 }});
-                map.overlayMapTypes.insertAt({{ forloop.counter0 }}, place_holder);
+    var toggle = $(this).find('.toggle-checkbox');
+    previous_state = !(toggle.prop("checked"));
+    console.log(previous_state);
+
+    //locate in 'data' by 2d indexing
+    defs_idx = data.defs.indexOf(this.id); //
+    idx = defs_idx*data.keys.length/data.defs.length+time_idx;
+
+    //turn overlay on
+    if (previous_state == false){
+
+        //create google map
+        var x = new google.maps.ImageMapType({
+          getTileUrl: function(coord, zoom) {
+            var proj = map.getProjection();
+            var tileSize = 256 / Math.pow(2,zoom);
+            var tileBounds = new google.maps.LatLngBounds(
+                    proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
+              proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
+                );
+                if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
+              return "{% static ''%}"+"tiles/"+data.tiles[idx]+"/" +
+              + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
+
+          },
+          tileSize: new google.maps.Size(256, 256),
+          isPng: true,
+          opacity: .8
+
+          });
+
+            visible_overlays.push(x);
+
+          map.overlayMapTypes.insertAt(visible_overlays_idx, x);
+          visible_overlays_idx += 1;
 
 
-            }
+            visible_keys.push(data.keys[idx]);
+          $("#key-img").attr("src",loc+data.keys[idx]);
+          $("#key-img").show();
 
-        } else { //state = false for this row
+    } else{ //turn overlay off
 
-            map.overlayMapTypes.removeAt({{ forloop.counter0 }});
-            map.overlayMapTypes.insertAt({{ forloop.counter0 }},layers[{{ forloop.counter0 }}]);
+        if (visible_keys.length > 1){
+            //which key/overlay are we removing?
+            to_remove = visible_keys.indexOf(data.keys[idx]);
 
-            $("#key-img").attr("src","{% static ''%}"+"{{item.key}}");
-            $("#key-img").show();
+            visible_keys.splice(to_remove, 1);
+            visible_overlays.splice(to_remove, 1);
+            map.overlayMapTypes.removeAt(to_remove);
 
+            //the last one in the list is now shown
+            $("#key-img").attr("src",loc+visible_keys[visible_keys.length-1]);
+            visible_overlays_idx -= 1;
 
+        // hide key-img when empty;
+        } else{
+            visible_keys.pop();
+            visible_overlays.pop();
+            visible_overlays_idx -= 1;
+            $("#key-img").attr("src","");
+            $("#key-img").hide();
+            map.overlayMapTypes.removeAt(0);
         }
+    }
+});
 
-        //update states
-        states[{{ forloop.counter0 }}] = !states[{{ forloop.counter0 }}];
 
-    });
-{% endfor %}
+$('#date-time').change(function(e) {
+    time_idx = $("#date-time option:selected").val();
+    time_idx = parseInt(time_idx);
+
+    new_idx = old_idx + time_idx;
+
+    for (i in visible_overlays){
+
+        //remove old overlay
+        map.overlayMapTypes.removeAt(i);
+
+        //create google map
+        var x = new google.maps.ImageMapType({
+          getTileUrl: function(coord, zoom) {
+            var proj = map.getProjection();
+            var tileSize = 256 / Math.pow(2,zoom);
+            var tileBounds = new google.maps.LatLngBounds(
+                    proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
+              proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
+                );
+                if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
+              return "{% static ''%}"+"tiles/"+data.tiles[new_idx]+"/" +
+              + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
+
+          },
+          tileSize: new google.maps.Size(256, 256),
+          isPng: true,
+          opacity: .8
+          });
+
+          visible_overlays[i] = x; //replace
+          map.overlayMapTypes.insertAt(i, x); //insert
+
+
+
+
+        //replace keys...
+        visible_keys[i] = data.keys[new_idx];
+        $("#key-img").attr("src",loc+visible_keys[visible_keys.length-1]);
+
+    }
+
+    console.log(visible_keys);
+
+    old_idx = time_idx;
+
+
+});
 
 </script>
