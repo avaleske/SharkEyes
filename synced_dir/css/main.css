@@ -148,6 +148,19 @@ h2 {
 
 }
 
+#key.transpose{
+    position:absolute;
+    bottom:10px;
+    bottom:15px;
+    left:0px;
+    right:0px;
+    z-index: 10;
+    z-index: 1;
+    margin:auto;
+    padding-left:280px;
+
+}
+
 @media screen and (max-width: 500px) {
     #key{
         width:100%;
@@ -292,7 +305,7 @@ table tr.option:hover {
 
 table td.col-two {
   text-align: left;
-  padding-right: 10px; }
+  padding-right: 20px; }
 
 table td.col-one {
   text-align: left;
