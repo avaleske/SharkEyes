@@ -42,12 +42,14 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     for i in xrange(max_temp-min_temp-1):
         color_levels.append(min_temp+1 + i * contour_range_inc)
 
-    cdict = {'red': ((0., .25, .25),
-                 (0.05, .1, .1),
-                 (0.11, 0, 0),
-                 (0.66, 1, 1),
-                 (0.89, 1, 1),
-                 (1, 0.5, 0.5)),
+    cdict = {'red': ((0., .15, .15),
+                    (0.05, .1, .1),
+                    (0.11, 0, 0),
+                    (0.4, .3, .3),
+                    (0.5, .9, .9),
+                    (0.66, 1, 1),
+                    (0.89, 1, 1),
+                    (1, 0.5, 0.5)),
          'green': ((0., 0, 0),
                    (0.05, 0, 0),
                    (0.11, 0, 0),
