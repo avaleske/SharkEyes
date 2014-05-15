@@ -34,78 +34,89 @@ var key_selector_offset = 0;
 function initialize() {
 
 
-$(function() {
-    FastClick.attach(document.body);
-});
+    $(function() {
+        FastClick.attach(document.body);
+    });
 
-  var mapOptions = {
-    panControl: true,
-    panControlOptions: {
-        position: google.maps.ControlPosition.TOP_RIGHT
-    },
+      var mapOptions = {
+        panControl: true,
+        panControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT
+        },
 
-    zoomControl: true,
-    zoomControlOptions: {
-        style: google.maps.ZoomControlStyle.LARGE,
-        position: google.maps.ControlPosition.TOP_RIGHT
-    },
-    mapTypeControl: false,
-    scaleControl: true,
-    streetViewControl: false,
-    overviewMapControl: false,
-    draggableCursor: 'crosshair',
-    mapTypeId: google.maps.MapTypeId.HYBRID
+        zoomControl: true,
+        zoomControlOptions: {
+            style: google.maps.ZoomControlStyle.LARGE,
+            position: google.maps.ControlPosition.TOP_RIGHT
+        },
+        mapTypeControl: false,
+        scaleControl: true,
+        streetViewControl: false,
+        overviewMapControl: false,
+        draggableCursor: 'crosshair',
+        mapTypeId: google.maps.MapTypeId.HYBRID
 
-  }
+      }
 
-  map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
-  map.fitBounds(mapBounds);
+      map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
+      map.fitBounds(mapBounds);
 
-  grid = new Graticule(map, true); // lat long lines
+      grid = new Graticule(map, true); // lat long lines
 
-  // cursor lat/long updated on mousemove over map
-  google.maps.event.addListener(map, 'mousemove', function(event) {
-    var ret = {lat:"", long:""};
-      var temp_lat0 = event.latLng.lat();
-      var temp_long0 = event.latLng.lng();
-      lat = temp_lat0.toString();
-      long = temp_long0.toString();
+      // cursor lat/long coordinates updated on mousemove * mousedown
+      google.maps.event.addListener(map, 'mousemove', function(event) {
+          RealtimeLL(event);
+      });
+      google.maps.event.addListener(map, 'mousedown', function(event) {
+          RealtimeLL(event);
+      });
 
-    //LAT
-
-    //hours
-    temp_lat = lat.split(".");
-    ret.lat += temp_lat[0];
-
-    //minutes
-    lat_remainder = ("0." + temp_lat[1]) * 60;
-    temp_lat = lat_remainder.toString().split(".");
-    ret.lat += "°" + temp_lat[0];
-
-    //seconds
-    temp_lat2 = ("0." + temp_lat[1]) * 60;
-    ret.lat += "'" + Math.round(temp_lat2) + '"';
-
-    //LONG
-
-    //hours
-    temp_long = long.split(".");
-    ret.long += temp_long[0];
-
-    //minutes
-    lat_remainder = ("0." + temp_long[1]) * 60;
-    temp_long = lat_remainder.toString().split(".");
-    ret.long += "°" + temp_long[0];
-
-    //seconds
-    temp_long2 = ("0." + temp_long[1]) * 60;
-    ret.long += "'" + Math.round(temp_long2) + '"';
-
-    $("#coords-lat").html(ret.lat);
-    $("#coords-long").html(ret.long);
-  });
  }
 //end initialize
+
+
+// converts google maps lat/long event decimal coordinates to hexidecimal and
+// displays it
+function RealtimeLL(event){
+  var ret = {lat:"", long:""};
+    var temp_lat0 = event.latLng.lat();
+    var temp_long0 = event.latLng.lng();
+    lat = temp_lat0.toString();
+    long = temp_long0.toString();
+
+  //LAT
+
+  //hours
+  temp_lat = lat.split(".");
+  ret.lat += temp_lat[0];
+
+  //minutes
+  lat_remainder = ("0." + temp_lat[1]) * 60;
+  temp_lat = lat_remainder.toString().split(".");
+  ret.lat += "°" + temp_lat[0];
+
+  //seconds
+  temp_lat2 = ("0." + temp_lat[1]) * 60;
+  ret.lat += "'" + Math.round(temp_lat2) + '"';
+
+  //LONG
+
+  //hours
+  temp_long = long.split(".");
+  ret.long += temp_long[0];
+
+  //minutes
+  lat_remainder = ("0." + temp_long[1]) * 60;
+  temp_long = lat_remainder.toString().split(".");
+  ret.long += "°" + temp_long[0];
+
+  //seconds
+  temp_long2 = ("0." + temp_long[1]) * 60;
+  ret.long += "'" + Math.round(temp_long2) + '"';
+
+  $("#coords-lat").html(ret.lat);
+  $("#coords-long").html(ret.long);
+}
 
 
 // show sidebar on load -> hide after two seconds
@@ -243,13 +254,9 @@ $('#date-time').change(function(e) {
         //replace keys...
         visible_keys[i] = data.keys[to_change_idx+delta_idx];
         $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
-
         }
-
     old_idx = time_idx;
-
 });
-
 
 function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
     var x = new google.maps.ImageMapType({
