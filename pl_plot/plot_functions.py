@@ -93,9 +93,7 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
 
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
-    u_mask = data_file.variables['mask_u'][:]
-    v_mask = data_file.variables['mask_v'][:]
-    rho_mask = data_file.variables['mask_rho'][:]
+    rho_mask = numpy.array(data_file.variables['mask_rho'][:])
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
@@ -105,36 +103,36 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
 
     # zoom
     zoom_level = 4
-    ys, xs = currents_u_adjusted.shape
-    u_cropped = currents_u_adjusted[:ys-(ys % int(zoom_level)), :xs-(xs % int(zoom_level))]
-    v_cropped = currents_v_adjusted[:ys-(ys % int(zoom_level)), :xs-(xs % int(zoom_level))]
-    u_zoomed = scipy.nanmean(numpy.concatenate([[u_cropped[i::zoom_level,j::zoom_level]
-        for i in range(zoom_level)]
-        for j in range(zoom_level)]), axis=0)
-    v_zoomed = scipy.nanmean(numpy.concatenate([[v_cropped[i::zoom_level,j::zoom_level]
-        for i in range(zoom_level)]
-        for j in range(zoom_level)]), axis=0)
-
-
-    rho_mask_cropped = numpy.array(rho_mask[:ys-(ys % int(zoom_level)), :xs-(xs % int(zoom_level))])
-    rho_mask_cropped[rho_mask_cropped == 0] = numpy.nan
-    rho_mask_zoomed = scipy.nanmean(numpy.concatenate([[rho_mask_cropped[i::zoom_level, j::zoom_level]
-        for i in range(zoom_level)]
-        for j in range(zoom_level)]), axis=0)
-    #rho_mask_zoomed = rho_mask[::4, ::4]
-
-    longs, lats = bmap.makegrid(u_zoomed.shape[1], v_zoomed.shape[0])
-    x, y = bmap(longs, lats)
+    u_zoomed = crop_and_downsample(currents_u_adjusted, zoom_level)
+    v_zoomed = crop_and_downsample(currents_v_adjusted, zoom_level)
+    rho_mask[rho_mask == 0] = numpy.nan
+    rho_mask_zoomed = crop_and_downsample(rho_mask, zoom_level)
+    longs = data_file.variables['lon_rho'][:]
+    lats = data_file.variables['lat_rho'][:]
+    longs_zoomed = crop_and_downsample(longs, zoom_level, False)
+    lats_zoomed = crop_and_downsample(lats, zoom_level, False)
 
     u_zoomed[rho_mask_zoomed == 0] = numpy.nan
     v_zoomed[rho_mask_zoomed == 0] = numpy.nan
-    #print u_zoomed
-    #print rho_mask_zoomed
+
+    x, y = bmap(longs_zoomed, lats_zoomed)
+
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    #linewidths=(0.05,), edgecolors=('white')
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
+
     quiverkey = key_ax.quiverkey(overlay, 2.5, .5, 0.5*.5144, "0.5 knots", labelpos='S', labelcolor='white', color='white', labelsep=.5)
     quiverkey1 = key_ax.quiverkey(overlay, 5, .5, 1*.5144, "1 knot", labelpos='S', labelcolor='white', color='white', labelsep=.5)
     quiverkey2 = key_ax.quiverkey(overlay, 7.5, .5, 2*.5144, "2 knots", labelpos='S', labelcolor='white', color='white', labelsep=.5)
     key_ax.set_axis_off()
 
+
+def crop_and_downsample(source_array, downsample_ratio, average=True):
+    ys, xs = source_array.shape
+    cropped_array = source_array[:ys - (ys % int(downsample_ratio)), :xs - (xs % int(downsample_ratio))]
+    if average:
+        zoomed_array = scipy.nanmean(numpy.concatenate([[cropped_array[i::downsample_ratio, j::downsample_ratio]
+                                                     for i in range(downsample_ratio)]
+                                                    for j in range(downsample_ratio)]), axis=0)
+    else:
+        zoomed_array = cropped_array[::downsample_ratio, ::downsample_ratio]
+    return zoomed_array
