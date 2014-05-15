@@ -356,3 +356,11 @@ input[type=checkbox] {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: -moz-none; }
+
+a.about {
+    text-align: left;
+    text-decoration: none;
+    font: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: bold;
+    color: #444444;
+}

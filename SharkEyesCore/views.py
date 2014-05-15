@@ -12,3 +12,6 @@ def home(request):
 
     context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.all(), 'times':list_of_times }
     return render(request, 'index.html', context)
+
+def about(request):
+    return render(request, 'about.html')
