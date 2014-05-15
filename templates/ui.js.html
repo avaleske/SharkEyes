@@ -11,10 +11,7 @@ data.tiles.push("{{item.tile_dir}}")
 {% for item in defs %}
 data.defs.push("{{item.function_name}}");
 {% endfor %}
-
 var loc = "{% static ''%}";
-
-
 
 // global variables
 var map;
@@ -26,11 +23,11 @@ var mapMaxZoom = 10;
 var layers = [];
 var place_holder;
 
-
 var time_idx = 1; //no bigger than data.keys.length
 var old_idx = 1;
+var idx = 1;
 
-
+var x;
 
 function initialize() {
 
@@ -129,7 +126,7 @@ function ToggleSidebar(){
 
     //update menu button text+style
     $('#sidebar-left-btn').text(function(i, text){
-        return text === "Hide" ? "Menu" : "Hide";})
+        return text === "Menu ►" ? "◄ Hide" : "Menu ►";})
     $('#sidebar-left-btn').toggleClass('arrow-left');
     $('#sidebar-left-btn').toggleClass('arrow-right');
     $('#key').toggleClass('transpose');
@@ -169,7 +166,9 @@ $(".overlay-toggle").click(function(e) {
 
     //locate in 'data' by 2d indexing
     defs_idx = data.defs.indexOf(this.id); //
-    idx = defs_idx*data.keys.length/data.defs.length+time_idx;
+    idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
+
+    console.log(idx, data.keys[idx]);
 
     //turn overlay on
     if (previous_state == false){
@@ -184,7 +183,7 @@ $(".overlay-toggle").click(function(e) {
               proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
                 );
                 if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
-              return "{% static ''%}"+"tiles/"+data.tiles[idx]+"/" +
+              return loc+"tiles/"+data.tiles[idx]+"/" +
               + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
 
           },
@@ -230,54 +229,55 @@ $(".overlay-toggle").click(function(e) {
     }
 });
 
-
+// update function for date-time selector
 $('#date-time').change(function(e) {
     time_idx = $("#date-time option:selected").val();
-    time_idx = parseInt(time_idx);
+    time_idx = parseInt(time_idx) + 1;
+    delta_idx = (time_idx - old_idx);
 
-    new_idx = old_idx + time_idx;
+    max = visible_overlays.length;
+    for (var i = 0; i < max; i++){
 
-    for (i in visible_overlays){
+        to_change_idx = data.keys.indexOf(visible_keys[i]);
 
-        //remove old overlay
         map.overlayMapTypes.removeAt(i);
-
-        //create google map
-        var x = new google.maps.ImageMapType({
-          getTileUrl: function(coord, zoom) {
-            var proj = map.getProjection();
-            var tileSize = 256 / Math.pow(2,zoom);
-            var tileBounds = new google.maps.LatLngBounds(
-                    proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
-              proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
-                );
-                if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
-              return "{% static ''%}"+"tiles/"+data.tiles[new_idx]+"/" +
-              + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
-
-          },
-          tileSize: new google.maps.Size(256, 256),
-          isPng: true,
-          opacity: .8
-          });
-
-          visible_overlays[i] = x; //replace
-          map.overlayMapTypes.insertAt(i, x); //insert
-
-
-
+        visible_overlays.splice(i, 1);
+        visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx);
 
         //replace keys...
-        visible_keys[i] = data.keys[new_idx];
+        visible_keys[i] = data.keys[to_change_idx+delta_idx];
         $("#key-img").attr("src",loc+visible_keys[visible_keys.length-1]);
 
-    }
-
-    console.log(visible_keys);
+        }
 
     old_idx = time_idx;
 
-
 });
+
+
+function insert_overlay(visible_overlays, gmaps_stack_position,idx){
+    var x = new google.maps.ImageMapType({
+      getTileUrl: function(coord, zoom) {
+        var proj = map.getProjection();
+        var tileSize = 256 / Math.pow(2,zoom);
+        var tileBounds = new google.maps.LatLngBounds(
+                proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
+          proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
+            );
+            if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
+          return loc+"tiles/"+data.tiles[idx]+"/" +
+          + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
+
+      },
+      tileSize: new google.maps.Size(256, 256),
+      isPng: true,
+      opacity: .8
+
+      });
+
+    visible_overlays.push(x);
+      map.overlayMapTypes.insertAt(gmaps_stack_position, x);
+      return visible_overlays;
+}
 
 </script>

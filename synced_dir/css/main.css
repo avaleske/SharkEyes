@@ -14,16 +14,16 @@ body {
 
 
 h2 {
-    margin-left:5px;
-    margin-top:10px;
+    margin-left:15px;
+    margin-top:13px;
     font-size: 18pt;
     color: #222;
     font-weight: bold;
 }
 
 .sidebar {
-  box-shadow: 0 0 7px rgba(0, 0, 0, 0.5);
-  background-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 7px rgba(0, 0, 0, 0.9);
+  background-color: #fafafa;
   width: 280px;
   height: 100%;
   position: absolute;
@@ -39,7 +39,6 @@ h2 {
  padding-top:60px;
 
 }
-
 
 .coords{
     color: #000;
@@ -194,71 +193,13 @@ button.btn {
   outline: none;
   z-index: 3; }
 
-#sidebar-right-btn {
-  right: 3px;
-  top: 3px; }
-
 #sidebar-left-btn {
   left: 15px;
-  top: 15px; }
-
-#advanced {
-  float: right;
-  margin-right: 5px;
-  margin-top: 5px; }
-
-#name {
-  margin-top: 60px; }
-
-#login {
-  margin-right: 10px; }
-
-/* note:
-these arrow-buttons are a hack and hard-coded. if you change the height or text-size they'll need to be fixed */
-button.arrow-left {
-  border-left: 0px;
-  margin-left: 22px;
-  border-radius: 0px 6px 6px 0px;
-  padding-left: 8px; }
-
-button.arrow-right {
-  border-right: 0px;
-  margin-right: 28px;
-  border-radius: 6px 0px 0px 6px;
-  padding-right: 8px; }
-
-button.arrow-left:after,
-button.arrow-right:after {
-  content: "";
-  width: 29.5px;
-  height: 29.5px;
-  background-color: inherit;
-  -moz-transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
-  display: block;
-  position: absolute;
-  border: 4px solid #bbddff;
-  border-radius: 7px;
-  z-index: -1; }
-
-button.arrow-left:after {
-  top: 1.5px;
-  left: -17px;
-  border-top: 0px;
-  border-right: 0px; }
-
-button.arrow-right:after {
-  top: 1.5px;
-  right: -17px;
-  border-bottom: 0px;
-  border-left: 0px; }
+  top: 15px;
+  z-index: 20;
+}
 
 button.btn:hover {
-  border-color: #a2d0ff;
-  background-color: #c6e0ff;
-  color: #111111; }
-
-button.arrow-left:hover:after, button.arrow-right:hover:after {
   border-color: #a2d0ff;
   background-color: #c6e0ff;
   color: #111111; }
