@@ -3,12 +3,16 @@ from django.test import TestCase
 # Create your tests here.
 from pl_plot.plotter import Plotter
 from pl_plot import plot_functions
+from pl_plot.models import OverlayManager
 FILE_NAME = "ocean_his_3322_04-Feb-2014.nc"
 
 
 class PlotterTestCase(TestCase):
     def setUp(self):
         None
+
+    def test_make_plot(self, oid=1, time_index=0, datafile=None):
+        return OverlayManager.make_plot(oid, time_index, datafile)
 
     def test_plotter_can_plot(self):
         plotter = Plotter(  FILE_NAME)

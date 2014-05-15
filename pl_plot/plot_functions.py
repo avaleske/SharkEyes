@@ -1,4 +1,3 @@
-__author__ = 'avaleske'
 import numpy
 from matplotlib import pyplot
 import math
@@ -11,30 +10,29 @@ NUM_COLOR_LEVELS = 20
 
 
 def sst_function(ax, data_file, bmap, key_ax, time_index):
+    def celius_to_fahrenheit(temp):
+        if temp > 100:
+            return numpy.nan
+        else:
+            return temp * 1.8 + 32
+    vectorized_conversion = numpy.vectorize(celius_to_fahrenheit)
+
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
-    surface_temp = data_file.variables['temp'][time_index][29]
+    rho_mask = data_file.variables['mask_rho'][:]
+    surface_temp = vectorized_conversion(data_file.variables['temp'][time_index][29])
+    #surface_temp[rho_mask == 0] = numpy.nan # mask out of range values
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
-    min_temp = numpy.amin(surface_temp)
+    min_temp = numpy.nanmin(surface_temp)
+    max_temp = numpy.nanmax(surface_temp)
+    print(min_temp, max_temp)
 
-    # umm... there is junk data at large value ranges, so numpy.amax
-    # finds these junk values - here's a quick fix
-    max_temp = -100
-    for i in xrange(surface_temp.shape[0]):
-        for j in xrange(surface_temp.shape[1]):
-            if max_temp < surface_temp[i][j] < 100:
-                max_temp = surface_temp[i][j]
-
-    # convert temperature data into format for our map
-    # get lat/longs of ny by nx evenly space grid.
-    # then compute map proj coordinates.
-    #longs, lats = bmap.makegrid(surface_temp.shape[1], surface_temp.shape[0])
     x, y = bmap(longs, lats)
 
     # calculate and plot colored contours for TEMPERATURE data
-    # is there an integer division issue we need to think about here?
+
     high_temp_range = math.ceil(max_temp)
     low_temp_range = math.floor(min_temp)
     contour_range_inc = (high_temp_range - low_temp_range) / NUM_COLOR_LEVELS
@@ -43,19 +41,32 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
         color_levels.append(low_temp_range + i * contour_range_inc)
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax)
+    overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax, extend='both')
 
     # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
     cbar.ax.tick_params(labelsize=10)
     cbar.ax.xaxis.label.set_color('white')
     cbar.ax.xaxis.set_tick_params(labelcolor='white')
-    cbar.set_label('Celsius')
+
+    labels = [item.get_text() for item in cbar.ax.xaxis.get_majorticklabels()]
+    if '.' in labels[0]:
+        endlabel = str(math.ceil(max_temp))
+    else:
+        endlabel = str(int(math.ceil(max_temp)))
+    labels = numpy.append(labels, [endlabel])
+    locs = cbar.ax.xaxis.get_majorticklocs()
+    locs = numpy.append(locs, [1.0])
+    cbar.ax.xaxis.set_ticks(locs)
+    cbar.ax.xaxis.set_ticklabels(labels)
+
+    cbar.set_label("Fahrenheit")
 
 
 def salt_function(ax, data_file, bmap, key_ax, time_index):
-    salt = data_file.variables["salt"][:]
+    salt = data_file.variables['salt'][:]
     salt_layer = salt[time_index][29]
+
     min_salt = numpy.amin(salt_layer)
     max_salt = -100
     for i in xrange(250):
@@ -76,14 +87,12 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.contourf(x, y, salt_layer, color_levs, ax=ax, bbox_inches='tight', pad_inches=0)
 
-
-
-     # add colorbar.
+    # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
     cbar.ax.tick_params(labelsize=10)
     cbar.ax.xaxis.label.set_color('white')
     cbar.ax.xaxis.set_tick_params(labelcolor='white')
-    cbar.set_label('Salinity (PSU)')
+    cbar.set_label("Salinity (PSU)")
 
 
 def currents_function(ax, data_file, bmap, key_ax, time_index):
