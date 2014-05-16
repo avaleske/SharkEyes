@@ -110,7 +110,7 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
 
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
-    rho_mask = numpy.array(data_file.variables['mask_rho'][:])
+    rho_mask = get_rho_mask(data_file)
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
@@ -123,15 +123,15 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     # zoom
     u_zoomed = crop_and_downsample(currents_u_adjusted, downsample_ratio)
     v_zoomed = crop_and_downsample(currents_v_adjusted, downsample_ratio)
-    rho_mask[rho_mask == 0] = numpy.nan
+    rho_mask[rho_mask == 1] = numpy.nan
     rho_mask_zoomed = crop_and_downsample(rho_mask, downsample_ratio)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
     longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
     lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
 
-    u_zoomed[rho_mask_zoomed == 0] = numpy.nan
-    v_zoomed[rho_mask_zoomed == 0] = numpy.nan
+    u_zoomed[rho_mask_zoomed == 1] = numpy.nan
+    v_zoomed[rho_mask_zoomed == 1] = numpy.nan
 
     x, y = bmap(longs_zoomed, lats_zoomed)
 
