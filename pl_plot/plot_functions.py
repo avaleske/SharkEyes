@@ -137,7 +137,8 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
     ys, xs = source_array.shape
     cropped_array = source_array[:ys - (ys % int(downsample_ratio)), :xs - (xs % int(downsample_ratio))]
     if average:
-        zoomed_array = scipy.nanmean(numpy.concatenate([[cropped_array[i::downsample_ratio, j::downsample_ratio]
+        zoomed_array = scipy.nanmean(numpy.concatenate(
+            [[cropped_array[i::downsample_ratio, j::downsample_ratio]
                                                      for i in range(downsample_ratio)]
                                                     for j in range(downsample_ratio)]), axis=0)
     else:
@@ -148,10 +149,9 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
 def get_modified_jet_colormap():
     modified_jet_cmap_dict = {
         'red': ((0., .15, .15),
-                (0.05, .2, .2),
-                (0.13, .3, .3),
-                (0.15, .2, .2),
-                (0.27, 0, 0),
+                (0.05, .15, .15),
+                (0.11, .1, .1),
+                (0.2, 0, 0),
                 (0.4, .3, .3),
                 (0.5, .9, .9),
                 (0.66, 1, 1),
@@ -167,9 +167,8 @@ def get_modified_jet_colormap():
                    (0.91, 0, 0),
                    (1, 0, 0)),
         'blue': ((0., 0.5, 0.5),
-                  (0.05, 0.8, 0.8),
-                  (0.07, 0.9, 0.9),
-                  (0.11, 1, 1),
+                  (0.05, 0.5, 0.5),
+                  (0.11, .7, .7),
                   (0.34, 1, 1),
                   (0.5, .9, .9),
                   (0.75, 0, 0),
