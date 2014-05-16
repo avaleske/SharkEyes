@@ -9,6 +9,13 @@ import scipy
 NUM_COLOR_LEVELS = 21
 
 
+def get_rho_mask(data_file):
+    rho_mask = numpy.logical_not(data_file.variables['mask_rho'][:])
+    rho_mask[207:221, 133:135] = 1
+    rho_mask[201:202, 133:135] = 1
+    return rho_mask
+
+
 def sst_function(ax, data_file, bmap, key_ax, time_index):
     def celsius_to_fahrenheit(temp):
         return temp * 1.8 + 32
@@ -16,14 +23,12 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
 
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
-    rho_mask = numpy.logical_not(data_file.variables['mask_rho'][:])
-    rho_mask[207:221, 133:135] = 1
-    rho_mask[201:202, 133:135] = 1
-    surface_temp = numpy.ma.array(vectorized_conversion(data_file.variables['temp'][time_index][29]), mask=rho_mask)
+    surface_temp = numpy.ma.array(vectorized_conversion(data_file.variables['temp'][time_index][29]), mask=get_rho_mask(data_file))
         
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
+    #get the max and min temps for the day
     all_day = data_file.variables['temp'][:, 29, :, :]
     min_temp = int(math.floor(celsius_to_fahrenheit(numpy.amin(all_day))))
     max_temp = int(math.floor(celsius_to_fahrenheit(numpy.amax(numpy.ma.masked_greater(all_day, 1000)))))
@@ -143,9 +148,9 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
 def get_modified_jet_colormap():
     modified_jet_cmap_dict = {
         'red': ((0., .15, .15),
-                (0.05, .17, .17),
-                (0.13, .25, .25),
-                (0.15, .13, .13),
+                (0.05, .2, .2),
+                (0.13, .3, .3),
+                (0.15, .2, .2),
                 (0.27, 0, 0),
                 (0.4, .3, .3),
                 (0.5, .9, .9),
@@ -162,7 +167,8 @@ def get_modified_jet_colormap():
                    (0.91, 0, 0),
                    (1, 0, 0)),
         'blue': ((0., 0.5, 0.5),
-                  (0.05, 0.7, 0.7),
+                  (0.05, 0.8, 0.8),
+                  (0.07, 0.9, 0.9),
                   (0.11, 1, 1),
                   (0.34, 1, 1),
                   (0.5, .9, .9),
