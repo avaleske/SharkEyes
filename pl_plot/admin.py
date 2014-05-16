@@ -3,5 +3,10 @@ from pl_plot.models import OverlayDefinition
 
 
 class AuthorAdmin(admin.ModelAdmin):
-    fields = ('type', 'display_name_long', 'display_name_short', 'function_name', 'is_base')
+    readonly_fields = ('type', 'display_name_long', 'function_name')
+    fields = ('is_base', 'display_name_short')
+
+    list_display = ('display_name_long', 'function_name', 'type', 'is_base')
+    list_per_page = 20
+
 admin.site.register(OverlayDefinition, AuthorAdmin)
