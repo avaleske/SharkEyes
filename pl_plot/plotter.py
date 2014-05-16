@@ -58,13 +58,13 @@ class Plotter:
 
         fig.savefig(
             os.path.join(settings.MEDIA_ROOT, settings.UNCHOPPED_STORAGE_DIR, plot_filename),
-            dpi=800, bbox_inches='tight', pad_inches=0,
+            dpi=1200, bbox_inches='tight', pad_inches=0,
             transparent=True, frameon=False)
         pyplot.close(fig)
 
         key_fig.savefig(
             os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
-            dpi=800, bbox_inches='tight', pad_inches=0,
+            dpi=500, bbox_inches='tight', pad_inches=0,
             transparent=True)
         pyplot.close(key_fig)
 
