@@ -42,7 +42,6 @@ class OverlayManager(models.Manager):
             .annotate(newest_id=Max('id'))
         that_are_not_tiled = and_the_newest_for_each.filter(is_tiled=False)
         ids_of_these = that_are_not_tiled.values_list('newest_id', flat=True)
-        print(ids_of_these)
         return ids_of_these
 
     @classmethod
