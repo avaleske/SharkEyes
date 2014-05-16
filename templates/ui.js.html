@@ -71,6 +71,15 @@ function initialize() {
           RealtimeLL(event);
       });
 
+    //a hack to make sure the scale is in miles...
+    var scaleInterval = setInterval(function() {
+  var scale = $(".gm-style-cc:not(.gmnoprint):contains(' km')");
+  if (scale.length) {
+    scale.click();
+    clearInterval(scaleInterval);
+  }
+}, 100);
+
  }
 //end initialize
 
@@ -209,6 +218,7 @@ $(".overlay-toggle").click(function(e) {
           visible_overlays_idx += 1;
           $("#key-img").attr("src",loc+data.keys[idx]);
           $("#key-img").show();
+          $("#key").show();
 
     } else{ //turn overlay off
 
@@ -231,6 +241,7 @@ $(".overlay-toggle").click(function(e) {
             visible_overlays_idx -= 1;
             $("#key-img").attr("src","");
             $("#key-img").hide();
+            $("#key").hide();
             map.overlayMapTypes.removeAt(0);
         }
     }
