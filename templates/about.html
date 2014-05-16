@@ -8,8 +8,16 @@
 
 <link href="{% static 'css/about.css' %}" rel="stylesheet" type="text/css"/>
 
+
+
 </head>
 <body>
+<script>
+    function goBack() {
+        window.history.back()
+    }
+</script>
+
 <div id="container">
 <h2>About</h2>
 
@@ -62,8 +70,8 @@
 </div>
     
     
-    <button id="back" class="btn">Back to SharkEyes</button>
+    <button id="back" class="btn" onclick="goBack()">Back to SharkEyes</button>
     
-    </div>
+</div>
 </body>
 </html>
