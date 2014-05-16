@@ -144,25 +144,35 @@ h2 {
     z-index: 10;
     z-index: 1;
     margin:auto;
-
+    padding:3px;
+    border: 3px solid rgba(0,0,0,0);
+    transition: all 0.2s ease;
+    -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
 }
 
-#key.transpose{
-    position:absolute;
-    bottom:10px;
-    bottom:15px;
-    left:0px;
-    right:0px;
-    z-index: 10;
-    z-index: 1;
-    margin:auto;
-    padding-left:280px;
-
+#key:hover{
+    border: 3px solid #bbddff;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color:rgba(0,0,0,.5);
 }
 
 @media screen and (max-width: 500px) {
     #key{
         width:100%;
+    }
+
+    #key.transpose{
+        position:absolute;
+        bottom:10px;
+        bottom:15px;
+        left:0px;
+        right:0px;
+        z-index: 10;
+        z-index: 1;
+        margin:auto;
+
+
     }
 }
 
@@ -172,12 +182,25 @@ and (min-width : 500px) {
     #key{
         width:500px;
     }
+
+    #key.transpose{
+        position:absolute;
+        bottom:10px;
+        bottom:15px;
+        left:280px;
+        right:0px;
+        z-index: 10;
+        z-index: 1;
+        margin:auto;
+
+    }
 }
 
 #key-img{
     display:none;
     width:100%;
     height:auto;
+    -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
 }
 
 button.btn {
@@ -191,7 +214,9 @@ button.btn {
   background-color: #e0eeff;
   color: #444444;
   outline: none;
-  z-index: 3; }
+  z-index: 3;
+  transition: all 0.1s ease;
+}
 
 #sidebar-left-btn {
   left: 15px;
@@ -202,7 +227,8 @@ button.btn {
 button.btn:hover {
   border-color: #a2d0ff;
   background-color: #c6e0ff;
-  color: #111111; }
+  color: #111111;
+}
 
 .right {
   right: 0px;

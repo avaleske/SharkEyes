@@ -1,5 +1,5 @@
 import numpy
-from matplotlib import pyplot
+from matplotlib import pyplot, colors
 import math
 from scipy import ndimage
 import scipy
@@ -11,37 +11,67 @@ NUM_COLOR_LEVELS = 20
 
 def sst_function(ax, data_file, bmap, key_ax, time_index):
     def celius_to_fahrenheit(temp):
-        if temp > 100:
-            return numpy.nan
-        else:
-            return temp * 1.8 + 32
+        return temp * 1.8 + 32
     vectorized_conversion = numpy.vectorize(celius_to_fahrenheit)
 
     # temperature has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
     rho_mask = data_file.variables['mask_rho'][:]
     surface_temp = vectorized_conversion(data_file.variables['temp'][time_index][29])
-    #surface_temp[rho_mask == 0] = numpy.nan # mask out of range values
+    surface_temp = numpy.ma.masked_greater(surface_temp, 1000)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
-    min_temp = numpy.nanmin(surface_temp)
-    max_temp = numpy.nanmax(surface_temp)
+    all_day = data_file.variables['temp'][:, 29, :, :]
+
+    min_temp = int(math.floor(celius_to_fahrenheit(numpy.amin(all_day))))
+    max_temp = int(math.floor(celius_to_fahrenheit(numpy.amax(numpy.ma.masked_greater(all_day,100)))))
     print(min_temp, max_temp)
+
+
+    one_min_temp = int(math.floor(numpy.amin(surface_temp)))
+    one_max_temp = int(math.floor(numpy.amax(numpy.ma.masked_greater(surface_temp,100))))
+    print(one_min_temp, one_max_temp)
 
     x, y = bmap(longs, lats)
 
     # calculate and plot colored contours for TEMPERATURE data
 
-    high_temp_range = math.ceil(max_temp)
-    low_temp_range = math.floor(min_temp)
-    contour_range_inc = (high_temp_range - low_temp_range) / NUM_COLOR_LEVELS
+    contour_range_inc = ((max_temp-1) - (min_temp + 1))/20
     color_levels = []
-    for i in xrange(NUM_COLOR_LEVELS+1):
-        color_levels.append(low_temp_range + i * contour_range_inc)
+    for i in xrange(max_temp-min_temp-1):
+        color_levels.append(min_temp+1 + i * contour_range_inc)
+
+    cdict = {'red': ((0., .15, .15),
+                    (0.05, .1, .1),
+                    (0.11, 0, 0),
+                    (0.4, .3, .3),
+                    (0.5, .9, .9),
+                    (0.66, 1, 1),
+                    (0.89, 1, 1),
+                    (1, 0.5, 0.5)),
+         'green': ((0., 0, 0),
+                   (0.05, 0, 0),
+                   (0.11, 0, 0),
+                   (0.3, 0.4, 0.4),
+                   (0.45, 1, 1),
+                   (0.55, 1, 1),
+                   (0.80, 0.2, 0.2),
+                   (0.91, 0, 0),
+                   (1, 0, 0)),
+         'blue': ((0., 0.5, 0.5),
+                  (0.05, 0.5, 0.5),
+                  (0.11, 1, 1),
+                  (0.34, 1, 1),
+                  (0.5, .9, .9),
+                  (0.75, 0, 0),
+                  (1, 0, 0))}
+
+    my_cmap = colors.LinearSegmentedColormap('my_colormap',cdict,256)
+
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax, extend='both')
+    overlay = bmap.contourf(x, y, surface_temp, color_levels, ax=ax, extend='both', cmap=my_cmap)
 
     # add colorbar.
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
@@ -53,7 +83,7 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     if '.' in labels[0]:
         endlabel = str(math.ceil(max_temp))
     else:
-        endlabel = str(int(math.ceil(max_temp)))
+        endlabel = str(int(math.ceil(max_temp-1)))
     labels = numpy.append(labels, [endlabel])
     locs = cbar.ax.xaxis.get_majorticklocs()
     locs = numpy.append(locs, [1.0])
