@@ -81,11 +81,11 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
     # out of bounds data with their color.
     contour_range = ((max_salt - 1) - (min_salt + 1))
     contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS
-    print(contour_range_inc, contour_range, max_salt, min_salt)
+
     color_levels = []
     for i in xrange(NUM_COLOR_LEVELS+1):
         color_levels.append(min_salt+1 + i * contour_range_inc)
-    print(color_levels)
+    
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.contourf(x, y, surface_salt, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap())
 
