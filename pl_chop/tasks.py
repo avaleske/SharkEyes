@@ -24,7 +24,7 @@ def chop_overlay(overlay_id):
             str(width), str(height), image.path, vrt_path)
     os.system(translate_cmd)
 #see if we don't need gdal_translate for this to work...
-    params = ['--profile=mercator', '-z', '3-7', '-w', 'none', vrt_path, full_tile_dir]
+    params = ['--profile=mercator', '-z', '2-10', '-w', 'none', vrt_path, full_tile_dir]
     tile_generator = GDAL2Tiles(params)
     tile_generator.process()
 
