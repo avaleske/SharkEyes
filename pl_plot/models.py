@@ -102,7 +102,7 @@ class OverlayManager(models.Manager):
     @shared_task(name='pl_plot.make_plot')
     def make_plot(overlay_definition_id, time_index=0, file_id=None):
         zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # todo fix hacky hack for expo
-        zoom_levels_for_others = [None, None]
+        zoom_levels_for_others = [(None, None)]
 
         if file_id is None:
             datafile = DataFile.objects.latest('model_date')
