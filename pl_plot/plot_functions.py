@@ -16,7 +16,7 @@ def get_rho_mask(data_file):
     return rho_mask
 
 
-def sst_function(ax, data_file, bmap, key_ax, time_index):
+def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
     def celsius_to_fahrenheit(temp):
         return temp * 1.8 + 32
     vectorized_conversion = numpy.vectorize(celsius_to_fahrenheit)
@@ -61,7 +61,7 @@ def sst_function(ax, data_file, bmap, key_ax, time_index):
     cbar.set_label("Fahrenheit")
 
 
-def salt_function(ax, data_file, bmap, key_ax, time_index):
+def salt_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
      # salt has dimensions ('ocean_time', 's_rho', 'eta_rho', 'xi_rho')
     # s_rho corresponds to layers, of which there are 30, so we take the top one.
     surface_salt = numpy.ma.array(data_file.variables['salt'][time_index][29], mask=get_rho_mask(data_file))
@@ -85,7 +85,7 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
     color_levels = []
     for i in xrange(NUM_COLOR_LEVELS+1):
         color_levels.append(min_salt+1 + i * contour_range_inc)
-    
+
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.contourf(x, y, surface_salt, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap())
 
@@ -103,7 +103,7 @@ def salt_function(ax, data_file, bmap, key_ax, time_index):
     cbar.set_label("Salinity (PSU)")
 
 
-def currents_function(ax, data_file, bmap, key_ax, time_index):
+def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
     def compute_average(array):
         avg = numpy.average(array)
         return numpy.nan if avg > 10**3 else avg
@@ -114,20 +114,21 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     right_column = currents_u[:, -1:]
-    currents_u_adjusted = ndimage.generic_filter(scipy.hstack((currents_u, right_column)), compute_average, footprint=[[1], [1]], mode='reflect')
+    currents_u_adjusted = ndimage.generic_filter(scipy.hstack((currents_u, right_column)),
+                                                 compute_average, footprint=[[1], [1]], mode='reflect')
     bottom_row = currents_v[-1:, :]
-    currents_v_adjusted = ndimage.generic_filter(scipy.vstack((currents_v, bottom_row)), compute_average, footprint=[[1], [1]], mode='reflect')
+    currents_v_adjusted = ndimage.generic_filter(scipy.vstack((currents_v, bottom_row)),
+                                                 compute_average, footprint=[[1], [1]], mode='reflect')
 
     # zoom
-    zoom_level = 4
-    u_zoomed = crop_and_downsample(currents_u_adjusted, zoom_level)
-    v_zoomed = crop_and_downsample(currents_v_adjusted, zoom_level)
+    u_zoomed = crop_and_downsample(currents_u_adjusted, downsample_ratio)
+    v_zoomed = crop_and_downsample(currents_v_adjusted, downsample_ratio)
     rho_mask[rho_mask == 0] = numpy.nan
-    rho_mask_zoomed = crop_and_downsample(rho_mask, zoom_level)
+    rho_mask_zoomed = crop_and_downsample(rho_mask, downsample_ratio)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
-    longs_zoomed = crop_and_downsample(longs, zoom_level, False)
-    lats_zoomed = crop_and_downsample(lats, zoom_level, False)
+    longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
+    lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
 
     u_zoomed[rho_mask_zoomed == 0] = numpy.nan
     v_zoomed[rho_mask_zoomed == 0] = numpy.nan
@@ -137,9 +138,12 @@ def currents_function(ax, data_file, bmap, key_ax, time_index):
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
 
-    quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white', color='white', labelsep=.5, coordinates='axes')
-    quiverkey1 = key_ax.quiverkey(overlay, 3.75, .4, 1*.5144, "1 knot", labelpos='S', labelcolor='white', color='white', labelsep=.5, coordinates='axes')
-    quiverkey2 = key_ax.quiverkey(overlay, 6.5, .4, 2*.5144, "2 knots", labelpos='S', labelcolor='white', color='white', labelsep=.5, coordinates='axes')
+    quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white',
+                                 color='white', labelsep=.5, coordinates='axes')
+    quiverkey1 = key_ax.quiverkey(overlay, 3.75, .4, 1*.5144, "1 knot", labelpos='S', labelcolor='white',
+                                  color='white', labelsep=.5, coordinates='axes')
+    quiverkey2 = key_ax.quiverkey(overlay, 6.5, .4, 2*.5144, "2 knots", labelpos='S', labelcolor='white',
+                                  color='white', labelsep=.5, coordinates='axes')
     key_ax.set_axis_off()
 
 

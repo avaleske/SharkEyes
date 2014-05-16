@@ -11,6 +11,7 @@ from pl_plot import plot_functions
 from pl_plot.plotter import Plotter
 from pl_download.models import DataFile, DataFileManager
 from django.db.models.aggregates import Max
+from uuid import uuid4
 
 
 class OverlayManager(models.Manager):
@@ -18,12 +19,13 @@ class OverlayManager(models.Manager):
     def get_all_base_definition_ids():
         return OverlayDefinition.objects.values_list('id', flat=True).filter(is_base=True)
 
+    # todo this will fail for multiple zoom levels
     @staticmethod
     def get_newest_untiled_overlay_ids():
         # assuming newer overlays have higher primary keys. Seems reasonable.
         overlay_definitions = OverlayDefinition.objects.annotate(newest_overlay_id=Max('overlay__id'))
         newest_overlays = Overlay.objects.filter(id__in=[od.newest_overlay_id for od in overlay_definitions])
-        return newest_overlays.filter(tile_dir__isnull=True).values_list('id', flat=True)
+        return newest_overlays.filter(is_tiled=False).values_list('id', flat=True)
 
     @classmethod
     def get_next_few_days_of_untiled_overlay_ids(cls):
@@ -36,9 +38,11 @@ class OverlayManager(models.Manager):
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
-        that_are_not_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=True)
-        and_the_newest_for_each = that_are_not_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
-        ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
+        and_the_newest_for_each = next_few_days_of_overlays.values('definition', 'applies_at_datetime', 'zoom_levels')\
+            .annotate(newest_id=Max('id'))
+        that_are_not_tiled = and_the_newest_for_each.filter(is_tiled=False)
+        ids_of_these = that_are_not_tiled.values_list('newest_id', flat=True)
+        print(ids_of_these)
         return ids_of_these
 
     @classmethod
@@ -48,12 +52,15 @@ class OverlayManager(models.Manager):
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
 
+        # should be okay that it doesn't know about zoom levels, since they should have the same tile_directory
+
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
-        that_are_tiled = next_few_days_of_overlays.filter(tile_dir__isnull=False)
-        and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime').annotate(newest_id=Max('id'))
+        that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
+        and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
+            .annotate(newest_id=Max('id'))
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
         # (Yay lazy evaluation...)
 
@@ -71,7 +78,7 @@ class OverlayManager(models.Manager):
     def make_all_base_plots_in_file(cls, file_id):
         datafile = DataFile.objects.get(pk=file_id)
         plotter = Plotter(datafile.file.name)
-        number_of_times = plotter.get_number_of_model_times() # yeah, loading the plotter just for this isn't ideal...
+        number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
         group_results_list = []
         for t in xrange(number_of_times):
             group_result = cls.make_all_base_plots(time_index=t, file_id=file_id)
@@ -94,23 +101,41 @@ class OverlayManager(models.Manager):
     @staticmethod
     @shared_task(name='pl_plot.make_plot')
     def make_plot(overlay_definition_id, time_index=0, file_id=None):
+        zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # todo fix hacky hack for expo
+        zoom_levels_for_others = [None, None]
+
         if file_id is None:
             datafile = DataFile.objects.latest('model_date')
         else:
             datafile = DataFile.objects.get(pk=file_id)
         plotter = Plotter(datafile.file.name)
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-        plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name), time_index)
 
-        overlay = Overlay(
-            file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
-            key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
-            created_datetime=timezone.now(),
-            definition_id=overlay_definition_id,
-            applies_at_datetime=plotter.get_time_at_oceantime_index(time_index)
-        )
-        overlay.save()
-        return overlay.id
+        if overlay_definition_id == 3:
+            zoom_levels = zoom_levels_for_currents
+        else:
+            zoom_levels = zoom_levels_for_others
+
+        # todo fix hacky hack for expo
+        tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
+        overlay_ids = []
+        for zoom_level in zoom_levels:
+            plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+                                                            time_index=time_index, downsample_ratio=zoom_level[1])
+
+            overlay = Overlay(
+                file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+                key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+                created_datetime=timezone.now(),
+                definition_id=overlay_definition_id,
+                applies_at_datetime=plotter.get_time_at_oceantime_index(time_index),
+                zoom_levels=zoom_level[0],
+                tile_dir=tile_dir,
+                is_tiled=False
+            )
+            overlay.save()
+            overlay_ids.append(overlay.id)
+        return overlay_ids
 
 
 class OverlayDefinition(models.Model):
@@ -140,3 +165,5 @@ class Overlay(models.Model):
     tile_dir = models.CharField(max_length=240, null=True)
     key = models.ImageField(upload_to=settings.KEY_STORAGE_DIR, null=True)
     applies_at_datetime = models.DateTimeField(null=False)
+    zoom_levels = models.CharField(max_length=50, null=True)
+    is_tiled = models.BooleanField(default=False)

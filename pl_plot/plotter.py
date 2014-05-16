@@ -34,7 +34,8 @@ class Plotter:
     def get_number_of_model_times(self):
         return numpy.shape(self.data_file.variables['ocean_time'])[0]
 
-    def make_plot(self, plot_function, time_index=0):
+    def make_plot(self, plot_function, time_index=0, downsample_ratio=None): #todo hack for expo
+
         fig = pyplot.figure()
         key_fig = pyplot.figure()
         ax = fig.add_subplot(111)  # one subplot in the figure
@@ -51,7 +52,8 @@ class Plotter:
                        llcrnrlon=longs[0], urcrnrlon=longs[-1],
                        ax=ax, epsg=4326)
 
-        plot_function(ax=ax, data_file=self.data_file, time_index=time_index, bmap=bmap, key_ax=key_ax)
+        plot_function(ax=ax, data_file=self.data_file, time_index=time_index, bmap=bmap, key_ax=key_ax,
+                      downsample_ratio=downsample_ratio) #todo this param is a hack for expo
 
         plot_filename = "{0}_{1}.png".format(plot_function.__name__, uuid4())
         key_filename = "{0}_key_{1}.png".format(plot_function.__name__, uuid4())
