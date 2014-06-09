@@ -48,6 +48,8 @@ If you change a task, you have to restart celery or it won't see it. This was re
 
 Also, you can run `sqlite3 db.sqlite3` to get a sql promp and see the database. `.tables` gets you a list of tables, `.headers on` turns on headers for the output when you run a query, and `.mode column` columnates the output so it's actually usable.
 
+###Git Organization
+We have structured the project Git repository so that any major feature development is done in a specific `feature` branch, and the `feature` branches are merged into the `develop` branch when they're complete. Then, when a set of features is ready for release and `develop` is in a stable state, `develop` is merged into `master`, and `master` is what is checked out in production. This ensures that `master` is always the same as what is running in production. If a hot-fix is necessary, a branch for the hot-fix is created from `master`, and then, when it is completed, it is merged into both `master` and `develop`.
 
 ###DB Schema
 I should probably also explain my thinking regarding the db schema as well.
