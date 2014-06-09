@@ -1,0 +1,343 @@
+body, html {
+    overflow: hidden;
+}
+
+
+body {
+  font: 100% "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: #444;
+  overflow: hidden;
+  /*background-color: #bdf;*/
+  margin: 0px;
+  padding: 0px; }
+
+
+h2 {
+    margin-left:15px;
+    margin-top:13px;
+    font-size: 18pt;
+    color: #222;
+    font-weight: bold;
+}
+
+.sidebar {
+  box-shadow: 0 0 7px rgba(0, 0, 0, 0.9);
+  background-color: #fafafa;
+  width: 280px;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  z-index: 2;
+  opacity: 1;
+  -webkit-transition: .2s ease-out;
+  overflow-x: hidden;
+  overflow-y: auto;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+ padding-top:60px;
+
+}
+
+.coords{
+    color: #000;
+    font-weight:300;
+
+}
+
+#date-time{
+    margin-top:5px;
+    margin-left:18px;
+}
+
+#sidebar-left {
+  left: 0px; }
+
+#sidebar-left.clicked {
+  left: -61px;
+  opacity: 0; }
+
+
+#sidebar-left.hidden {
+    display:none;
+}
+
+#sidebar-right {
+  right: 0px; }
+
+#sidebar-right.clicked {
+  right: -61px;
+  opacity: 0; }
+
+#map_canvas {
+  z-index: 1;
+  cursor: crosshair !important;
+ }
+
+#label-lat{
+   position: absolute;
+   text-align: center;
+  background-color:#fff;
+   border: 1px solid #666;
+  border-radius: 5px;
+  z-index: 4;
+  padding: 5px;
+  width:50px;
+  right:80px;
+  bottom:18px;
+  color:#222;
+}
+
+#label-lon{
+   position: absolute;
+   text-align: center;
+  background-color:#fff;
+   border: 1px solid #666;
+  border-radius: 5px;
+  z-index: 4;
+  padding: 5px;
+  width:50px;
+  bottom:18px; /* okay that -2 is a lil arbitrary... */
+  right:10px;
+  color:#222;
+}
+
+ #line-lat {
+
+   position: absolute;
+  background-color:#fff;
+   border: 1px solid #666;
+  border-radius: 2px;
+  z-index: 2;
+
+  width: 100%;
+  height: 1px;
+  bottom: 30px;
+  left: -85px; /* match label position */
+  font-size: 20px;
+  z-index: 2;
+ }
+
+  #line-lon {
+
+    position: absolute;
+  background-color:#fff;
+   border: 1px solid #666;
+  border-radius: 2px;
+  z-index: 2;
+
+  width: 1px;
+  height: 100%;
+  z-index: 1;
+  right: 25px;
+  top: -30px;
+  z-index: 2;
+ }
+
+#key{
+    position:absolute;
+    display:none;
+    bottom:10px;
+    bottom:15px;
+    left:0px;
+    right:0px;
+    z-index: 10;
+    z-index: 1;
+    margin:auto;
+    padding:3px;
+    background-color:rgba(0,0,0,.2);
+    border-radius: 6px;
+    border: 3px solid rgba(0,0,0,0);
+    transition: all 0.2s ease;
+    -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+
+#key:hover{
+    border: 3px solid #bbddff;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color:rgba(0,0,0,.5);
+}
+
+@media screen and (max-width: 500px) {
+    #key{
+        width:100%;
+    }
+
+    #key.transpose{
+        position:absolute;
+        bottom:10px;
+        bottom:15px;
+        left:0px;
+        right:0px;
+        z-index: 10;
+        z-index: 1;
+        margin:auto;
+
+
+    }
+}
+
+@media only screen
+and (min-width : 500px) {
+
+    #key{
+        width:500px;
+    }
+
+    #key.transpose{
+        position:absolute;
+        bottom:10px;
+        bottom:15px;
+        left:280px;
+        right:0px;
+        z-index: 10;
+        z-index: 1;
+        margin:auto;
+
+    }
+}
+
+#key-img{
+    display:none;
+    width:100%;
+    height:auto;
+    -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+
+button.btn {
+  line-height: 20px;
+  padding: 7px 15px 7px 15px;
+  font: 18px "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: bold;
+  border: 3px solid #bbddff;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #e0eeff;
+  color: #444444;
+  outline: none;
+  z-index: 3;
+  transition: all 0.1s ease;
+}
+
+#sidebar-left-btn {
+  left: 15px;
+  top: 15px;
+  z-index: 20;
+}
+
+button.btn:hover {
+  border-color: #a2d0ff;
+  background-color: #c6e0ff;
+  color: #111111;
+}
+
+.right {
+  right: 0px;
+  position: absolute; }
+
+.left {
+  left: 0px;
+  position: absolute; }
+
+input.effect, input.effect:focus {
+  width: 213px;
+  padding: 1em 1em .7em 1em;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 3px;
+  font-size: 1.4em;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  background-color: #fafafa; }
+
+table {
+  margin-top: 5px;
+  padding-left: 5px;
+  width: 280px;
+  font: 100% "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: bold;
+  color: #444; }
+
+table tr {
+  height: 36px; }
+
+table tr.disabled {
+    color: #888;
+}
+
+table tr.option:hover {
+  background-color: #fff;
+  cursor: pointer;
+  color: #000; }
+
+table td.col-two {
+  text-align: left;
+  padding-right: 20px; }
+
+table td.col-one {
+  text-align: left;
+  padding-left: 15px; }
+
+.lbl {
+  display: inline-block;
+  float: left; }
+
+label.radio_label {
+  position: relative;
+  left: -21px;
+  top: 0px;
+  width: 115px;
+  padding-left: 24px;
+  padding-right: 10px;
+  display: inline-block;
+  height: 30px;
+  font-size: 13px;
+  line-height: 31px;
+  cursor: pointer;
+  margin-bottom: -1px;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; }
+
+.radio_option {
+  display: inline-block;
+  position: relative;
+  margin-right: -23px;
+  top: 2px;
+  left: 12px;
+  float: left; }
+
+span.radio_option:hover label.radio_label {
+  background: #bdf;
+  color: #000;
+  border-radius: 5px; }
+
+input[type=checkbox] {
+  position: relative;
+  left: 4px;
+  cursor: pointer;
+  z-index: 3; }
+
+.radio_label {
+  font-size: 13px !important; }
+
+.noselect {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: -moz-none; }
+
+a.about {
+    text-align: left;
+    text-decoration: none;
+    font: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: bold;
+    color: #444444;
+}
+
+.about_h1 {
+    font: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: bold;
+    color: #444444;
+    font-size: 16px;
+}

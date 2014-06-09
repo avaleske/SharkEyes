@@ -21,6 +21,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # accessing "localhost:8080" will access port 80 on the guest machine.
   config.vm.network :forwarded_port, guest: 80, host: 8080
   config.vm.network :forwarded_port, guest: 8000, host: 8001
+  config.vm.network :forwarded_port, guest: 5555, host: 5551
 
 
   # Create a private network, which allows host-only access to the machine
@@ -41,44 +42,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
-
-  # Provider-specific configuration so you can fine-tune various
-  # backing providers for Vagrant. These expose provider-specific options.
-  # Example for VirtualBox:
-  #
-  # config.vm.provider :virtualbox do |vb|
-  #   # Don't boot with headless mode
-  #   vb.gui = true
-  #
-  #   # Use VBoxManage to customize the VM. For example to change memory:
-  #   vb.customize ["modifyvm", :id, "--memory", "1024"]
-  # end
-  #
-  # View the documentation for the provider you're using for more
-  # information on available options.
-
-  # Enable provisioning with Puppet stand alone.  Puppet manifests
-  # are contained in a directory path relative to this Vagrantfile.
-  # You will need to create the manifests directory and a manifest in
-  # the file CentOS6_4.pp in the manifests_path directory.
-  #
-  # An example Puppet manifest to provision the message of the day:
-  #
-  # # group { "puppet":
-  # #   ensure => "present",
-  # # }
-  # #
-  # # File { owner => 0, group => 0, mode => 0644 }
-  # #
-  # # file { '/etc/motd':
-  # #   content => "Welcome to your Vagrant-built virtual machine!
-  # #               Managed by Puppet.\n"
-  # # }
-  #
-  # config.vm.provision :puppet do |puppet|
-  #   puppet.manifests_path = "manifests"
-  #   puppet.manifest_file  = "site.pp"
-  # end
+  config.vm.synced_folder "synced_dir", "/home/vagrant/media_root"
 
   # Enable provisioning with chef solo, specifying a cookbooks path, roles
   # path, and data_bags path (all relative to this Vagrantfile), and adding
@@ -86,19 +50,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision :chef_solo do |chef|
 
-      chef.json = {
-              postgresql: {
-                            password: {
-                              postgres: 'yourpassword'
-                            },
-                            pg_hba: [
-                              {type: 'local', db: 'all', user: 'all', addr: nil, method: 'trust'},
-                              {type: 'host', db: 'all', user: 'all', addr: '127.0.0.1/32', method: 'trust'},
-                              {type: 'host', db: 'all', user: 'all', addr: '::1/128', method: 'trust'}
-                            ]
-                          },
-                  }
-    chef.cookbooks_path = "./chef-recipes/cookbooks"
+    chef.json = {
+        :python => {
+            :install_method => 'source',
+            :version => '2.7.3',
+            :checksum => 'c57477edd6d18bd9eeca2f21add73919'
+        }
+    }
+    chef.cookbooks_path = "./chef-recipes"
     chef.add_recipe "apt"
     chef.add_recipe "apache2"
     chef.add_recipe "apache2::mod_wsgi"
@@ -106,10 +65,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     chef.add_recipe "git"
     chef.add_recipe "vim"
     chef.add_recipe "openssl"
-    chef.add_recipe "postgresql"
-    chef.add_recipe "postgresql::server"
-    #chef.add_recipe "yum"
+    chef.add_recipe "yum"
     chef.add_recipe "python"
+    chef.add_recipe "iptables::disabled"
+    chef.add_recipe "source_package"
+    #chef.add_recipe "scipy"
+    chef.add_recipe "sharkeyes"
   end
 
 
@@ -117,7 +78,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # config.vm.provision :chef_solo do |chef|
   #   chef.cookbooks_path = "../my-recipes/cookbooks"
   #   chef.roles_path = "../my-recipes/roles"
-  #   chef.data_bags_path = "../my-recipes/data_bags"
   #   chef.add_recipe "mysql"
   #   chef.add_role "web"
   #

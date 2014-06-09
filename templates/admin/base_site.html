@@ -1,0 +1,16 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {% trans 'Project Sharkeyes' %}{% endblock %}
+
+{% block branding %}
+<h1 id="Project SharkEyes">Project SharkEyes Administration Console</h1>
+{% endblock %}
+
+{% block messages %}
+    {{ block.super }}
+    <a href="/"> User Interface </a> |
+    <a href="/pl_download/testfetch"> Test Fetch </a> |
+    <a href="/pl_chop/testchop"> Test Chop </a> |
+    <a href="/pl_plot/testplot"> Test Plot </a>
+{% endblock %}

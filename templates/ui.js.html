@@ -1,0 +1,301 @@
+{% load staticfiles %}
+
+<script>
+
+// init js data (from DB)
+var data = {'keys':[], 'tiles':[], 'defs':[], 'types':[]};
+{% for item in overlays %}
+data.keys.push("{{item.key}}");
+data.tiles.push("{{item.tile_dir}}");
+data.types.push("{{item.definition.type}}");
+{% endfor %}
+{% for item in defs %}
+data.defs.push("{{item.function_name}}");
+{% endfor %}
+var loc = "{% static ''%}";
+
+// global variables
+var map;
+var mapBounds = new google.maps.LatLngBounds(
+  new google.maps.LatLng(40.5840806224, -129.0),
+  new google.maps.LatLng(47.499, -123.726199391));
+var mapMinZoom = 4;
+var mapMaxZoom = 10;
+var layers = [];
+var place_holder;
+
+var time_idx = 1;
+var old_idx = 1;
+var idx = 1;
+var x;
+
+var key_selector_offset = 0;
+
+function initialize() {
+
+
+    $(function() {
+        FastClick.attach(document.body);
+    });
+
+      var mapOptions = {
+        panControl: true,
+        panControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT
+        },
+
+        zoomControl: true,
+        zoomControlOptions: {
+            style: google.maps.ZoomControlStyle.LARGE,
+            position: google.maps.ControlPosition.TOP_RIGHT
+        },
+        mapTypeControl: false,
+        scaleControl: true,
+        streetViewControl: false,
+        overviewMapControl: false,
+        draggableCursor: 'crosshair',
+        mapTypeId: google.maps.MapTypeId.HYBRID
+
+      }
+
+      map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
+      map.fitBounds(mapBounds);
+
+      grid = new Graticule(map, true); // lat long lines
+
+      // cursor lat/long coordinates updated on mousemove * mousedown
+      google.maps.event.addListener(map, 'mousemove', function(event) {
+          RealtimeLL(event);
+      });
+      google.maps.event.addListener(map, 'mousedown', function(event) {
+          RealtimeLL(event);
+      });
+
+    //a hack to make sure the scale is in miles...
+    var scaleInterval = setInterval(function() {
+  var scale = $(".gm-style-cc:not(.gmnoprint):contains(' km')");
+  if (scale.length) {
+    scale.click();
+    clearInterval(scaleInterval);
+  }
+}, 100);
+
+ }
+//end initialize
+
+
+// converts google maps lat/long event decimal coordinates to hexidecimal and
+// displays it
+function RealtimeLL(event){
+  var ret = {lat:"", long:""};
+    var temp_lat0 = event.latLng.lat();
+    var temp_long0 = event.latLng.lng();
+    lat = temp_lat0.toString();
+    long = temp_long0.toString();
+
+  //LAT
+
+  //hours
+  temp_lat = lat.split(".");
+  ret.lat += temp_lat[0];
+
+  //minutes
+  lat_remainder = ("0." + temp_lat[1]) * 60;
+  temp_lat = lat_remainder.toString().split(".");
+  ret.lat += "°" + temp_lat[0];
+
+  //seconds
+  temp_lat2 = ("0." + temp_lat[1]) * 60;
+  ret.lat += "'" + Math.round(temp_lat2) + '"';
+
+  //LONG
+
+  //hours
+  temp_long = long.split(".");
+  ret.long += temp_long[0];
+
+  //minutes
+  lat_remainder = ("0." + temp_long[1]) * 60;
+  temp_long = lat_remainder.toString().split(".");
+  ret.long += "°" + temp_long[0];
+
+  //seconds
+  temp_long2 = ("0." + temp_long[1]) * 60;
+  ret.long += "'" + Math.round(temp_long2) + '"';
+
+  $("#coords-lat").html(ret.lat);
+  $("#coords-long").html(ret.long);
+}
+
+
+// show sidebar on load -> hide after two seconds
+// if sidebar is clicked before then, don't hide it!
+var timer;
+jQuery(document).ready(function () {
+    timer = setTimeout( "ToggleSidebar()",4000 );
+});
+$('#sidebar-left').on('click', function() {
+    clearTimeout(timer);
+});
+$('#sidebar-left-btn').click(function() {
+  clearTimeout(timer);
+  ToggleSidebar();
+});
+
+function ToggleSidebar(){
+    if (! $('#sidebar-left').hasClass('clicked')){
+        $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
+            $('#sidebar-left').css("display","none");
+            next();
+        });
+    } else {
+        $('#sidebar-left').show().toggleClass('clicked');
+    };
+
+    $('#sidebar-left-btn').text(function(i, text){
+        return text === "Menu ►" ? "◄ Hide" : "Menu ►";})
+    $('#sidebar-left-btn').toggleClass('arrow-left');
+    $('#sidebar-left-btn').toggleClass('arrow-right');
+    $('#key').toggleClass('transpose');
+}
+
+/* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
+$("tr").click(function() {
+    var checkBoxes = $(this).find('.toggle-checkbox');
+    checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+});
+$(".toggle-checkbox").click(function(e) { //fixing the duplex clicked issue
+    return false;
+});
+
+//rotate through all the keys that match the current set of visible overlays
+$("#key").click(function() {
+    key_selector_offset += 1;
+    key_selector_offset = key_selector_offset%visible_keys.length;
+    $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+});
+
+//lat long line toggle
+$('#latlong-toggle .toggle-checkbox').prop("checked", true); //show on load
+$("#latlong-toggle").click(function(e) {
+    var temp = $(this).find('.toggle-checkbox');
+    if (temp.prop("checked")){
+        grid.show();
+    } else {
+        grid.hide();
+    }
+});
+
+visible_keys = [];
+visible_overlays = [];
+
+//add to our stack of overlays
+visible_overlays_idx = 0;
+
+$(".overlay-toggle").click(function(e) {
+
+    //grab toggle + visible state
+    var toggle = $(this).find('.toggle-checkbox');
+    previous_state = !(toggle.prop("checked"));
+
+    //locate corresponding overlay in 'data' by 2d indexing
+    defs_idx = data.defs.indexOf(this.id); //
+    idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
+
+    //turn overlay on
+    if (previous_state == false){
+
+        //if it's a vector.. push normally; if it isn't... always put it at the bottom
+          if (data.types[idx] == "V"){
+            visible_overlays = insert_overlay(visible_overlays, visible_overlays_idx,idx, true);
+            visible_keys.push(data.keys[idx]);
+
+        } else {
+            visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
+            visible_keys.unshift(data.keys[idx]);
+        }
+
+          visible_overlays_idx += 1;
+          $("#key-img").attr("src",loc+data.keys[idx]);
+          $("#key-img").show();
+          $("#key").show();
+
+    } else{ //turn overlay off
+
+        if (visible_keys.length > 1){
+            //which key/overlay are we removing?
+            to_remove = visible_keys.indexOf(data.keys[idx]);
+
+            visible_keys.splice(to_remove, 1);
+            visible_overlays.splice(to_remove, 1);
+            map.overlayMapTypes.removeAt(to_remove);
+
+            //the last one in the list is now shown - with current offset
+            $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+            visible_overlays_idx -= 1;
+
+        // hide key-img when empty;
+        } else{
+            visible_keys.pop();
+            visible_overlays.pop();
+            visible_overlays_idx -= 1;
+            $("#key-img").attr("src","");
+            $("#key-img").hide();
+            $("#key").hide();
+            map.overlayMapTypes.removeAt(0);
+        }
+    }
+});
+
+// update function for date-time selector
+$('#date-time').change(function(e) {
+    time_idx = $("#date-time option:selected").val();
+    time_idx = parseInt(time_idx) + 1;
+    delta_idx = (time_idx - old_idx);
+
+    max = visible_overlays.length;
+    for (var i = 0; i < max; i++){
+
+        to_change_idx = data.keys.indexOf(visible_keys[i]);
+
+        map.overlayMapTypes.removeAt(i);
+        visible_overlays.splice(i, 1);
+        visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
+
+        //replace keys...
+        visible_keys[i] = data.keys[to_change_idx+delta_idx];
+        $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+        }
+    old_idx = time_idx;
+});
+
+function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
+    var x = new google.maps.ImageMapType({
+      getTileUrl: function(coord, zoom) {
+        var proj = map.getProjection();
+        var tileSize = 256 / Math.pow(2,zoom);
+        var tileBounds = new google.maps.LatLngBounds(
+                proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
+          proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
+            );
+            if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
+          return loc+"tiles/"+data.tiles[idx]+"/" +
+          + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
+
+      },
+      tileSize: new google.maps.Size(256, 256),
+      isPng: true,
+      opacity: .8
+
+      });
+
+     if (push){
+         visible_overlays.push(x);
+    } else {
+        visible_overlays.unshift(x);
+    }
+      map.overlayMapTypes.insertAt(gmaps_stack_position, x);
+      return visible_overlays;
+}
+
+</script>

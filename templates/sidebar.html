@@ -1,0 +1,103 @@
+    <button id="sidebar-left-btn" class="btn left arrow-left">◄ Hide</button>
+
+    <div class="sidebar left" id="sidebar-left">
+
+
+
+        <h2>Forecast Date/Time</h2>
+
+        <select id ="date-time">
+          {% for item in times %}
+          <option value="{{forloop.counter0}}">{{ item }}</option>
+          {% endfor %}
+        </select>
+
+        <h2>Map Data Layers</h2>
+
+      <table>
+
+        {% for item in defs %}
+        <tr id="{{ item.function_name }}" class="option overlay-toggle">
+          <td class="col-one">{{ item.display_name_long }}</td>
+          <td class="col-two">
+            <div class="toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+
+        <!-- more overlays to come... -->
+        <tr class="disabled">
+          <td class="col-one">Wave Height</td>
+          <td class="col-two">
+            <div class="toggle toggle-disabled">
+              <input type="checkbox" class="toggle-checkbox-disabled" id="t1" disabled></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="disabled">
+          <td class="col-one">Chlorophyll</td>
+          <td class="col-two">
+            <div class="toggle toggle-disabled">
+              <input type="checkbox" class="toggle-checkbox-disabled" id="t1" disabled></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+
+        <h2>Options</h2>
+
+    <table>
+
+        <tr id="latlong-toggle" class="option">
+          <td class="col-one">Lat/Long Lines</td>
+          <td class="col-two">
+            <div class="toggle toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+    </table>
+
+        <h2>Cursor Coordinates:</h2>
+
+    <table>
+        <tr>
+            <td class="col-one">Lat:</td>
+            <td class="col-two">
+                <div id="coords-lat" class="coords"></div>
+            </td>
+        </tr>
+            <td class="col-one">Long:</td>
+            <td class="col-two">
+                <div id="coords-long" class="coords"></div>
+            </td>
+        <tr>
+    </table>
+
+    <table>
+        <tr>
+            <td class="col-one"><a class="about" href="{% url "SharkEyesCore.views.about" %}" target="_self">About</a></td>
+        </tr>
+    </table>
+
+    </div>

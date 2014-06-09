@@ -1,0 +1,37 @@
+{% load staticfiles %}
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
+
+<title>Shark Eyes</title>
+
+<link rel="icon" type="image/png" href="{% static 'static_files/imgs/icon.png' %}">
+<link href="{% static 'static_files/css/normalize.css' %}" rel="stylesheet" type="text/css"/>
+<link href="{% static 'static_files/css/main.css' %}" rel="stylesheet" type="text/css"/>
+<link href="{% static 'static_files/css/toggle.css' %}" rel="stylesheet" type="text/css"/>
+
+<script type="text/javascript" src="{% static 'static_files/js/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'static_files/js/fastclick.min.js' %}"></script>
+
+<!-- going local with js libraries...
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.0/fastclick.min.js"></script>
+-->
+
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+</head>
+<body style="margin:0px; padding:0px;" onload="initialize()">
+
+{% include "sidebar.html" %}
+
+<div id="map_canvas" style="width:100%; height:100%"></div>
+
+<div id="key" class="transpose"><img id="key-img" src=""></img></div>
+
+{% include "v3_ll_grat.js.html" %}
+{% include "ui.js.html" %}
+
+</body>
+</html>

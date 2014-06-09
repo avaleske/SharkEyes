@@ -46,6 +46,7 @@ coverage.xml
 # Django stuff:
 *.log
 *.pot
+db.sqlite3
 
 # Sphinx documentation
 docs/_build/
@@ -115,3 +116,5 @@ $RECYCLE.BIN/
 # Vagrant ----------------------------------
 .vagrant/
 
+# Celery ----------------------------------
+*celeryev.pid
