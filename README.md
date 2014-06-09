@@ -8,23 +8,23 @@ This was last updated on 6/9/2014. There is likely a more up to date version. Em
 To setup the vm
 - install pycharm, vagrant, git, virtualbox
 - clone repo to local drive
-- git submodule init
-- git submodule update
-- run vagrant up to download and configure the centos box.
-- to download box base beforehand, you can also do vagrant box add CentOS6_4_Dev http://developer.nrel.gov/downloads/vagrant-boxes/CentOS-6.4-x86_64-v20130731.box and then do vagrant up
+- `git submodule init`
+- `git submodule update`
+- run `vagrant up` to download and configure the centos box.
+- to download box base beforehand, you can also do `vagrant box add CentOS6_4_Dev http://developer.nrel.gov/downloads/vagrant-boxes/CentOS-6.4-x86_64-v20130731.box` and then do vagrant up
 
 To configure PyCharm
 - First, open the project folder in pycharm. It should recognize stuff, let it do it.
 - Then you need to setup the project interpreter to use the interpreter in your virtual machine.
 - So do pycharm settings > project interpretor > configure interpretors
 - Click add, and then remote, and then “fill from vagrant config” This might glitch and take awhile, but should work after a few tries. If it asks, your vagrant instance folder is the project folder.
-- In the Python Interpreter Path put /home/vagrant/virtualenvs/sharkeyes/bin/python
-- Then go to pycharm settings > django support. Settings is for settings.py, and the manage script is for manage.py. These are both relative to the project root.
+- In the Python Interpreter Path put `/home/vagrant/virtualenvs/sharkeyes/bin/python`
+- Then go to pycharm settings > django support. Settings is for `settings.py`, and the manage script is for `manage.py`. These are both relative to the project root.
 - Then, at the top, of the pycharm window, there’s a play button and a down arrow to the left of it. Choose that, and then edit configurations.
-- Set the host to 0.0.0.0, and the Port to 8000.
+- Set the host to `0.0.0.0`, and the Port to `8000`.
 - Check no-reload so that it doesn’t automatically reload when you change code. Or don't if you want it to do that.
 - Make sure that the python interpreter is the remote one you chose earlier.
-- This should be everything. You should be able to hit run, and get then go to localhost:8001 and get the django welcome page.
+- This should be everything. You should be able to hit run, and get then go to `localhost:8001` and project home page.
 
 
 
