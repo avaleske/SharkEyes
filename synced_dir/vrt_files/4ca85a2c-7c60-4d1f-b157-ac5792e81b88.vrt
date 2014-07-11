@@ -1,0 +1,55 @@
+<VRTDataset rasterXSize="2927" rasterYSize="3840">
+  <Metadata />
+  <Metadata domain="IMAGE_STRUCTURE">
+    <MDI key="INTERLEAVE">PIXEL</MDI>
+  </Metadata>
+  <GCPList Projection="GEOGCS[&quot;WGS 84&quot;,DATUM[&quot;WGS_1984&quot;,SPHEROID[&quot;WGS 84&quot;,6378137,298.257223563,AUTHORITY[&quot;EPSG&quot;,&quot;7030&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;6326&quot;]],PRIMEM[&quot;Greenwich&quot;,0,AUTHORITY[&quot;EPSG&quot;,&quot;8901&quot;]],UNIT[&quot;degree&quot;,0.0174532925199433,AUTHORITY[&quot;EPSG&quot;,&quot;9122&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;4326&quot;]]">
+    <GCP Id="" Pixel="0.0000" Line="0.0000" X="-1.290000000000E+02" Y="4.749900000000E+01" />
+    <GCP Id="" Pixel="2927.0000" Line="0.0000" X="-1.237260000000E+02" Y="4.749900000000E+01" />
+    <GCP Id="" Pixel="2927.0000" Line="3840.0000" X="-1.237260000000E+02" Y="4.058330000000E+01" />
+  </GCPList>
+  <VRTRasterBand dataType="Byte" band="1">
+    <Metadata />
+    <ColorInterp>Red</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">/home/vagrant/media_root/unchopped/salt_function_7ce5cf0a-370c-43d7-bc3d-a51a7ab7ed14.png</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="2927" RasterYSize="3840" DataType="Byte" BlockXSize="2927" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+      <DstRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="2">
+    <Metadata />
+    <ColorInterp>Green</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">/home/vagrant/media_root/unchopped/salt_function_7ce5cf0a-370c-43d7-bc3d-a51a7ab7ed14.png</SourceFilename>
+      <SourceBand>2</SourceBand>
+      <SourceProperties RasterXSize="2927" RasterYSize="3840" DataType="Byte" BlockXSize="2927" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+      <DstRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="3">
+    <Metadata />
+    <ColorInterp>Blue</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">/home/vagrant/media_root/unchopped/salt_function_7ce5cf0a-370c-43d7-bc3d-a51a7ab7ed14.png</SourceFilename>
+      <SourceBand>3</SourceBand>
+      <SourceProperties RasterXSize="2927" RasterYSize="3840" DataType="Byte" BlockXSize="2927" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+      <DstRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="4">
+    <Metadata />
+    <ColorInterp>Alpha</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">/home/vagrant/media_root/unchopped/salt_function_7ce5cf0a-370c-43d7-bc3d-a51a7ab7ed14.png</SourceFilename>
+      <SourceBand>4</SourceBand>
+      <SourceProperties RasterXSize="2927" RasterYSize="3840" DataType="Byte" BlockXSize="2927" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+      <DstRect xOff="0" yOff="0" xSize="2927" ySize="3840" />
+    </SimpleSource>
+  </VRTRasterBand>
+</VRTDataset>
