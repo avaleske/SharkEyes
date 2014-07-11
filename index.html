@@ -1,0 +1,902 @@
+
+
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
+
+<title>Shark Eyes</title>
+
+<link href="synced_dir/css/normalize.css" rel="stylesheet" type="text/css"/>
+<link href="synced_dir/css/main.css" rel="stylesheet" type="text/css"/>
+<link href="synced_dir/css/toggle.css" rel="stylesheet" type="text/css"/>
+
+<script type="text/javascript" src="synced_dir/js/jquery.min.js"></script>
+<script type="text/javascript" src="synced_dir/js/fastclick.min.js"></script>
+
+<!--
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.0/fastclick.min.js"></script>
+-->
+
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+</head>
+<body style="margin:0px; padding:0px;" onload="initialize()">
+
+    <button id="sidebar-left-btn" class="btn left arrow-left">< Hide</button>
+
+    <div class="sidebar left" id="sidebar-left">
+
+
+
+        <h2>Forecast Date/Time</h2>
+
+        <select id ="date-time">
+
+          <option value="0">Thursday, 05 PM</option>
+
+          <option value="1">Thursday, 09 PM</option>
+
+          <option value="2">Friday, 01 AM</option>
+
+          <option value="3">Friday, 05 AM</option>
+
+          <option value="4">Friday, 09 AM</option>
+
+          <option value="5">Friday, 01 PM</option>
+
+          <option value="6">Friday, 05 PM</option>
+
+          <option value="7">Friday, 09 PM</option>
+
+          <option value="8">Saturday, 01 AM</option>
+
+          <option value="9">Saturday, 05 AM</option>
+
+        </select>
+
+        <h2>Map Data Layers</h2>
+
+      <table>
+
+
+        <tr id="sst_function" class="option overlay-toggle">
+          <td class="col-one">Sea Surface Temperature</td>
+          <td class="col-two">
+            <div class="toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+        <tr id="salt_function" class="option overlay-toggle">
+          <td class="col-one">Salinity</td>
+          <td class="col-two">
+            <div class="toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+        <tr id="currents_function" class="option overlay-toggle">
+          <td class="col-one">Currents</td>
+          <td class="col-two">
+            <div class="toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+
+        <!-- more overlays to come... -->
+        <tr class="disabled">
+          <td class="col-one">Wave Height</td>
+          <td class="col-two">
+            <div class="toggle toggle-disabled">
+              <input type="checkbox" class="toggle-checkbox-disabled" id="t1" disabled></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="disabled">
+          <td class="col-one">Chlorophyll</td>
+          <td class="col-two">
+            <div class="toggle toggle-disabled">
+              <input type="checkbox" class="toggle-checkbox-disabled" id="t1" disabled></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+
+        <h2>Options</h2>
+
+    <table>
+
+        <tr id="latlong-toggle" class="option">
+          <td class="col-one">Lat/Long Lines</td>
+          <td class="col-two">
+            <div class="toggle toggle">
+              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+              <label class="toggle-label" for="t1">
+              <div class="toggle-inner"></div>
+              <div class="toggle-switch"></div>
+              </label>
+            </div>
+          </td>
+        </tr>
+    </table>
+
+        <h2>Cursor Coordinates:</h2>
+
+    <table>
+        <tr>
+            <td class="col-one">Lat:</td>
+            <td class="col-two">
+                <div id="coords-lat" class="coords"></div>
+            </td>
+        </tr>
+            <td class="col-one">Long:</td>
+            <td class="col-two">
+                <div id="coords-long" class="coords"></div>
+            </td>
+        <tr>
+    </table>
+
+    <table>
+        <tr>
+            <td class="col-one"><a class="about" href="/about.html" target="_blank">About</a></td>
+        </tr>
+    </table>
+
+    </div>
+
+
+<div id="map_canvas" style="width:100%; height:100%"></div>
+
+<div id="key" class="transpose"><img id="key-img" src=""></img></div>
+
+<script>
+
+// Graticule for google.maps v3
+//
+// Adapted from Bill Chadwick 2006 http://www.bdcc.co.uk/Gmaps/BdccGmapBits.htm
+// which is free for any use.
+//
+// This work is licensed under the Creative Commons Attribution 3.0 Unported
+// License. To view a copy of this license, visit
+// http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative
+// Commons, 171 Second Street, Suite 300, San Francisco, California, 94105,
+// USA.
+//
+// Matthew Shen 2011
+//
+// Reworked some more by Bill Chadwick ...
+//
+// This version was tweaked slightly by Ryan Phillips (2014)
+
+var Graticule = (function() {
+    function _(map, sexagesimal) {
+        // default to decimal intervals
+        this.sex_ = sexagesimal || false;
+        this.set('container', document.createElement('DIV'));
+        this.show();
+        this.setMap(map);
+    }
+    _.prototype = new google.maps.OverlayView();
+    _.prototype.addDiv = function(div) {
+        this.get('container').appendChild(div);
+        div.style.zIndex="100"; //we want lines to be on top of overlays
+        div.style.textShadow="0px 0px 3px #000000";
+    },
+  _.prototype.decToLonSex = function(d) {
+      var degs = Math.floor(Math.abs(d));
+      var mins = ((Math.abs(d) - degs) * 60.0).toFixed(0);
+      if (mins < .01){ mins = "" };
+
+      return [degs, (d>0)?"E":"W", mins].join('');
+  };
+
+    _.prototype.decToLatSex = function(d) {
+      var degs = Math.floor(Math.abs(d));
+      var mins = ((Math.abs(d) - degs) * 60.0).toFixed(0);
+
+      if (mins < .01){ mins = "" };
+
+      //if (mins == "60") { degs += 1.0; mins = "0.00"; }
+
+      return [degs, (d>0)?"N":"S", mins].join('');
+  };
+    _.prototype.onAdd = function() {
+        var self = this;
+        this.getPanes().mapPane.appendChild(this.get('container'));
+
+        function redraw() {
+            self.draw();
+        }
+        this.idleHandler_ = google.maps.event.addListener(this.getMap(), 'idle', redraw);
+
+        function changeColor() {
+            self.draw();
+        }
+        changeColor();
+        this.typeHandler_ = google.maps.event.addListener(this.getMap(), 'maptypeid_changed', changeColor);
+    };
+    _.prototype.clear = function() {
+        var container = this.get('container');
+        while (container.hasChildNodes()) {
+            container.removeChild(container.firstChild);
+        }
+    };
+    _.prototype.onRemove = function() {
+        this.get('container').parentNode.removeChild(this.get('container'));
+        this.set('container', null);
+        google.maps.event.removeListener(this.idleHandler_);
+        google.maps.event.removeListener(this.typeHandler_);
+    };
+    _.prototype.show = function() {
+        this.get('container').style.visibility = 'visible';
+    };
+    _.prototype.hide = function() {
+        this.get('container').style.visibility = 'hidden';
+    };
+
+    function _bestTextColor(overlay) {
+        var type = overlay.getMap().getMapTypeId();
+        var GMM = google.maps.MapTypeId;
+        if (type === GMM.HYBRID) return '#fff';
+        if (type === GMM.ROADMAP) return '#000';
+        if (type === GMM.SATELLITE) return '#fff';
+        if (type === GMM.TERRAIN) return '#000';
+        var mt = overlay.getMap().mapTypes[type];
+        return (mt.textColor) ? mt.textColor : '#fff'; //ported legacy V2 map layers may have a textColor property
+    };
+
+    function gridPrecision(dDeg) {
+        if (dDeg < 0.01) return 3;
+        if (dDeg < 0.1) return 2;
+        if (dDeg < 1) return 1;
+        return 0;
+    }
+
+    function leThenReturn(x, l, d) {
+        for (var i = 0; i < l.length; i += 1) {
+            if (x <= l[i]) {
+                return l[i];
+            }
+        }
+        return d;
+    }
+
+    //yikes, we just added jquery as a dependency to grat.js
+    w = $(window).width();
+
+    var numLines;
+    //full size
+    if (w > 800){
+        numLines = 10;
+    } else {
+        numLines = 6;
+    }
+    var middle = numLines/2 - 1;
+
+    var decmins = [
+    0.06, // 0.001 degrees
+    0.12, // 0.002 degrees
+    0.3, // 0.005 degrees
+    0.6, // 0.01 degrees
+    1.2, // 0.02 degrees
+    3, // 0.05 degrees
+    6, // 0.1 degrees
+    12, // 0.2 degrees
+    30, // 0.5
+    60, // 1
+    60 * 2,
+    60 * 5,
+    60 * 10,
+    60 * 20,
+    60 * 30,
+  ];
+    var sexmins = [
+    0.01, // minutes
+    0.02,
+    0.05,
+    0.1,
+    0.2,
+    0.5,
+    1.0,
+    3, // 0.05 degrees
+    6, // 0.1 degrees
+    12, // 0.2 degrees
+    30, // 0.5
+    60, // 1
+    60 * 2,
+    60 * 5,
+    60 * 10,
+    60 * 20,
+    60 * 30,
+  ];
+
+    function mins_list(overlay) {
+        if (overlay.sex_) return sexmins;
+        return decmins;
+    }
+
+    function latLngToPixel(overlay, lat, lng) {
+        return overlay.getProjection().fromLatLngToDivPixel(
+      new google.maps.LatLng(lat, lng));
+    };
+
+    // calculate rounded graticule interval in decimals of degrees for supplied
+    // lat/lon span return is in minutes
+    function gridInterval(dDeg, mins) {
+        return leThenReturn(Math.ceil(dDeg / numLines * 6000) / 100, mins,
+                        60 * 45) / 60;
+    }
+
+    function npx(n) {
+        return n.toString() + 'px';
+    }
+
+    function makeLabel(color, x, y, text) {
+        var d = document.createElement('DIV');
+        var s = d.style;
+        s.position = 'absolute';
+        s.left = npx(x);
+        s.top = npx(y);
+        s.color = color;
+        s.width = '3em';
+        s.fontSize = '1.0em';
+        s.whiteSpace = 'nowrap';
+        d.innerHTML = text;
+        return d;
+    };
+
+    function createLine(x, y, w, h, color) {
+        var d = document.createElement('DIV');
+        var s = d.style;
+        s.position = 'absolute';
+        s.overflow = 'hidden';
+        s.backgroundColor = color;
+        s.opacity = 0.3;
+        var s = d.style;
+        s.left = npx(x);
+        s.top = npx(y);
+        s.width = npx(w);
+        s.height = npx(h);
+        return d;
+    };
+
+    var span = 50000;
+    function meridian(px, color) {
+        return createLine(px, -span, 1, 2 * span, color);
+    }
+    function parallel(py, color) {
+        return createLine(-span, py, 2 * span, 1, color);
+    }
+    function eqE(a, b, e) {
+        if (!e) {
+            e = Math.pow(10, -6);
+        }
+        if (Math.abs(a - b) < e) {
+            return true;
+        }
+        return false;
+    }
+
+    // Redraw the graticule based on the current projection and zoom level
+    _.prototype.draw = function() {
+
+        var color = _bestTextColor(this);
+
+        this.clear();
+
+
+        if (this.get('container').style.visibility != 'visible') {
+            return;
+        }
+
+        // determine graticule interval
+        var bnds = this.getMap().getBounds();
+        if (!bnds) {
+            // The map is not ready yet.
+            return;
+        }
+
+        var sw = bnds.getSouthWest(),
+        ne = bnds.getNorthEast();
+        var l = sw.lng(),
+        b = sw.lat(),
+        r = ne.lng(),
+        t = ne.lat();
+        if (l == r) { l = -180.0; r = 180.0; }
+        if (t == b) { b = -90.0; t = 90.0; }
+
+        // grid interval in degrees
+        var mins = mins_list(this);
+        var dLat = gridInterval(t - b, mins);
+        var dLng = gridInterval(r > l ? r - l : ((180 - l) + (r + 180)), mins);
+
+        // round iteration limits to the computed grid interval
+        l = Math.floor(l / dLng) * dLng;
+        b = Math.floor(b / dLat) * dLat;
+        t = Math.ceil(t / dLat) * dLat;
+        r = Math.ceil(r / dLng) * dLng;
+        if (r == l) l += dLng;
+        if (r < l) r += 360.0;
+
+        // lngs
+        var crosslng = l + middle * dLng;
+        // labels on second to bottom row
+        var y = latLngToPixel(this, b + middle * dLat, l).y + 2;
+
+        // lo<r to skip printing 180/-180
+        for (var lo = l; lo < r; lo += dLng) {
+            if (lo > 180.0) {
+                r -= 360.0;
+                lo -= 360.0;
+            }
+            var px = latLngToPixel(this, b, lo).x;
+            this.addDiv(meridian(px, color));
+
+            var atcross = eqE(lo, crosslng);
+            this.addDiv(makeLabel(color,
+        px + (atcross ? 2 : 3), y - (atcross ? -18 : 0),
+        (this.sex_ ? this.decToLonSex(lo) : lo.toFixed(gridPrecision(dLng)))));
+        }
+
+        // lats
+        var crosslat = b + middle * dLat;
+        // labels on 5th column
+        var x = latLngToPixel(this, b, l + middle * dLng).x + 3;
+
+        for (; b <= t; b += dLat) {
+            var py = latLngToPixel(this, b, l).y;
+            this.addDiv(parallel(py, color));
+
+            this.addDiv(makeLabel(color,
+        x + (eqE(b, crosslat) ? 15 : 3), py + (eqE(b, crosslat) ? 2 : 0),
+        (this.sex_ ? this.decToLatSex(b) : b.toFixed(gridPrecision(dLat)))));
+        }
+    };
+
+    return _;
+})();
+
+</script>
+
+
+
+<script>
+
+// init js data (from DB)
+var data = {'keys':[], 'tiles':[], 'defs':[], 'types':[]};
+
+data.keys.push("keys/sst_function_key_e37cfeaa-505c-45e3-ae28-3e888d85b3bb.png");
+data.tiles.push("tiles_sst_function_8e76d4cf-7703-4a33-bff5-896813f987d2");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_e9427bed-f986-4277-9b9c-1c2fada416ac.png");
+data.tiles.push("tiles_sst_function_518ef724-958f-4cfc-b0be-013d550394d0");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_778c233e-2e89-41ab-97f9-1bf5fc426b55.png");
+data.tiles.push("tiles_sst_function_eaff5977-4ab4-4b10-a877-0bb86dee2f03");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_4ca0f6ea-9b60-4eb6-af4b-11db6d9b8ec4.png");
+data.tiles.push("tiles_sst_function_edb9c2d6-98e1-4b05-a025-3e82f4c7eb1a");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_1105c4ca-9e33-4c79-b33b-0536b4727b41.png");
+data.tiles.push("tiles_sst_function_562e2a22-1822-4bf3-8789-9cb2071fd889");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_226abc5e-eb08-45f4-9ec2-fe3a4be99791.png");
+data.tiles.push("tiles_sst_function_125d57de-07cf-4e23-9012-b77155bc807a");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_3dfa37f1-720a-4b76-a7ac-cfa270389474.png");
+data.tiles.push("tiles_sst_function_9acf7014-fe21-4c78-9dc1-c122b0aef35f");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_f8c79dfc-bcec-4365-87a2-4cf9d84371b1.png");
+data.tiles.push("tiles_sst_function_b0522bdc-97a5-4f91-bf23-927a1065ed01");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_ddc0500f-a680-4e76-b433-e65f40e192e4.png");
+data.tiles.push("tiles_sst_function_4b0a7461-c644-4814-aeb9-82e8626da103");
+data.types.push("FC");
+
+data.keys.push("keys/sst_function_key_b5acbc3d-3967-409a-8010-be1ff86e199f.png");
+data.tiles.push("tiles_sst_function_325e4c47-5075-4a75-8bbd-0bfc278aa3c7");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_34ce1898-28f1-48be-9bef-017fbc1573bf.png");
+data.tiles.push("tiles_salt_function_89f796e8-b02c-48be-b0c4-710f0991dd4d");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_259edee7-0004-4ce5-8065-034a70766aa4.png");
+data.tiles.push("tiles_salt_function_5d7c36ce-9865-44f7-88d5-c4fd43a5566b");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_94d2c1db-9a12-4f2d-ba06-fc382dccc78b.png");
+data.tiles.push("tiles_salt_function_997af8cb-9080-4c0d-bab5-47c166fb2d17");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_59d42028-5d3d-4f86-8227-3589b937c3b9.png");
+data.tiles.push("tiles_salt_function_e1b08a33-86d0-4552-b3f2-5949b5533d90");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_d313829b-b5c6-4bc4-8577-9031d826860c.png");
+data.tiles.push("tiles_salt_function_4a3c18e9-5866-4308-91a6-cdf8de97b2e1");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_fb0000f6-8c6b-4c1d-bf03-2048d3d08465.png");
+data.tiles.push("tiles_salt_function_04d26865-6b30-4f68-97d9-315193ae1371");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_1bcfe04b-16a0-4ce6-8a8e-a510e1b900cd.png");
+data.tiles.push("tiles_salt_function_3456ba75-ec61-442c-ae39-351d5379e64b");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_4b16803d-c504-4e32-923f-8f9d766f569f.png");
+data.tiles.push("tiles_salt_function_f4fb30a5-55b8-462f-9059-3038e67c83c1");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_a5286f52-2542-4d3a-92e7-5b1ee4c8b8de.png");
+data.tiles.push("tiles_salt_function_a80b6c91-8994-4523-bbef-33bad0d3f88d");
+data.types.push("FC");
+
+data.keys.push("keys/salt_function_key_c0439139-4667-4e1f-bede-051762de9c65.png");
+data.tiles.push("tiles_salt_function_100dfc3a-cd25-4dc0-aefe-8f56362b74c5");
+data.types.push("FC");
+
+data.keys.push("keys/currents_function_key_4adff0eb-0d5d-48fd-ac57-6607038673a7.png");
+data.tiles.push("tiles_currents_function_69e27e94-7ca3-4b44-bc33-da809bdaf719");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_1b308260-9c72-4781-a173-e28028fef0d6.png");
+data.tiles.push("tiles_currents_function_e429e961-57d2-49a7-b5be-ad6e52000653");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_69d1253f-abe8-45fa-bb92-82ddc4f5316e.png");
+data.tiles.push("tiles_currents_function_b3d3c981-36f9-4c62-a152-567b587fd420");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_740db45d-5699-487c-983f-5c77c52c9605.png");
+data.tiles.push("tiles_currents_function_6494d083-d76f-4d78-9185-b16f142f0fe7");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_13980549-6c01-4e8d-afbd-5dc448ba8e07.png");
+data.tiles.push("tiles_currents_function_9c34a750-0368-4b4a-9d38-d2f9f0e93a80");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_4b41e7fe-90ad-4eb3-b96d-491e4fb01898.png");
+data.tiles.push("tiles_currents_function_eaa3e14f-5bf7-44ed-80d5-8dc7395d555e");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_3d0e3ac1-cffc-428b-8094-925c255bbba4.png");
+data.tiles.push("tiles_currents_function_083eb4b1-f7a9-4835-b4e0-c6bfcfafbf58");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_b00b3f39-e512-44f4-adae-6ed07d5080ef.png");
+data.tiles.push("tiles_currents_function_599a6f33-7bc9-471e-b252-0d565ba3aa53");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_f1fbf8b1-111c-4c81-8232-b323d18fa222.png");
+data.tiles.push("tiles_currents_function_c6565606-a9a4-425c-acfb-9eec262b8a7c");
+data.types.push("V");
+
+data.keys.push("keys/currents_function_key_82f3b4ab-6698-400c-a3e6-6b45e3cd70de.png");
+data.tiles.push("tiles_currents_function_d27f2153-e684-4a40-959b-da0332cdc23f");
+data.types.push("V");
+
+
+data.defs.push("sst_function");
+
+data.defs.push("salt_function");
+
+data.defs.push("currents_function");
+
+var loc = "synced_dir/";
+
+// global variables
+var map;
+var mapBounds = new google.maps.LatLngBounds(
+  new google.maps.LatLng(40.5840806224, -129.0),
+  new google.maps.LatLng(47.499, -123.726199391));
+var mapMinZoom = 4;
+var mapMaxZoom = 10;
+var layers = [];
+var place_holder;
+
+var time_idx = 1;
+var old_idx = 1;
+var idx = 1;
+var x;
+
+var key_selector_offset = 0;
+
+function initialize() {
+
+
+    $(function() {
+        FastClick.attach(document.body);
+    });
+
+      var mapOptions = {
+        panControl: true,
+        panControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT
+        },
+
+        zoomControl: true,
+        zoomControlOptions: {
+            style: google.maps.ZoomControlStyle.LARGE,
+            position: google.maps.ControlPosition.TOP_RIGHT
+        },
+        mapTypeControl: false,
+        scaleControl: true,
+        streetViewControl: false,
+        overviewMapControl: false,
+        draggableCursor: 'crosshair',
+        mapTypeId: google.maps.MapTypeId.HYBRID
+
+      }
+
+      map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
+      map.fitBounds(mapBounds);
+
+      grid = new Graticule(map, true); // lat long lines
+
+      // cursor lat/long coordinates updated on mousemove * mousedown
+      google.maps.event.addListener(map, 'mousemove', function(event) {
+          RealtimeLL(event);
+      });
+      google.maps.event.addListener(map, 'mousedown', function(event) {
+          RealtimeLL(event);
+      });
+
+ }
+//end initialize
+
+
+// converts google maps lat/long event decimal coordinates to hexidecimal and
+// displays it
+function RealtimeLL(event){
+  var ret = {lat:"", long:""};
+    var temp_lat0 = event.latLng.lat();
+    var temp_long0 = event.latLng.lng();
+    lat = temp_lat0.toString();
+    long = temp_long0.toString();
+
+  //LAT
+
+  //hours
+  temp_lat = lat.split(".");
+  ret.lat += temp_lat[0];
+
+  //minutes
+  lat_remainder = ("0." + temp_lat[1]) * 60;
+  temp_lat = lat_remainder.toString().split(".");
+  ret.lat += "&deg;" + temp_lat[0];
+
+  //seconds
+  temp_lat2 = ("0." + temp_lat[1]) * 60;
+  ret.lat += "'" + Math.round(temp_lat2) + '"';
+
+  //LONG
+
+  //hours
+  temp_long = long.split(".");
+  ret.long += temp_long[0];
+
+  //minutes
+  lat_remainder = ("0." + temp_long[1]) * 60;
+  temp_long = lat_remainder.toString().split(".");
+  ret.long += "&deg;" + temp_long[0];
+
+  //seconds
+  temp_long2 = ("0." + temp_long[1]) * 60;
+  ret.long += "'" + Math.round(temp_long2) + '"';
+
+  $("#coords-lat").html(ret.lat);
+  $("#coords-long").html(ret.long);
+}
+
+
+// show sidebar on load -> hide after two seconds
+// if sidebar is clicked before then, don't hide it!
+var timer;
+jQuery(document).ready(function () {
+    timer = setTimeout( "ToggleSidebar()",4000 );
+});
+$('#sidebar-left').on('click', function() {
+    clearTimeout(timer);
+});
+$('#sidebar-left-btn').click(function() {
+  clearTimeout(timer);
+  ToggleSidebar();
+});
+
+function ToggleSidebar(){
+    if (! $('#sidebar-left').hasClass('clicked')){
+        $('#sidebar-left').toggleClass('clicked').delay(200).queue(function(next){
+            $('#sidebar-left').css("display","none");
+            next();
+        });
+    } else {
+        $('#sidebar-left').show().toggleClass('clicked');
+    };
+
+    $('#sidebar-left-btn').text(function(i, text){
+        return text === "Menu >" ? "< Hide" : "Menu >";})
+    $('#sidebar-left-btn').toggleClass('arrow-left');
+    $('#sidebar-left-btn').toggleClass('arrow-right');
+    $('#key').toggleClass('transpose');
+}
+
+/* make toggle switch associated labels also work as click targets (by using the whole 'tr') */
+$("tr").click(function() {
+    var checkBoxes = $(this).find('.toggle-checkbox');
+    checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+});
+$(".toggle-checkbox").click(function(e) { //fixing the duplex clicked issue
+    return false;
+});
+
+//rotate through all the keys that match the current set of visible overlays
+$("#key").click(function() {
+    key_selector_offset += 1;
+    key_selector_offset = key_selector_offset%visible_keys.length;
+    $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+});
+
+//lat long line toggle
+$('#latlong-toggle .toggle-checkbox').prop("checked", true); //show on load
+$("#latlong-toggle").click(function(e) {
+    var temp = $(this).find('.toggle-checkbox');
+    if (temp.prop("checked")){
+        grid.show();
+    } else {
+        grid.hide();
+    }
+});
+
+visible_keys = [];
+visible_overlays = [];
+
+//add to our stack of overlays
+visible_overlays_idx = 0;
+
+$(".overlay-toggle").click(function(e) {
+
+    //grab toggle + visible state
+    var toggle = $(this).find('.toggle-checkbox');
+    previous_state = !(toggle.prop("checked"));
+
+    //locate corresponding overlay in 'data' by 2d indexing
+    defs_idx = data.defs.indexOf(this.id); //
+    idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
+
+    //turn overlay on
+    if (previous_state == false){
+
+        //if it's a vector.. push normally; if it isn't... always put it at the bottom
+          if (data.types[idx] == "V"){
+            visible_overlays = insert_overlay(visible_overlays, visible_overlays_idx,idx, true);
+            visible_keys.push(data.keys[idx]);
+
+        } else {
+            visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
+            visible_keys.unshift(data.keys[idx]);
+        }
+
+          visible_overlays_idx += 1;
+          $("#key-img").attr("src",loc+data.keys[idx]);
+          $("#key-img").show();
+
+    } else{ //turn overlay off
+
+        if (visible_keys.length > 1){
+            //which key/overlay are we removing?
+            to_remove = visible_keys.indexOf(data.keys[idx]);
+
+            visible_keys.splice(to_remove, 1);
+            visible_overlays.splice(to_remove, 1);
+            map.overlayMapTypes.removeAt(to_remove);
+
+            //the last one in the list is now shown - with current offset
+            $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+            visible_overlays_idx -= 1;
+
+        // hide key-img when empty;
+        } else{
+            visible_keys.pop();
+            visible_overlays.pop();
+            visible_overlays_idx -= 1;
+            $("#key-img").attr("src","");
+            $("#key-img").hide();
+            map.overlayMapTypes.removeAt(0);
+        }
+    }
+});
+
+// update function for date-time selector
+$('#date-time').change(function(e) {
+    time_idx = $("#date-time option:selected").val();
+    time_idx = parseInt(time_idx) + 1;
+    delta_idx = (time_idx - old_idx);
+
+    max = visible_overlays.length;
+    for (var i = 0; i < max; i++){
+
+        to_change_idx = data.keys.indexOf(visible_keys[i]);
+
+        map.overlayMapTypes.removeAt(i);
+        visible_overlays.splice(i, 1);
+        visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
+
+        //replace keys...
+        visible_keys[i] = data.keys[to_change_idx+delta_idx];
+        $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+        }
+    old_idx = time_idx;
+});
+
+function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
+    var x = new google.maps.ImageMapType({
+      getTileUrl: function(coord, zoom) {
+        var proj = map.getProjection();
+        var tileSize = 256 / Math.pow(2,zoom);
+        var tileBounds = new google.maps.LatLngBounds(
+                proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
+          proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
+            );
+            if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
+          return loc+"tiles/"+data.tiles[idx]+"/" +
+          + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
+
+      },
+      tileSize: new google.maps.Size(256, 256),
+      isPng: true,
+      opacity: .8
+
+      });
+
+     if (push){
+         visible_overlays.push(x);
+    } else {
+        visible_overlays.unshift(x);
+    }
+      map.overlayMapTypes.insertAt(gmaps_stack_position, x);
+      return visible_overlays;
+}
+
+</script>
+
+
+</body>
+</html>
