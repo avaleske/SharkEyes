@@ -24,7 +24,7 @@
 </head>
 <body style="margin:0px; padding:0px;" onload="initialize()">
 
-    <button id="sidebar-left-btn" class="btn left arrow-left">< Hide</button>
+    <button id="sidebar-left-btn" class="btn left arrow-left">Hide</button>
 
     <div class="sidebar left" id="sidebar-left">
 
@@ -166,7 +166,7 @@
 
     <table>
         <tr>
-            <td class="col-one"><a class="about" href="/about.html" target="_blank">About</a></td>
+            <td class="col-one"><a class="about" href="about.html" target="_blank">About</a></td>
         </tr>
     </table>
 
@@ -752,7 +752,7 @@ function ToggleSidebar(){
     };
 
     $('#sidebar-left-btn').text(function(i, text){
-        return text === "Menu >" ? "< Hide" : "Menu >";})
+        return text === "Menu" ? "Hide" : "Menu";})
     $('#sidebar-left-btn').toggleClass('arrow-left');
     $('#sidebar-left-btn').toggleClass('arrow-right');
     $('#key').toggleClass('transpose');
