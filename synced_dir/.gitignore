@@ -1,4 +1,5 @@
 # Ignore everything in here apart from the .gitignore file & static files (cs+js+imgs)
-*
+/*
+/*/
 !.gitignore
-!static_files/*
+!/static_files/
