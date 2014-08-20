@@ -89,6 +89,7 @@ TEMPLATE_LOADERS = (
 TEMPLATE_DIRS = BASE_DIR + '/templates/'
 
 STATIC_URL = '/synced_dir/'
+STATIC_ROOT = '/vagrant/synced_dir/'
 
 STATICFILES_DIRS = (
     BASE_DIR + '/synced_dir/',
@@ -115,5 +116,4 @@ BROKER_USER = "guest"           # todo change these to something more secure. ad
 BROKER_PASSWORD = "guest"
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
-
 
