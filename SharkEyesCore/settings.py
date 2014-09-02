@@ -115,8 +115,9 @@ MEDIA_ROOT = "/home/vagrant/media_root/"
 # For celery
 BROKER_HOST = "127.0.0.1"
 BROKER_PORT = 5672
-BROKER_VHOST = "/"
-BROKER_USER = "guest"           # todo change these to something more secure. add a user in rebbitmq for celery or?
-BROKER_PASSWORD = "guest"
+BROKER_VHOST = "sharkeyes"
+BROKER_USER = "sharkeyes"
+BROKER_PASSWORD = "secureme"
+
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
