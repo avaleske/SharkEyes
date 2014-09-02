@@ -62,8 +62,12 @@ WSGI_APPLICATION = 'SharkEyesCore.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'sharkeyes',
+        'USER': 'sharkeyes',
+        'PASSWORD': 'secureme',
+        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
     }
 }
 
@@ -115,5 +119,4 @@ BROKER_VHOST = "/"
 BROKER_USER = "guest"           # todo change these to something more secure. add a user in rebbitmq for celery or?
 BROKER_PASSWORD = "guest"
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
-
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'

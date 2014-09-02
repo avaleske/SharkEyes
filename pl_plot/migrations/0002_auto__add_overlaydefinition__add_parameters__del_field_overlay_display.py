@@ -34,7 +34,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Overlay.definition'
         db.add_column(u'pl_plot_overlay', 'definition',
-                      self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['pl_plot.OverlayDefinition']),
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['pl_plot.OverlayDefinition']),
                       keep_default=False)
 
 
