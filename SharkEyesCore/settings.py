@@ -13,16 +13,7 @@ from __future__ import absolute_import
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'w^_kzwp&gk9z9%(8_6sgcc4lvyw=_4x8v1!c$kmvblnwu6ad1g'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -56,20 +47,6 @@ ROOT_URLCONF = 'SharkEyesCore.urls'
 
 WSGI_APPLICATION = 'SharkEyesCore.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sharkeyes',
-        'USER': 'sharkeyes',
-        'PASSWORD': 'secureme',
-        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
-        'PORT': '3306',
-    }
-}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -116,8 +93,8 @@ MEDIA_ROOT = "/home/vagrant/media_root/"
 BROKER_HOST = "127.0.0.1"
 BROKER_PORT = 5672
 BROKER_VHOST = "sharkeyes"
-BROKER_USER = "sharkeyes"
-BROKER_PASSWORD = "secureme"
 
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+from settings_local import *
