@@ -11,16 +11,24 @@ BROKER_PASSWORD = ''
 # Choose sqlite for development if you wish, or just use mysql like in production.
 
 # Sqlite
-#DATABASE_ENGINE = 'django.db.backends.sqlite3'
-#DATABASE_NAME = os.path.join(BASE_DIR, 'db.sqlite3')
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#    }
+#}
 
-#Mysql
-DATABASE_ENGINE = 'django.db.backends.mysql'
-DATABASE_NAME = 'sharkeyes'
-DATABASE_USER = 'sharkeyes'
-DATABASE_PASSWORD = ''
-DATABASE_HOST = 'localhost'   # Or an IP Address that your DB is hosted on
-DATABASE_PORT = '3306'
+#MySQL
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'sharkeyes',
+        'USER': 'sharkeyes',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = ''

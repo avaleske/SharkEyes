@@ -97,4 +97,4 @@ BROKER_VHOST = "sharkeyes"
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
-from settings_local import *
+from .settings_local import *
