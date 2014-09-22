@@ -115,9 +115,11 @@ $RECYCLE.BIN/
 
 # Vagrant ----------------------------------
 .vagrant/
+.vagrant.bak/
 
 # Celery ----------------------------------
 *celeryev.pid
 
 # Django ____________________
 settings_local.py
+
