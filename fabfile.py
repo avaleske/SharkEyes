@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from fabric.api import *
+from fabric.api import run, env, sudo, local
 from fabric.contrib.console import confirm
 
 
@@ -15,6 +15,13 @@ def vagrant():
         env.key_filename = v['IdentityFile'][1:-1]
     else:
         env.key_filename = v['IdentityFile']
+
+
+def install_prereqs():
+    sudo('yum -y update')                               # careful here if not on a new machine
+    sudo('yum -y groupinstall "Development tools"')
+    sudo('yum -y install zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
+    sudo('yum -y install centos-release-SCL')
 
 def uname():
     run('uname -a')
