@@ -55,18 +55,20 @@ def install_python27():
 
 def install_apache():
     sudo('yum -y install httpd')
-    sudo('yum -y install httpd-devel.x86_64')
+    sudo('yum -y install httpd-devel')
+    make_dir('/etc/httpd/sites-available')
+    make_dir('/etc/httpd/sites-enabled')
 
 
 def install_mysql():
     sudo('yum -y install mysql')
-    sudo('yum -y mysql-python')
-    sudo('yum -y mysql-server')
+    sudo('yum -y install MySQL-python')
+    sudo('yum -y install mysql-server')
 
 
-def install_geo_tools():
+def install_geotools():
     sudo('yum -y install blas-devel freetype-devel lapack-devel libpng-devel')
-    sudo('yum -y install geos-devel proj')
+    sudo('yum -y --nogpgcheck install geos-devel proj')
     sudo('yum -y install rabbitmq-server')
 
     if not exists('/opt/gdal-1.10.1/install_complete'):
@@ -82,22 +84,44 @@ def install_geo_tools():
     sudo('ldconfig')
 
 def setup_python():
+    #setup virtualenv
+    # run pip install
+    # install basemap
+    # link basemap
     pass
 
 
 def configure_apache():
+    # do stuff from here: http://twohlix.com/2011/05/setting-up-apache-virtual-hosts-on-centos/
+    # edit virtual hosts to point to right place
+    # need to point at django settings file?
     pass
 
 
 def configure_mod_wsgi():
+    # compile against python
+    # add link to apache
+    # setup deamon mode
     pass
 
 
 def configure_mysql():
+    # secure installation
+    # edit password stuff
+    # create database
+    pass
+
+
+def configure_rabbitmq():
+    # do the thing
+    # deamon mode
     pass
 
 
 def deploy():
+    # checkout code, or link to /vagrant, depending.
+    # manage.py migrate and stuff
+    # start rabbit, celery
     pass
 
 
@@ -106,7 +130,7 @@ def provision():
     install_python27()
     install_apache()
     install_mysql()
-    install_geo_tools()
+    install_geotools()
     setup_python()
     configure_apache()
     configure_mod_wsgi()
@@ -116,3 +140,7 @@ def provision():
 def uname():
     run('uname -a')
 
+
+def make_dir(path):
+    if not exists(path):
+        sudo('mkdir ' + path)
