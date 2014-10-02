@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from fabric.api import run, env, sudo, local, cd, settings
+from fabric.api import run, env, sudo, local, cd, settings, prefix
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 
@@ -28,7 +28,10 @@ def install_prereqs():
     with settings(warn_only=True):
         with cd('/opt'):
             if run('rpm -q epel-release-6-8.noarch').return_code != 0:
-                sudo('wget http://mirror-fpt-telecom.fpt.net/fedora/epel/6/i386/epel-release-6-8.noarch.rpm')
+                if is_64():
+                    sudo('wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm')
+                else:
+                    sudo('wget http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm')
                 sudo('rpm -ivh epel-release-6-8.noarch.rpm')
             if run('rpm -q elgis-release-6-6_0.noarch').return_code != 0:
                 sudo('wget http://elgis.argeo.org/repos/6/elgis-release-6-6_0.noarch.rpm')
@@ -83,12 +86,17 @@ def install_geotools():
     sudo("if grep -Fxq '/usr/local/lib' '/etc/ld.so.conf'; then :; else echo '/usr/local/lib' | tee -a /etc/ld.so.conf; fi")
     sudo('ldconfig')
 
+    # link proj
+
 def setup_python():
-    #setup virtualenv
-    # run pip install
+    make_dir('/opt/sharkeyes/')
+    with cd('/opt/sharkeyes/'):
+        if not exists('env_sharkeyes'):
+            sudo('virtualenv env_sharkeyes')
+        with prefix('source env_sharkeyes/bin/activate'):
+            sudo('pip install -r /vagrant/requirements.txt') #fix after we symlink /vagrant to /opt/sharkeyes/src/
     # install basemap
     # link basemap
-    pass
 
 
 def configure_apache():
@@ -144,3 +152,8 @@ def uname():
 def make_dir(path):
     if not exists(path):
         sudo('mkdir ' + path)
+
+def is_64():
+    if run('uname -m') == 'x86_64':
+        return True
+    return False
