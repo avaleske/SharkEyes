@@ -4,6 +4,20 @@ from fabric.api import run, env, sudo, local, cd, settings, prefix
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 
+python_packages =  ['numpy==1.8',
+                    'nose==1.1',
+                    'scipy==0.10',
+                    'matplotlib==1.1',
+                    'pandas==0.8',
+                   # 'MySQL-python==1.2.3c1',
+                    'django==1.6.2',
+                    'pillow==2.3.0',
+                    'pytz==2013.9',
+                    'celery==3.1.9',
+                    'django-celery==3.1.9',
+                    'south==0.8.4',
+                    'defusedxml==0.4.1',
+                    'pygdal==1.10.1.0',]
 
 def vagrant():
     """Allow fabric to manage a Vagrant VM/LXC container"""
@@ -21,7 +35,7 @@ def vagrant():
 def install_prereqs():
     # sudo('yum -y update')                               # careful here if not on a new machine
     sudo('yum -y groupinstall "Development tools"')
-    sudo('yum -y install wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
+    sudo('yum -y install man wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
     # sudo('yum -y install centos-release-SCL')         # let's not do this, so we have more control over things
 
     # repos
@@ -65,8 +79,21 @@ def install_apache():
 
 def install_mysql():
     sudo('yum -y install mysql')
-    sudo('yum -y install MySQL-python')
+    sudo('yum -y install MySQL-python') # todo should this be in the virtualenv?
     sudo('yum -y install mysql-server')
+
+def setup_group():
+    current_user = run('id -u -n')
+    sudo('groupadd sharkeyes')
+    sudo('usermod -a -G sharkeyes apache')
+    sudo('usermod -a -G sharkeyes mysql')
+    sudo('usermod -a -G sharkeyes ' + current_user)
+
+
+def setup_project_directory():
+    make_dir('/opt/sharkeyes/')
+    sudo('chgrp -R sharkeyes /opt/sharkeyes')
+    sudo('chmod -R 770 /opt/sharkeyes')
 
 
 def install_geotools():
@@ -89,12 +116,13 @@ def install_geotools():
     # link proj
 
 def setup_python():
-    make_dir('/opt/sharkeyes/')
     with cd('/opt/sharkeyes/'):
         if not exists('env_sharkeyes'):
-            sudo('virtualenv env_sharkeyes')
-        with prefix('source env_sharkeyes/bin/activate'):
-            sudo('pip install -r /vagrant/requirements.txt') #fix after we symlink /vagrant to /opt/sharkeyes/src/
+            run('virtualenv -p /usr/bin/python2.7 env_sharkeyes')
+        #with prefix('source env_sharkeyes/bin/activate'):
+        #sudo('source env_sharkeyes/bin/activate')
+        for package in python_packages:
+            run('env_sharkeyes/bin/pip install ' + package) # tried to use requirements.txt and it kept failing
     # install basemap
     # link basemap
 
@@ -138,6 +166,8 @@ def provision():
     install_python27()
     install_apache()
     install_mysql()
+    setup_group()
+    setup_project_directory()
     install_geotools()
     setup_python()
     configure_apache()
