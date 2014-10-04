@@ -114,6 +114,11 @@ def install_geotools():
     sudo('ldconfig')
 
     # link proj
+    if(is_64):
+        sudo('ln -s /usr/lib64/libproj.so.0 /usr/lib64/libproj.so')
+    else:
+        sudo('ln -s /usr/libproj.so.0 /usr/libproj.so')
+
 
 def setup_python():
     with cd('/opt/sharkeyes/'):
@@ -123,8 +128,8 @@ def setup_python():
         #sudo('source env_sharkeyes/bin/activate')
         for package in python_packages:
             run('env_sharkeyes/bin/pip install ' + package) # tried to use requirements.txt and it kept failing
-    # install basemap
-    # link basemap
+        run('env_sharkeyes/bin/pip install -e git+https://github.com/matplotlib/basemap#egg=Basemap')
+        run('ln -s env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/ env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
 
 
 def configure_apache():
