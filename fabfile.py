@@ -84,7 +84,9 @@ def install_mysql():
 
 def setup_group():
     current_user = run('id -u -n')
-    sudo('groupadd sharkeyes')
+    with settings(warn_only=True):
+        if run('grep sharkeyes /etc/group').return_code != 0:
+            sudo('groupadd sharkeyes')
     sudo('usermod -a -G sharkeyes apache')
     sudo('usermod -a -G sharkeyes mysql')
     sudo('usermod -a -G sharkeyes ' + current_user)
@@ -114,10 +116,12 @@ def install_geotools():
     sudo('ldconfig')
 
     # link proj
-    if(is_64):
-        sudo('ln -s /usr/lib64/libproj.so.0 /usr/lib64/libproj.so')
+    if(is_64()):
+        if not exists('/usr/lib64/libproj.so'):
+            sudo('ln -s /usr/lib64/libproj.so.0 /usr/lib64/libproj.so')
     else:
-        sudo('ln -s /usr/libproj.so.0 /usr/libproj.so')
+        if not exists('/usr/lib/libproj.so'):
+            sudo('ln -s /usr/lib/libproj.so.0 /usr/lib/libproj.so')
 
 
 def setup_python():
