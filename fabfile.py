@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-from fabric.api import run, env, sudo, local, cd, settings, prefix
+# If running this on a critical system that shouldn't reboot, comment out the reboot() command in setup_group()
+# The script will fail with a permissions error at that point, just run it again from the start and it will work.
+
+from fabric.api import run, env, sudo, local, cd, settings, prefix, reboot
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 
@@ -33,11 +36,6 @@ def vagrant():
 
 
 def install_prereqs():
-    # sudo('yum -y update')                               # careful here if not on a new machine
-    sudo('yum -y groupinstall "Development tools"')
-    sudo('yum -y install man wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
-    # sudo('yum -y install centos-release-SCL')         # let's not do this, so we have more control over things
-
     # repos
     with settings(warn_only=True):
         with cd('/opt'):
@@ -50,6 +48,23 @@ def install_prereqs():
             if run('rpm -q elgis-release-6-6_0.noarch').return_code != 0:
                 sudo('wget http://elgis.argeo.org/repos/6/elgis-release-6-6_0.noarch.rpm')
                 sudo('rpm -Uvh elgis-release-6-6_0.noarch.rpm')
+
+    # sudo('yum -y update')                               # careful here if not on a new machine
+    sudo('yum -y groupinstall "Development tools"')
+    sudo('yum -y install man wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
+
+    """
+    if not run('freetype-config --ftversion').startswith('2.4'):    # we want at least version 2.4
+        with cd('/opt'):
+            if not exists('freetype-2.4.2.tar.gz'):
+                sudo('wget http://download.savannah.gnu.org/releases/freetype/freetype-2.4.2.tar.gz')
+                sudo('tar -xvzf freetype-2.4.2.tar.gz')
+        with cd('/opt/freetype-2.4.2'):
+            sudo('./configure --prefix=/usr')
+            sudo('make')
+            sudo('make install')
+            """
+    # sudo('yum -y install centos-release-SCL')         # let's not do this, so we have more control over things
 
 
 def install_python27():
@@ -90,6 +105,9 @@ def setup_group():
     sudo('usermod -a -G sharkeyes apache')
     sudo('usermod -a -G sharkeyes mysql')
     sudo('usermod -a -G sharkeyes ' + current_user)
+    #sudo('exec sudo su -l $USER')
+    if 'sharkeyes' not in run('id'):
+        reboot()
 
 
 def setup_project_directory():
@@ -99,7 +117,8 @@ def setup_project_directory():
 
 
 def install_geotools():
-    sudo('yum -y install blas-devel freetype-devel lapack-devel libpng-devel')
+    sudo('yum -y install lapack atlas atlas-devel')
+    sudo('yum -y install blas-devel lapack-devel libpng-devel')
     sudo('yum -y --nogpgcheck install geos-devel proj')
     sudo('yum -y install rabbitmq-server')
 
