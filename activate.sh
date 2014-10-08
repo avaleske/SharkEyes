@@ -1,2 +1,2 @@
 #!/bin/bash
-source /home/vagrant/virtualenvs/sharkeyes/bin/activate
+source /opt/sharkeyes/env_sharkeyes/bin/activate

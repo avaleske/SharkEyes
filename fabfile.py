@@ -51,7 +51,7 @@ def install_prereqs():
 
     # sudo('yum -y update')                               # careful here if not on a new machine
     sudo('yum -y groupinstall "Development tools"')
-    sudo('yum -y install man wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
+    sudo('yum -y install vim emacs man wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
 
     """
     if not run('freetype-config --ftversion').startswith('2.4'):    # we want at least version 2.4
@@ -152,7 +152,8 @@ def setup_python():
         for package in python_packages:
             run('env_sharkeyes/bin/pip install ' + package) # tried to use requirements.txt and it kept failing
         run('env_sharkeyes/bin/pip install -e git+https://github.com/matplotlib/basemap#egg=Basemap')
-        run('ln -s env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/ env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
+        if not exists('env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
+            run('ln -s env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/ env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
 
 
 def configure_apache():
