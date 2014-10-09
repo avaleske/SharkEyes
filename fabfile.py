@@ -3,6 +3,9 @@
 # If running this on a critical system that shouldn't reboot, comment out the reboot() command in setup_group()
 # The script will fail with a permissions error at that point, just run it again from the start and it will work.
 
+# Before running this, make sure you've filled out settings_local.py.
+# If you're running this against a production server, then make sure you've also set up git ssh keys with github.
+
 from fabric.api import run, env, sudo, local, cd, settings, prefix, reboot
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
@@ -156,11 +159,27 @@ def setup_python():
             run('ln -s env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/ env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
 
 
+def clone_repo():
+    if exists('/vagrant/') and not exists('/opt/sharkeyes/src/'):     # then this is a vm, with a vagrant folder
+        sudo('ln -s /vagrant /opt/sharkeyes/src')
+    elif not exists('/opt/sharkeyes/src'):
+        run('git clone git@github.com:avaleske/SharkEyes.git /opt/sharkeyes/src')
+
+
 def configure_apache():
+    sudo('cp /opt/sharkeyes/src/config/apache/sharkeyes /etc/httpd/sites-available/')
+    # and symlink to sites-enabled as per best practices
+    if not exists('/etc/httpd/sites-enabled/sharkeyes'):
+        sudo('ln -s /etc/httpd/sites-available/sharkeyes /etc/httpd/sites-enabled/sharkeyes')
+    with settings(warn_only=True):
+        if sudo('grep -x "NameVirtualHost \*:80" /etc/httpd/conf/httpd.conf').return_code != 0:
+            sudo('echo "NameVirtualHost *:80" >> /etc/httpd/conf/httpd.conf')
+        if sudo('grep -x "Include /etc/httpd/sites-enabled/" /etc/httpd/conf/httpd.conf').return_code != 0:
+            sudo('echo "Include /etc/httpd/sites-enabled/" >> /etc/httpd/conf/httpd.conf')
+    sudo('service httpd restart')
     # do stuff from here: http://twohlix.com/2011/05/setting-up-apache-virtual-hosts-on-centos/
     # edit virtual hosts to point to right place
     # need to point at django settings file?
-    pass
 
 
 def configure_mod_wsgi():
@@ -199,8 +218,8 @@ def provision():
     setup_project_directory()
     install_geotools()
     setup_python()
-    configure_apache()
     configure_mod_wsgi()
+    configure_apache()
     configure_mysql()
 
 
