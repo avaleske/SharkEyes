@@ -102,9 +102,10 @@ def install_apache():
 
 
 def install_mysql():
-    sudo('yum -y install mysql')
-    sudo('yum -y install MySQL-python') # todo should this be in the virtualenv?
+    sudo('yum -y install mysql mysql_devel')
+    #sudo('yum -y install MySQL-python') # moved to virtualenv
     sudo('yum -y install mysql-server')
+
 
 def setup_group():
     current_user = run('id -u -n')
