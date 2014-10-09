@@ -14,20 +14,21 @@ from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 from fabric.context_managers import shell_env
 
-python_packages =  ['numpy==1.8',
-                    'nose==1.1',
-                    'scipy==0.10',
-                    'matplotlib==1.1',
-                    'pandas==0.8',
-                   # 'MySQL-python==1.2.3c1',
-                    'django==1.6.2',
-                    'pillow==2.3.0',
-                    'pytz==2013.9',
-                    'celery==3.1.9',
-                    'django-celery==3.1.9',
-                    'south==0.8.4',
-                    'defusedxml==0.4.1',
-                    'pygdal==1.10.1.0',]
+python_packages = ['numpy==1.8',
+                   'nose==1.1',
+                   'scipy==0.10',
+                   'matplotlib==1.1',
+                   'pandas==0.8',
+                   'MySQL-python==1.2.3c1',
+                   'django==1.6.2',
+                   'pillow==2.3.0',
+                   'pytz==2013.9',
+                   'celery==3.1.9',
+                   'django-celery==3.1.9',
+                   'south==0.8.4',
+                   'defusedxml==0.4.1',
+                   'pygdal==1.10.1.0',
+                   ]
 
 def vagrant():
     """Allow fabric to manage a Vagrant VM/LXC container"""

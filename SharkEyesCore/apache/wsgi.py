@@ -16,8 +16,8 @@ os.environ["CELERY_LOADER"] = "django"
 os.environ["MPLCONFIGDIR"] = "/tmp/"
 
 site.addsitedir('/opt/sharkyes/env_sharkeyes/lib/python2.7/site-packages')
-sys.path.append('/opt/sharkeyes')
-sys.path.append('/opt/sharkeyes/SharkEyesCore')
+sys.path.append('/opt/sharkeyes/src')
+sys.path.append('/opt/sharkeyes/src/SharkEyesCore')
 
 activate_env = os.path.expanduser('/opt/sharkeyes/env_sharkeyes/bin/activate_this.py')
 execfile(activate_env, dict(__file__=activate_env))
