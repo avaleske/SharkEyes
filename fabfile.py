@@ -6,9 +6,13 @@
 # Before running this, make sure you've filled out settings_local.py.
 # If you're running this against a production server, then make sure you've also set up git ssh keys with github.
 
+# Finally, all the functions that'd you'd expect to be should be idempotent, save for configure_apache(), which
+# will overwrite /etc/httpd/sites-available/sharkeyes with whatever's in the config/apache folder of the project.
+
 from fabric.api import run, env, sudo, local, cd, settings, prefix, reboot
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
+from fabric.context_managers import shell_env
 
 python_packages =  ['numpy==1.8',
                     'nose==1.1',
@@ -39,9 +43,10 @@ def vagrant():
 
 
 def install_prereqs():
+    make_dir('/opt/installers')
     # repos
     with settings(warn_only=True):
-        with cd('/opt'):
+        with cd('/opt/installers'):
             if run('rpm -q epel-release-6-8.noarch').return_code != 0:
                 if is_64():
                     sudo('wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm')
@@ -58,11 +63,11 @@ def install_prereqs():
 
     """
     if not run('freetype-config --ftversion').startswith('2.4'):    # we want at least version 2.4
-        with cd('/opt'):
+        with cd('/opt/installers'):
             if not exists('freetype-2.4.2.tar.gz'):
                 sudo('wget http://download.savannah.gnu.org/releases/freetype/freetype-2.4.2.tar.gz')
                 sudo('tar -xvzf freetype-2.4.2.tar.gz')
-        with cd('/opt/freetype-2.4.2'):
+        with cd('/opt/installers/freetype-2.4.2'):
             sudo('./configure --prefix=/usr')
             sudo('make')
             sudo('make install')
@@ -72,10 +77,10 @@ def install_prereqs():
 
 def install_python27():
     if not exists('/usr/bin/python2.7'):
-        with cd('/opt/'):
+        with cd('/opt/installers/'):
             sudo('wget https://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz')
             sudo('tar -xvzf Python-2.7.3.tgz')
-        with cd('/opt/Python-2.7.3/'):
+        with cd('/opt/installers/Python-2.7.3/'):
             sudo('./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"')
             sudo('make && make altinstall')
         with cd('/usr/local/lib/python2.7/config/'):
@@ -125,11 +130,11 @@ def install_geotools():
     sudo('yum -y --nogpgcheck install geos-devel proj')
     sudo('yum -y install rabbitmq-server')
 
-    if not exists('/opt/gdal-1.10.1/install_complete'):
-        with cd('/opt'):
+    if not exists('/opt/installers/gdal-1.10.1/install_complete'):
+        with cd('/opt/installers'):
             sudo('wget http://download.osgeo.org/gdal/1.10.1/gdal-1.10.1.tar.gz')
             sudo('tar -xvzf gdal-1.10.1.tar.gz')
-        with cd('/opt/gdal-1.10.1/'):
+        with cd('/opt/installers/gdal-1.10.1/'):
             sudo('./configure --prefix=/usr/local')
             sudo('make && make install')
             sudo('touch install_complete')
@@ -166,6 +171,29 @@ def clone_repo():
         run('git clone git@github.com:avaleske/SharkEyes.git /opt/sharkeyes/src')
 
 
+def configure_mod_wsgi():
+    if not exists('/etc/httpd/modules/mod_wsgi.so'):
+        with cd('/opt/installers'):
+            if not exists('mod_wsgi-4.2.7'):
+                sudo('wget https://github.com/GrahamDumpleton/mod_wsgi/archive/4.2.7.tar.gz')
+                sudo('tar xvfz 4.2.7.tar.gz')
+            with cd('mod_wsgi-4.2.7'):
+                with shell_env(LD_RUN_PATH='/usr/local/lib'):
+                    sudo('./configure --with-python=/usr/local/bin/python2.7')
+                    sudo('make')
+                    sudo('make install')
+
+    with settings(warn_only=True):
+        with cd('/etc/httpd/conf/'):
+            if run('grep -x "LoadModule wsgi_module modules/mod_wsgi.so" httpd.conf').return_code != 0:
+                # get the line number where the module loading happens, and then add the load for wsgi at that point
+                line_num = run('grep -n "^LoadModule " httpd.conf -m 1').split(':')[0]
+                sudo(' gawk \'{print;if(NR==' + line_num + ')print"LoadModule wsgi_module modules/mod_wsgi.so"}\' httpd.conf>httpd.conf.temp')
+                sudo('cp httpd.conf httpd.conf.bak')
+                sudo('mv httpd.conf.temp httpd.conf')
+    # setup deamon mode
+    pass
+
 def configure_apache():
     sudo('cp /opt/sharkeyes/src/config/apache/sharkeyes /etc/httpd/sites-available/')
     # and symlink to sites-enabled as per best practices
@@ -181,12 +209,6 @@ def configure_apache():
     # edit virtual hosts to point to right place
     # need to point at django settings file?
 
-
-def configure_mod_wsgi():
-    # compile against python
-    # add link to apache
-    # setup deamon mode
-    pass
 
 
 def configure_mysql():
