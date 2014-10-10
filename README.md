@@ -3,6 +3,11 @@
 
 This was last updated on 6/9/2014. There is likely a more up to date version. Email avaleske@gmail.com with Sharkeyes in the subject line to get access to the newest version of the repo.
 
+###Prereqs
+You'll need git, vagrant, virtualbox, and an IDE. These instructions are for PyCharm as the IDE, which has so far served us well and should be available from Jetbrains for free for students. Vagrant runs on any OS, so these should work anywhere. (When working on Windows I've found it nice to use the git bash, rather than command prompt, for what it's worth.)
+
+Also, note that on Windows there's a bug in virtualbox that causes vagrant to destroy the vm if you sleep it. Do `vagrant halt` instead of `vagrant suspend`.
+
 ###Setup
 
 To setup the vm
