@@ -10,9 +10,10 @@
 # will overwrite /etc/httpd/sites-available/sharkeyes with whatever's in the config/apache folder of the project.
 
 from fabric.api import run, env, sudo, local, cd, settings, prefix, reboot
-from fabric.contrib.console import confirm
+from fabric.contrib.console import confirm, prompt
 from fabric.contrib.files import exists
 from fabric.context_managers import shell_env
+from getpass import getpass
 
 python_packages = ['numpy==1.8',
                    'nose==1.1',
@@ -217,18 +218,25 @@ def configure_mysql():
     sudo('service mysqld start')
 
     confirm("You will now start with interactive MySQL secure installation."
-                " Current root password is blank. Change it "
-                "and save the new one to your password manager. Then answer "
-                "with default answers to all other questions. Ready?")
+                " If this is the first run, the current root password is blank. "
+                "Even if this is your local, "
+                "change it, and save the new one to your password manager. Then "
+                "answer with default answers to all other questions. Ready?")
     sudo('/usr/bin/mysql_secure_installation')
+    sudo('service mysqld restart')
+    root_pass = getpass('So this script can stop bugging you, first enter your root mysql password: ')
+    sharkeyes_pass = getpass('And now the database password you specified in settings_local.py: ')
 
-    # restart mysql and php-fastcgi
-    sudo('service mysql restart')
-
-    # secure installation
-    # edit password stuff
-    # create database
-    pass
+    with settings(warn_only=True):
+        if run('mysql --user=root --password={0} -e "show databases;" | grep sharkeyes'.format(root_pass)).return_code != 0:
+            run('mysql --user=root --password={0} -e "CREATE DATABASE sharkeyes;"'.format(root_pass))
+        if run('mysql --user=root --password={0} -e "SELECT user from mysql.user;" | grep sharkeyes'.format(root_pass)).return_code != 0:
+            run('mysql --user=root --password={0} -e "CREATE USER \'sharkeyes\'@\'localhost\' IDENTIFIED BY \'{1}\';"'.format(
+                root_pass, sharkeyes_pass))
+            # assuming if we created the user already, then we already gave it proper permissions
+            run('mysql --user=root --password={0} -e "GRANT ALL ON sharkeyes.* to  \'sharkeyes\'@\'localhost\';"'.format(
+                root_pass))
+            run('mysql --user=root --password={0} -e "FLUSH PRIVILEGES;"'.format(root_pass))
 
 
 def configure_rabbitmq():
