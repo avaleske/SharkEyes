@@ -149,9 +149,9 @@ def setup_python():
         for package in python_packages:
             run('env_sharkeyes/bin/pip install ' + package)
         run('env_sharkeyes/bin/pip install -e git+https://github.com/matplotlib/basemap#egg=Basemap')
-        if not exists('env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
-            run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/'
-                '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
+    if not exists('/opt/sharkees/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
+        run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap' + ' ' +   # explicit space because I fail
+            '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
 
 
 def clone_repo():
