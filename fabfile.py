@@ -229,17 +229,35 @@ def configure_rabbitmq():
         if sudo('rabbitmqctl list_vhosts | grep sharkeyes').return_code != 0:
             sudo('rabbitmqctl add_vhost sharkeyes')
         if sudo('rabbitmqctl list_users | grep sharkeyes').return_code != 0:
-            rabbit_pass = getpass("What's the Broker password you specified in settings_local.py? ")
+            rabbit_pass = getpass("What's the Broker password you specified in settings_local.py?: ")
             sudo('rabbitmqctl add_user sharkeyes {0}'.format(rabbit_pass))
             sudo('rabbitmqctl set_permissions -p sharkeyes sharkeyes ".*" ".*" ".*"')
         if sudo('rabbitmqctl list_users | grep guest').return_code == 0:
             sudo('rabbitmqctl delete_user guest')
 
+
+def configure_celery():
+    pass
+
+
 def deploy():
-    # checkout code, or link to /vagrant, depending.
+    with cd('/opt/sharkeyes/src/'):
+        if not exists('/vagrant/'): # then this is a local vm
+            branch = prompt("Branch to run? (Enter for leave unchanged): ")
+            if branch:
+                run('git checkout {0}'.format(branch))
+            run('git pull')
+        with prefix('source /opt/sharkeyes/env_sharkeyes/bin/activate'):
+            print("If this is your first run, Django will ask you to create a super user. "
+                    "Store the password in your password manager.")
+            run('./manage.py syncdb')
+            run('./manage.py migrate djcelery 0004')
+            run('./manage.py migrate pl_download')
+            run('./manage.py migrate pl_plot')
+            run('./manage.py migrate pl_chop')
     # manage.py migrate and stuff
     # start rabbit, celery
-    pass
+    sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
 
 
 def provision():
@@ -255,6 +273,8 @@ def provision():
     configure_apache()
     configure_mysql()
     configure_rabbitmq()
+    configure_celery()
+
 
 def uname():
     run('uname -a')
@@ -264,7 +284,12 @@ def make_dir(path):
     if not exists(path):
         sudo('mkdir ' + path)
 
+
 def is_64():
     if run('uname -m') == 'x86_64':
         return True
     return False
+
+def test():
+    test = prompt('asfdsa: ')
+    print test
