@@ -15,6 +15,7 @@ from fabric.contrib.files import exists
 from fabric.context_managers import shell_env
 from getpass import getpass
 
+# we'd use requirements.txt, but some of these have install time dependencies because they suck
 python_packages = ['numpy==1.8',
                    'nose==1.1',
                    'scipy==0.10',
@@ -62,19 +63,6 @@ def install_prereqs():
     # sudo('yum -y update')                               # careful here if not on a new machine
     sudo('yum -y groupinstall "Development tools"')
     sudo('yum -y install vim emacs man wget zlib-devel bzip2-devel openssl-devel ncurses-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel')
-
-    """
-    if not run('freetype-config --ftversion').startswith('2.4'):    # we want at least version 2.4
-        with cd('/opt/installers'):
-            if not exists('freetype-2.4.2.tar.gz'):
-                sudo('wget http://download.savannah.gnu.org/releases/freetype/freetype-2.4.2.tar.gz')
-                sudo('tar -xvzf freetype-2.4.2.tar.gz')
-        with cd('/opt/installers/freetype-2.4.2'):
-            sudo('./configure --prefix=/usr')
-            sudo('make')
-            sudo('make install')
-            """
-    # sudo('yum -y install centos-release-SCL')         # let's not do this, so we have more control over things
 
 
 def install_python27():
@@ -158,13 +146,12 @@ def setup_python():
     with cd('/opt/sharkeyes/'):
         if not exists('env_sharkeyes'):
             run('virtualenv -p /usr/bin/python2.7 env_sharkeyes')
-        #with prefix('source env_sharkeyes/bin/activate'):
-        #sudo('source env_sharkeyes/bin/activate')
         for package in python_packages:
-            run('env_sharkeyes/bin/pip install ' + package) # tried to use requirements.txt and it kept failing
+            run('env_sharkeyes/bin/pip install ' + package)
         run('env_sharkeyes/bin/pip install -e git+https://github.com/matplotlib/basemap#egg=Basemap')
         if not exists('env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
-            run('ln -s env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/ env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
+            run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap/'
+                '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
 
 
 def clone_repo():
@@ -197,6 +184,7 @@ def configure_mod_wsgi():
     # setup deamon mode
     # by doing this:https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide#Delegation_To_Daemon_Process
 
+
 def configure_apache():
     sudo('cp /opt/sharkeyes/src/config/apache/sharkeyes /etc/httpd/sites-available/')
     # and symlink to sites-enabled as per best practices
@@ -208,10 +196,6 @@ def configure_apache():
         if sudo('grep -x "Include /etc/httpd/sites-enabled/" /etc/httpd/conf/httpd.conf').return_code != 0:
             sudo('echo "Include /etc/httpd/sites-enabled/" >> /etc/httpd/conf/httpd.conf')
     sudo('service httpd restart')
-    # do stuff from here: http://twohlix.com/2011/05/setting-up-apache-virtual-hosts-on-centos/
-    # edit virtual hosts to point to right place
-    # need to point at django settings file?
-
 
 
 def configure_mysql():
@@ -240,10 +224,16 @@ def configure_mysql():
 
 
 def configure_rabbitmq():
-    # do the thing
-    # deamon mode
-    pass
-
+    sudo('service rabbitmq-server start')
+    with settings(warn_only=True):
+        if sudo('rabbitmqctl list_vhosts | grep sharkeyes').return_code != 0:
+            sudo('rabbitmqctl add_vhost sharkeyes')
+        if sudo('rabbitmqctl list_users | grep sharkeyes').return_code != 0:
+            rabbit_pass = getpass("What's the Broker password you specified in settings_local.py? ")
+            sudo('rabbitmqctl add_user sharkeyes {0}'.format(rabbit_pass))
+            sudo('rabbitmqctl set_permissions -p sharkeyes sharkeyes ".*" ".*" ".*"')
+        if sudo('rabbitmqctl list_users | grep guest').return_code == 0:
+            sudo('rabbitmqctl delete_user guest')
 
 def deploy():
     # checkout code, or link to /vagrant, depending.
@@ -264,7 +254,7 @@ def provision():
     configure_mod_wsgi()
     configure_apache()
     configure_mysql()
-
+    configure_rabbitmq()
 
 def uname():
     run('uname -a')
