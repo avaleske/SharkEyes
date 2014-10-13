@@ -194,7 +194,7 @@ def configure_mod_wsgi():
                 sudo('cp httpd.conf httpd.conf.bak')
                 sudo('mv httpd.conf.temp httpd.conf')
     # setup deamon mode
-    pass
+    # by doing this:https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide#Delegation_To_Daemon_Process
 
 def configure_apache():
     sudo('cp /opt/sharkeyes/src/config/apache/sharkeyes /etc/httpd/sites-available/')
@@ -214,6 +214,17 @@ def configure_apache():
 
 
 def configure_mysql():
+    sudo('service mysqld start')
+
+    confirm("You will now start with interactive MySQL secure installation."
+                " Current root password is blank. Change it "
+                "and save the new one to your password manager. Then answer "
+                "with default answers to all other questions. Ready?")
+    sudo('/usr/bin/mysql_secure_installation')
+
+    # restart mysql and php-fastcgi
+    sudo('service mysql restart')
+
     # secure installation
     # edit password stuff
     # create database
