@@ -5,7 +5,8 @@ ServerAlias www.sharkeyes.local
 
 WSGIScriptAlias / /opt/sharkeyes/src/SharkEyesCore/apache/wsgi.py
 
-Alias /synced_dir/ /opt/sharkeyes/src/synced_dir/
+Alias /static/ /opt/sharkeyes/static/
+Alias /media/ /opt/sharkeyes/media/
 
 <Directory /opt/sharkeyes/src/SharkEyesCore/apache>
 <Files wsgi.py>

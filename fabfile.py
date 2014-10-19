@@ -186,6 +186,7 @@ def configure_mod_wsgi():
 
 
 def configure_apache():
+    #todo overwrites the one there. Should be different for local vs staging vs production
     sudo('cp /opt/sharkeyes/src/config/apache/sharkeyes /etc/httpd/sites-available/')
     # and symlink to sites-enabled as per best practices
     if not exists('/etc/httpd/sites-enabled/sharkeyes'):
@@ -242,7 +243,7 @@ def configure_celery():
 
 def deploy():
     with cd('/opt/sharkeyes/src/'):
-        if not exists('/vagrant/'): # then this is a local vm
+        if not exists('/vagrant/'): # then this is not a local vm
             branch = prompt("Branch to run? (Enter for leave unchanged): ")
             if branch:
                 run('git checkout {0}'.format(branch))
@@ -257,6 +258,7 @@ def deploy():
             run('./manage.py migrate pl_chop')
     # manage.py migrate and stuff
     # start rabbit, celery
+    # do collect static
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
 
 
