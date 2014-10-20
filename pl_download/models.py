@@ -6,7 +6,6 @@ from django.utils import timezone
 import urllib
 import os
 from uuid import uuid4
-from django.conf import settings
 from urlparse import urljoin
 import urllib2
 from defusedxml import ElementTree
@@ -60,54 +59,54 @@ def is_new_file_to_download():
     return True
 
 
-@shared_task(name='pl_download.fetch_new_files')
-# grabs file for next few days.
-# todo make each file download in a separate task
-def fetch_new_files():
-    if not is_new_file_to_download():
-       return False
-
-    # download new file for next few days
-    days_to_retrieve = [timezone.now().date(),
-                        timezone.now().date()+timedelta(days=1),
-                        timezone.now().date()+timedelta(days=2),
-                        timezone.now().date()+timedelta(days=3)]
-    files_to_retrieve = []
-    tree = get_ingria_xml_tree()    # yes, we just did this to see if there's a new file. refactor later.
-    tags = tree.iter(XML_NAMESPACE + 'dataset')
-
-    for elem in tags:
-        server_filename = elem.get('name')
-        if not server_filename.startswith('ocean_his'):
-            continue
-        date_string_from_filename = server_filename.split('_')[-1]
-        model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
-        modified_datetime = extract_modified_datetime_from_xml(elem)
-
-        for day_to_retrieve in days_to_retrieve:
-            if model_date - day_to_retrieve == timedelta(days=0):
-                files_to_retrieve.append((server_filename, model_date, modified_datetime))
-
-    destination_directory = os.path.join(settings.MEDIA_ROOT, settings.NETCDF_STORAGE_DIR)
-
-    for server_filename, model_date, modified_datetime in files_to_retrieve:
-        url = urljoin(settings.BASE_NETCDF_URL, server_filename)
-        local_filename = "{0}_{1}.nc".format(model_date, uuid4())
-        urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename)) # this also needs a try/catch
-
-        datafile = DataFile(
-            type='NCDF',
-            download_datetime=timezone.now(),
-            generated_datetime=modified_datetime,
-            model_date=model_date,
-            file=local_filename,
-        )
-        datafile.save()
-
-    return True
-
-
 class DataFileManager(models.Manager):
+    # grabs file for next few days.
+    # todo make each file download in a separate task
+    @staticmethod
+    @shared_task(name='pl_download.fetch_new_files')
+    def fetch_new_files():
+        if not is_new_file_to_download():
+            return False
+
+        # download new file for next few days
+        days_to_retrieve = [timezone.now().date(),
+                            timezone.now().date()+timedelta(days=1),
+                            timezone.now().date()+timedelta(days=2),
+                            timezone.now().date()+timedelta(days=3)]
+        files_to_retrieve = []
+        tree = get_ingria_xml_tree()    # yes, we just did this to see if there's a new file. refactor later.
+        tags = tree.iter(XML_NAMESPACE + 'dataset')
+
+        for elem in tags:
+            server_filename = elem.get('name')
+            if not server_filename.startswith('ocean_his'):
+                continue
+            date_string_from_filename = server_filename.split('_')[-1]
+            model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
+            modified_datetime = extract_modified_datetime_from_xml(elem)
+
+            for day_to_retrieve in days_to_retrieve:
+                if model_date - day_to_retrieve == timedelta(days=0):
+                    files_to_retrieve.append((server_filename, model_date, modified_datetime))
+
+        destination_directory = os.path.join(settings.MEDIA_ROOT, settings.NETCDF_STORAGE_DIR)
+
+        for server_filename, model_date, modified_datetime in files_to_retrieve:
+            url = urljoin(settings.BASE_NETCDF_URL, server_filename)
+            local_filename = "{0}_{1}.nc".format(model_date, uuid4())
+            urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename)) # this also needs a try/catch
+
+            datafile = DataFile(
+                type='NCDF',
+                download_datetime=timezone.now(),
+                generated_datetime=modified_datetime,
+                model_date=model_date,
+                file=local_filename,
+            )
+            datafile.save()
+
+        return True
+
     @staticmethod
     def get_next_few_days_files_from_db():
         next_few_days_of_files = DataFile.objects.filter(

@@ -1,7 +1,7 @@
 from django.http import HttpResponse
-from pl_download.models import fetch_new_files
+from pl_download.models import DataFileManager
 
 
 def test_fetch(request):
-    result = fetch_new_files.delay()
+    result = DataFileManager.fetch_new_files.delay()
     return HttpResponse("Downloaded file: " + str(result.get()))

@@ -94,6 +94,7 @@ BROKER_VHOST = "sharkeyes"
 
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_IMPORTS = ('SharkEyesCore.tasks',)
 
 # import local settings. PyCharm thinks it's unused, but PyCharm is silly.
 from .settings_local import *
