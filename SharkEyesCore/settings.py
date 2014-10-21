@@ -71,7 +71,7 @@ TEMPLATE_DIRS = BASE_DIR + '/templates/'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = '/opt/sharkeyes/static/'
-STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static_files'),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static_files'), )
 
 
 # other files

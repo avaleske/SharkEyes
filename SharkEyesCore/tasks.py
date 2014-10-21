@@ -5,5 +5,5 @@ import time
 
 @shared_task(name='sharkeyescore.add')
 def add(a, b):
-    time.sleep(5)
+    #time.sleep(5)
     return a + b
