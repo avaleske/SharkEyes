@@ -55,12 +55,12 @@ Ok, awesome, vagrant works and you have passwords setup. Now to run the setup sc
   - Go to PyCharm Preferences -> Project Interpretor
   - Click the gear to the right of the Project Interpeter bar, and then remote, and then the 'vagrant' radio button. If it asks, your vagrant instance folder is the project folder.
   - In the Python Interpreter Path put `/home/vagrant/virtualenvs/sharkeyes/bin/python`
-  - <img src="https://raw.github.com/avaleske/SharkEyes/develop/resources/configure_interpreter.png">
+  - <img src="resources/configure_interpreter.png?raw=true">
   - Then click ok. It'll connect to the vagrant instance and learn what's installed there, which might take a minute or two.
 - Then go to PyCharm Preferences -> Django.
   - Check the box to enable Django.
   - The project root is your project folder. Point 'Settings' at `settings.py`, and point 'Manage script' at `manage.py`. These are both relative to the project root.
-  - <img src="https://raw.github.com/avaleske/SharkEyes/develop/resources/pycharm_django.png">
+  - <img src="resources/pycharm_django.png?raw=true">
 - Then setup the site configuration to run the project from within PyCharm:
   - At the top of the PyCharm window there’s a play button and a down arrow to the left of it. Choose that, and then 'edit configurations'.
   - Set the host to `0.0.0.0`, and the Port to `8000`.
