@@ -201,7 +201,7 @@ def configure_apache():
 
 def configure_mysql():
     sudo('service mysqld start')
-
+    print("!-"*50)
     confirm("You will now start with interactive MySQL secure installation."
                 " If this is the first run, the current root password is blank. "
                 "Even if this is your local, "
@@ -249,6 +249,7 @@ def deploy():
                 run('git checkout {0}'.format(branch))
             run('git pull')
         with prefix('source /opt/sharkeyes/env_sharkeyes/bin/activate'):
+            print("!-"*50)
             print("If this is your first run, Django will ask you to create a super user. "
                     "Store the password in your password manager.")
             run('./manage.py syncdb')
@@ -260,6 +261,20 @@ def deploy():
     # start rabbit, celery
     # do collect static
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
+
+def startdev():
+    # starts everything that needs to run for the dev environment
+    sudo('service mysqld start')
+    sudo('service rabbitmq-server start')
+    sudo('service httpd stop')  # stop apache so it's not in the way
+    print("!-"*50)
+    prompt("Now go ssh into the virtual machine with 'vagrant ssh'. \n"
+           "Then do 'source /opt/sharkeyes/env_sharkeyes/bin/activate' to activate the virtual environment. \n"
+           "Then cd to /opt/sharkeyes/src and do './runcelery.sh' \n"
+           "This will then block, as it's meant to show you what celery is doing. Leave it running, or ctl-c it \n"
+           "and do './runcelery.sh' again if you want to restart it."
+           "Now you'll be able to run the site from PyCharm or the runserver."
+           "Sorry this sucks, in a bit this last step will be automated. Got it? Good.")
 
 
 def provision():
