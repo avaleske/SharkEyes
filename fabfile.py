@@ -296,6 +296,7 @@ def provision():
     configure_rabbitmq()
     configure_celery()
     deploy()
+    print("And provisioning is complete. Awesome!")
 
 
 def uname():
