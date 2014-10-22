@@ -8,15 +8,16 @@ All these requirements should be cross platform. If you're on Windows, I like us
 - Install [PyCharm](http://www.jetbrains.com/pycharm/) (There's a free 30 day trial and free academic license.)
 - Install [Python](https://www.python.org/) or use the Python that comes with your system. The system python, however, is likely out of date.    
 - Install Python Pip using instructions from [here](https://pip.pypa.io/en/latest/installing.html). (Using the `get-pip.py` script described in the links makes this pretty easy.)
-- This step is likely Windows only. You have some dependencies you need to install before install fabric:
-  - Install the pycrypto binaries with `easy_install http://www.voidspace.org.uk/downloads/pycrypto26/pycrypto-2.6.win32-py2.7.ex`
+- This step is likely Windows only. You have some dependencies you need to install before installing fabric:
+  - Install the pycrypto binaries with `easy_install http://www.voidspace.org.uk/downloads/pycrypto26/pycrypto-2.6.win32-py2.7.exe`
   - Then `pip install paramiko`
 - Install [Fabric](http://www.fabfile.org/installing.html) with `pip install fabric`. You can do this in a virtualenv if you want, but it shouldn't conflict with anything so that's likely not critical.
-- Clone this repo to local drive using the button (if you use Git Desktop) or the url on the side. If you want to use ssh so you don't have to keep entering passwords, learn how to setup ssh keys with GitHub  [here](https://help.github.com/articles/generating-ssh-keys/)
-  - When cloning, keep in mind that you'll be adding a few directories at the same level as the project directory, so cloning the recommended approach is to make a directory for the project, cd into that, and then clone the repo. (So for example, create directory at `~/code/sharkyes/` and run `git clone` from inside that directory.)
+- Clone this repo to your local drive using the button (if you use Git Desktop) or the url on the right side of the main github repo page. If you want to use ssh so you don't have to keep entering passwords, learn how to setup ssh keys with GitHub [here](https://help.github.com/articles/generating-ssh-keys/).
+  - When cloning, keep in mind that you'll be adding a few directories at the same level as the project directory, so the recommended approach is to make a directory for the all this stuff, cd into that, and then clone the repo. (So for example, create directory at `~/code/sharkyes/` and run `git clone` from inside that directory.)
   - Clone the repo with `git clone git@github.com:avaleske/SharkEyes.git` for ssh,
   - or `git clone https://github.com/avaleske/SharkEyes.git` for http.
 - Finally, create a `media/` directory at the same level as your project directory. For the example directory structure listed above, it'd be at `~/code/sharkeyes/media/`, since the repo you just cloned is at `~/code/sharkeyes/SharkEyesCore/`.
+
 #####Bringing the virtual machine online:
 - While at this point you can just run `vagrant up`  to download and configure the centos box, it's recommended to first download the base box manually.
   - To download box base manually, you can do `vagrant box add centos65 https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box`
