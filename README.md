@@ -50,7 +50,7 @@ Ok, awesome, vagrant works and you have passwords setup. Now to run the setup sc
 - Then you need to setup the project interpreter to use the interpreter in your virtual machine. Make sure the VM is up before doing this:
   - Go to PyCharm Preferences -> Project Interpretor
   - Click the gear to the right of the Project Interpeter bar, and then remote, and then the 'vagrant' radio button. If it asks, your vagrant instance folder is the project folder.
-  - In the Python Interpreter Path put `/home/vagrant/virtualenvs/sharkeyes/bin/python`
+  - In the Python Interpreter Path put `/opt/sharkeyes/env_sharkeyes/bin/python`
   - <img src="resources/configure_interpreter.png?raw=true">
   - Then click ok. It'll connect to the vagrant instance and learn what's installed there, which might take a minute or two.
 - Then go to PyCharm Preferences -> Django.
@@ -66,31 +66,32 @@ Ok, awesome, vagrant works and you have passwords setup. Now to run the setup sc
     - set `DJANGO_SETTINGS_MODULE` equal to `SharkEyesCore.settings`
     - and set `PYTHONUNBUFFERED` equal to 1.
   - And add a path mapping where the local path is your project folder, and the remote path is `/opt/sharkeyes/src`.
-- This should be everything. You should be able to hit run, and get then go to `localhost:8001` in your browser and project home page. If you want to debug, set a breakpoint and hit the bug to the right of the play button.
+- This should be everything. You should be able to hit run, and get then go to `localhost:8001` in your browser and see the project home page. If you get a page reset message, try refreshing a few times. If you want to debug, set a breakpoint and hit the bug to the right of the play button.
 
 ####Test things:
-For any of these urls, you can go to the terminal window where celery is running to watch the tasks go by, even after the pageload times out. Everything is saved to the `media/` directory that's at the same level as your project directory. All of the functions that these urls call can also be called from the django console. Careful to ensure you're calling them as celery tasks (Do it the ways it's done in the corresponding `views.py` file) rather than a normal function, or else you'll lose any concurrency benefits and won't be able to monitor progress with celery.
+For any of the urls below, you can go to the terminal window where celery is running to watch the tasks go by, even after the pageload times out. Everything is saved to the `media/` directory that's at the same level as your project directory. All of the functions that these urls call can also be called from the django console. Careful to ensure you're calling them as celery tasks (Do it the ways it's done in the corresponding `views.py` file) rather than a normal function, or else you'll lose any concurrency benefits and won't be able to monitor progress with celery.
 - Now that Django is running, you can go to `http://localhost:8001/pl_download/testfetch/` to download the netcdf files for the next few days.
-- If you have a lot of time, then `http://localhost:8001/pl_plot/testplot/` to plot the files for the next few days. If you don't have a lot of time, do the next bullet.
-- You can also use the django console in PyCharm to run functions that only plot one plot, instead of all of them. To plot something from the django console you'd need to do `from pl_plot.models import OverlayManager`, then `OverlayManager.make_plot.delay(1)`. This would plot the sst overlay for the first time index of the most recent netcdf file. Note that due to assumptions in the javascript, this one plot may not show up in the picker until you've plotted all the plots for that day.
-- To tile these plots, go to `https://localhost:8001/pl_chop/testchop/`. These will take a long time if you have many overlays. It will go faster if you give your VM multiple cores.
+- If you have a lot of time, then go `http://localhost:8001/pl_plot/testplot/` to plot the files for the next few days. If you don't have a lot of time, do the next bullet instead.
+- You can use the django console in PyCharm to run functions that only plot one plot instead of all of them. To plot something from the django console you'd need to do `from pl_plot.models import OverlayManager`, then `OverlayManager.make_plot.delay(1)`. This would plot the sst overlay for the first time index of the most recent netcdf file. Note that due to assumptions in the javascript, this one plot may not show up in the picker until you've plotted all the plots for that day.
+- To tile these plots, go to `https://localhost:8001/pl_chop/testchop/`. This will take a long time if you have many overlays. It will go faster if you give your VM multiple cores.
 
 ###Notes
-The celery console won't give you a prompt back, so you'll have to open a new terminal tab or place it in the background. In Linux, a task may be placed in the background by regaining the command prompt (Ctrl-Z), and typing bg %<task number>. If you watch it, it'll tell you what it's doing with the tasks.
+The celery console won't give you a prompt back, so you'll have to open a new terminal tab or place it in the background. In Linux, a task may be placed in the background by regaining the command prompt (Ctrl-Z), and typing `bg %<task number>`. If you watch it, it'll tell you what it's doing with the tasks.
 
-If you change a task, you have to restart celery or it won't see it. This was really confusing for awhile when I had swapped the order of the return arguments.
+If you change a task, you have to restart celery or it won't see it. This was really confusing for awhile when I had swapped the order of the return arguments of something, but didn't restart celery
 
 If you're using sqlite (and if you followed the above instuctions you're not - it should be an option again soon) you can run `sqlite3 db.sqlite3` to get a sql promp and see the database. `.tables` gets you a list of tables, `.headers on` turns on headers for the output when you run a query, and `.mode column` columnates the output so it's actually usable.
 
+For MySQL, from in the vm it's just `mysql --user=<username> -p`.
+
 Sometimes you'll try to start the runserver and the port will be in use. There's likely a runserver instance running that got lost. In the VM, do `sudo ps aux | grep -i manage` and kill the runserver process. Just restarting the VM can fix this too.
 
-If you try to run a fabric command and get an ssh key error, and also recently destroyed your vm and are trying to build a new one, it's likely because fabric is expecting the old ssh key. Run `ssh-keygen -R [127.0.0.1]:2222` to fix it. Type it exactly. Unlike convention the brackets don't mean to replace their contents.)
+If you try to run a fabric command and get an ssh key error, and also recently destroyed your vm and are trying to build a new one, it's likely because fabric is expecting the old ssh key. Run `ssh-keygen -R [127.0.0.1]:2222` to fix it. Type that exactly. Unlike convention the brackets don't mean to replace their contents.
 
 ###Git Organization
 We have structured the project Git repository so that any major feature development is done in a specific `feature` branch, and the `feature` branches are merged into the `develop` branch when they're complete. Then, when a set of features is ready for release and `develop` is in a stable state, `develop` is merged into `master`, and `master` is what is checked out in production. This ensures that `master` is always the same as what is running in production. If a hot-fix is necessary, a branch for the hot-fix is created from `master`, and then, when it is completed, it is merged into both `master` and `develop`.
 
 ###DB Schema
-I should probably also explain my thinking regarding the db schema as well.
 For netcdf files it's pretty straightforward. Information about when they were downloaded and such is in the DataFile model.
 
 For Overlays, there's Overlays, OverlayDefinitions, and Parameters. An OverlayDefinition knows everything about the type, the name, the function that it needs to call to run it, and whether it's one of the base overlays that are automatically run. (Any overlay someone makes custom won't be a base overlay.)
