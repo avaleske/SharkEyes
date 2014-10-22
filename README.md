@@ -20,7 +20,7 @@ All these requirements should be cross platform. If you on Windows, I like using
   - or `git clone https://github.com/avaleske/SharkEyes.git` for http.
 - Finally, create a `media/` directory at the same level as your project directory. For the example directory structure listed above, it'd be at `~/code/sharkeyes/media/`, since the repo you just cloned is at `~/code/sharkeyes/SharkEyesCore/`.
 #####Bringing the virtual machine online:
-- While you at this point you can just run `vagrant up`  to download and configure the centos box, it's recommended to first download the base box manually.
+- While at this point you can just run `vagrant up`  to download and configure the centos box, it's recommended to first download the base box manually.
   - To download box base manually, you can do `vagrant box add centos65 https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box`
   - Then do `vagrant up` to bring the box online. You'll need to be in or below the directory where the vagrantfile is located. With our running example, you'd need to be in `~/code/sharkeyes/SharkEyesCore/`.
   - You should now be able to run `vagrant ssh` from inside the project directory and automatically ssh into the virtual machine. To suspend or shutdown the vm, use `vagrant suspend` or `vagrant halt`, respectively. To bring your VM online, it's always `vagrant up`.
@@ -50,12 +50,12 @@ Ok, awesome, vagrant works and you have passwords setup. Now to run the setup sc
   - Go to PyCharm Preferences -> Project Interpretor
   - Click the gear to the right of the Project Interpeter bar, and then remote, and then the 'vagrant' radio button. If it asks, your vagrant instance folder is the project folder.
   - In the Python Interpreter Path put `/home/vagrant/virtualenvs/sharkeyes/bin/python`
-  - ![Pycharm Screencap](https://raw.github.com/avaleske/resources/configure_interpreter.png)
+  - <img src="https://raw.github.com/avaleske/SharkEyes/develop/resources/configure_interpreter.png">
   - Then click ok. It'll connect to the vagrant instance and learn what's installed there, which might take a minute or two.
 - Then go to PyCharm Preferences -> Django.
   - Check the box to enable Django.
   - The project root is your project folder. Point 'Settings' at `settings.py`, and point 'Manage script' at `manage.py`. These are both relative to the project root.
-  - ![Django Pycharm Screencap](https://raw.github.com/avaleske/resources/pycharm_django.png)
+  - <img src="https://raw.github.com/avaleske/SharkEyes/develop/resources/pycharm_django.png">
 - Then setup the site configuration to run the project from within PyCharm:
   - At the top of the PyCharm window there’s a play button and a down arrow to the left of it. Choose that, and then 'edit configurations'.
   - Set the host to `0.0.0.0`, and the Port to `8000`.
