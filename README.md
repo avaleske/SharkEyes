@@ -4,7 +4,7 @@
 
 ####Installing prereqs:
 All these requirements should be cross platform. If you're on Windows, I like using the Git Bash for these over Command Prompt, but that's just me. Also, throughout these steps I mention the project directory, which is the directory that you clone from GitHub that contains `manage.py` and the hidden `.git` directory.
-- Install [Vagrant](www.vagrantup.com), [Git](http://git-scm.com/), and [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+- Install [Vagrant](http://www.vagrantup.com), [Git](http://git-scm.com/), and [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 - Install [PyCharm](http://www.jetbrains.com/pycharm/) (There's a free 30 day trial and free academic license.)
 - Install [Python](https://www.python.org/) or use the Python that comes with your system. The system python, however, is likely out of date.    
 - Install Python Pip using instructions from [here](https://pip.pypa.io/en/latest/installing.html). (Using the `get-pip.py` script described in the links makes this pretty easy.)
