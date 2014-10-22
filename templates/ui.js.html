@@ -12,7 +12,7 @@ data.types.push("{{item.definition.type}}");
 {% for item in defs %}
 data.defs.push("{{item.function_name}}");
 {% endfor %}
-var loc = "{% static ''%}";
+var loc = "{{ MEDIA_URL }}"
 
 // global variables
 var map;

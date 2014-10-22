@@ -10,11 +10,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "CentOS6_4_Dev"
+  config.vm.box = "centos65"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  config.vm.box_url = "http://developer.nrel.gov/downloads/vagrant-boxes/CentOS-6.4-x86_64-v20130731.box"
+  config.vm.box_url = "https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box"
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
@@ -42,36 +42,36 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
-  config.vm.synced_folder "synced_dir", "/home/vagrant/media_root"
+  config.vm.synced_folder "../media", "/opt/sharkeyes/media"
 
   # Enable provisioning with chef solo, specifying a cookbooks path, roles
   # path, and data_bags path (all relative to this Vagrantfile), and adding
   # some recipes and/or roles.
 
-  config.vm.provision :chef_solo do |chef|
-
-    chef.json = {
-        :python => {
-            :install_method => 'source',
-            :version => '2.7.3',
-            :checksum => 'c57477edd6d18bd9eeca2f21add73919'
-        }
-    }
-    chef.cookbooks_path = "./chef-recipes"
-    chef.add_recipe "apt"
-    chef.add_recipe "apache2"
-    chef.add_recipe "apache2::mod_wsgi"
-    chef.add_recipe "build-essential"
-    chef.add_recipe "git"
-    chef.add_recipe "vim"
-    chef.add_recipe "openssl"
-    chef.add_recipe "yum"
-    chef.add_recipe "python"
-    chef.add_recipe "iptables::disabled"
-    chef.add_recipe "source_package"
-    #chef.add_recipe "scipy"
-    chef.add_recipe "sharkeyes"
-  end
+ # config.vm.provision :chef_solo do |chef|
+ #
+ #   chef.json = {
+ #       :python => {
+ #           :install_method => 'source',
+ #           :version => '2.7.3',
+ #           :checksum => 'c57477edd6d18bd9eeca2f21add73919'
+ #       }
+ #   }
+ #   chef.cookbooks_path = "./chef-recipes"
+ #   chef.add_recipe "apt"
+ #   chef.add_recipe "apache2"
+ #   chef.add_recipe "apache2::mod_wsgi"
+ #   chef.add_recipe "build-essential"
+ #   chef.add_recipe "git"
+ #   chef.add_recipe "vim"
+ #   chef.add_recipe "openssl"
+ #   chef.add_recipe "yum"
+ #   chef.add_recipe "python"
+ #   chef.add_recipe "iptables::disabled"
+ #   chef.add_recipe "source_package"
+ #   #chef.add_recipe "scipy"
+ #   chef.add_recipe "sharkeyes"
+ # end
 
 
   #

@@ -13,16 +13,7 @@ from __future__ import absolute_import
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'w^_kzwp&gk9z9%(8_6sgcc4lvyw=_4x8v1!c$kmvblnwu6ad1g'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -54,18 +45,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'SharkEyesCore.urls'
 
-WSGI_APPLICATION = 'SharkEyesCore.wsgi.application'
+WSGI_APPLICATION = 'SharkEyesCore.apache.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -88,32 +69,32 @@ TEMPLATE_LOADERS = (
 
 TEMPLATE_DIRS = BASE_DIR + '/templates/'
 
-STATIC_URL = '/synced_dir/'
-STATIC_ROOT = '/vagrant/synced_dir/'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/opt/sharkeyes/static/'
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static_files'), )
 
-STATICFILES_DIRS = (
-    BASE_DIR + '/synced_dir/',
-     '/var/www/synced_dir/',
-)
 
 # other files
-#definitely a temporary option
 NETCDF_STORAGE_DIR = "netcdf"
 UNCHOPPED_STORAGE_DIR = "unchopped"
 VRT_STORAGE_DIR = "vrt_files"
 TILE_STORAGE_DIR = "tiles"
 KEY_STORAGE_DIR = "keys"
 
-BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 
-MEDIA_ROOT = "/home/vagrant/media_root/"
+MEDIA_ROOT = "/opt/sharkeyes/media/"
+MEDIA_URL = "/media/"
+
+BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 
 # For celery
 BROKER_HOST = "127.0.0.1"
 BROKER_PORT = 5672
-BROKER_VHOST = "/"
-BROKER_USER = "guest"           # todo change these to something more secure. add a user in rebbitmq for celery or?
-BROKER_PASSWORD = "guest"
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+BROKER_VHOST = "sharkeyes"
 
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_IMPORTS = ('SharkEyesCore.tasks',)
+
+# import local settings. PyCharm thinks it's unused, but PyCharm is silly.
+from .settings_local import *
