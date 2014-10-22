@@ -8,7 +8,7 @@ All these requirements should be cross platform. If you on Windows, I like using
 - Install [PyCharm](http://www.jetbrains.com/pycharm/) (There's a free 30 day trial and free academic license.)
 - Install [Python](https://www.python.org/) or use the Python that comes with your system. The system python, however, is likely out of date.    
 - Install Python Pip using instructions from [here](https://pip.pypa.io/en/latest/installing.html). (Using the `get-pip.py` script described in the links makes this pretty easy.)
-- Likely Windows only. You have some dependencies you need to install before install fabric:
+- This step is ikely Windows only. You have some dependencies you need to install before install fabric:
   - Install the pycrypto binaries with `easy_install http://www.voidspace.org.uk/downloads/pycrypto26/pycrypto-2.6.win32-py2.7.ex`
   - Then `pip install paramiko`
 - Install [Fabric](http://www.fabfile.org/installing.html) with `pip install fabric`. You can do this in a virtualenv if you want, but it shouldn't conflict with anything so that's likely not critical.
