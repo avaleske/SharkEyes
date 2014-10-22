@@ -28,15 +28,17 @@ All these requirements should be cross platform. If you're on Windows, I like us
 
 ####To configure the VM:
 Ok, so you've got the vagrant vm up and running. Great! We use fabric to provision the VM and set it up with everything we need. This will take awhile to download and compile everything we need, so you can leave it for a bit, but unfortunately it'll need some babysitting at the end.
+
 #####Setup passwords:
 We store the passwords in a separate file that we keep out of source control. Make some up now. You'll need them later in setup, but you can always reference the file you're about to create.
-- In `<project dir>/SharkEyesCore` there's a file called `settings_local.template`. Make a copy of this named `settings_local.py`
+- In `~/code/sharkeyes/SharkEyesCore/SharkEyesCore/` there's a file called `settings_local.template`. Make a copy of this named `settings_local.py` and leave it in the same directory.
 - In this `settings_local.py`, make up values for the BROKER_PASSWORD and the PASSWORD item under DATABASES. Also, choose a secret key, which should be an ASCII string that's about 40 characters long.
 - Finally, set the DEBUG and TEMPLATE_DEBUG flags to true if you want the runserver and static files to work.
+
 #####Setup everything else:
 Ok, awesome, vagrant works and you have passwords setup. Now to run the setup script. We use fabric to do this.
-- From the same directory as `fabfile.py`, or below it, run `fab vagrant uname`. This will connect to the VM, and run `uname -a` remotely for you. If this worked, then go to the next step.
-- Now we install everything on the VM. To do this, run `fab vagrant provision`. This will take a long time, (possibly hours). It should do most things on it's own, but will need babysitting at the end. Just do what it asks you to do. If something fails you should be able to run `fab vagrant provision` again, as it should be indempotent. If you need to, you can run any function in `fabfile.py` with `fab vagrant <function name>`.
+- Let's test it first. So from the same directory as `fabfile.py`, or below it, run `fab vagrant uname`. This will connect to the VM, and run `uname -a` remotely for you. If this worked, then go to the next step.
+- Now we install everything on the VM. To do this, run `fab vagrant provision`. This will take a long time, (possibly hours). It should do most things on its own, but will need babysitting at the end. Just do what it asks you to do. If something fails you should be able to run `fab vagrant provision` again, as it should be indempotent. If you need to, you can run any function in `fabfile.py` with `fab vagrant <function name>`.
 - Once that finishes, do `fab vagrant deploy` to run the Django setup scripts and run the database migrations.
 - Then do `fab vagrant startdev` and do what it says to bring all the background services online. You'll need to run this anytime you cold boot the VM. (If you're just resuming, it should be fine.)
 - At this point, you can move on and configure PyCharm, or `vagrant ssh` into the machine and start the runserver manually.
