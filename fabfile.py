@@ -91,7 +91,7 @@ def install_apache():
 
 
 def install_mysql():
-    sudo('yum -y install mysql mysql_devel')
+    sudo('yum -y install mysql mysql-devel')
     #sudo('yum -y install MySQL-python') # moved to virtualenv
     sudo('yum -y install mysql-server')
 
@@ -106,7 +106,10 @@ def setup_group():
     sudo('usermod -a -G sharkeyes ' + current_user)
     #sudo('exec sudo su -l $USER')
     if 'sharkeyes' not in run('id'):
-        reboot()
+        if env.user == 'vagrant':
+            local('vagrant reload') # if we're in vagrant, a normal restart doesn't reconnect things it needs to
+        else:
+            reboot()
 
 
 def setup_project_directory():
@@ -149,7 +152,7 @@ def setup_python():
         for package in python_packages:
             run('env_sharkeyes/bin/pip install ' + package)
         run('env_sharkeyes/bin/pip install -e git+https://github.com/matplotlib/basemap#egg=Basemap')
-    if not exists('/opt/sharkees/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
+    if not exists('/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
         run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap' + ' ' +   # explicit space because I fail
             '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
 
@@ -206,7 +209,7 @@ def configure_mysql():
                 " If this is the first run, the current root password is blank. "
                 "Even if this is your local, "
                 "change it, and save the new one to your password manager. Then "
-                "answer with default answers to all other questions. Ready?")
+                "answer with default answers (Y) to all other questions. Ready?")
     sudo('/usr/bin/mysql_secure_installation')
     sudo('service mysqld restart')
     root_pass = getpass('So this script can stop bugging you, first enter your root mysql password: ')
@@ -272,8 +275,8 @@ def startdev():
            "Then do 'source /opt/sharkeyes/env_sharkeyes/bin/activate' to activate the virtual environment. \n"
            "Then cd to /opt/sharkeyes/src and do './runcelery.sh' \n"
            "This will then block, as it's meant to show you what celery is doing. Leave it running, or ctl-c it \n"
-           "and do './runcelery.sh' again if you want to restart it."
-           "Now you'll be able to run the site from PyCharm or the runserver."
+           "and do './runcelery.sh' again if you want to restart it. \n"
+           "Now you'll be able to run the site from PyCharm or the runserver. \n"
            "Sorry this sucks, in a bit this last step will be automated. Got it? Good.")
 
 
@@ -286,11 +289,13 @@ def provision():
     setup_project_directory()
     install_geotools()
     setup_python()
+    clone_repo()
     configure_mod_wsgi()
     configure_apache()
     configure_mysql()
     configure_rabbitmq()
     configure_celery()
+    deploy()
 
 
 def uname():
@@ -306,7 +311,3 @@ def is_64():
     if run('uname -m') == 'x86_64':
         return True
     return False
-
-def test():
-    test = prompt('asfdsa: ')
-    print test
