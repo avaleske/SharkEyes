@@ -7,7 +7,7 @@ All these requirements should be cross platform. If you're on Windows, I like us
 - Install [Vagrant](http://www.vagrantup.com), [Git](http://git-scm.com/), and [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 - Install [PyCharm](http://www.jetbrains.com/pycharm/) (There's a free 30 day trial and free academic license.)
 - Install [Python](https://www.python.org/) or use the Python that comes with your system. The system python, however, is likely out of date.    
-- Install Python Pip using instructions from [here](https://pip.pypa.io/en/latest/installing.html). (Using the `get-pip.py` script described in the links makes this pretty easy.)
+- Install Python Pip using instructions from [here](https://pip.pypa.io/en/latest/installing.html). (Using the `get-pip.py` script described in the link makes this pretty easy.)
 - This step is likely Windows only. You have some dependencies you need to install before installing fabric:
   - Install the pycrypto binaries with `easy_install http://www.voidspace.org.uk/downloads/pycrypto26/pycrypto-2.6.win32-py2.7.exe`
   - Then `pip install paramiko`
@@ -42,7 +42,7 @@ Ok, awesome, vagrant works and you have passwords setup. Now to run the setup sc
 - Once that finishes, do `fab vagrant deploy` to run the Django setup scripts and run the database migrations.
 - Then do `fab vagrant startdev` and do what it says to bring all the background services online. You'll need to run this anytime you cold boot the VM. (If you're just resuming, it should be fine.)
 - At this point, you can move on and configure PyCharm, or `vagrant ssh` into the machine and start the runserver manually.
-  - To start the runserver manually, source the virtualenv by doing `source /opt/sharkeyes/env_sharkeyes/bin/activate`
+  - To start the runserver manually, ssh into the vm and source the virtualenv by doing `source /opt/sharkeyes/env_sharkeyes/bin/activate`
   - Then, from the project directory, do `./manage.py runserver 0.0.0.0:8000`
 
 ####To configure PyCharm:
