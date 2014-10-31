@@ -205,26 +205,33 @@ def configure_apache():
 def configure_mysql():
     sudo('service mysqld start')
     print("!-"*50)
-    confirm("You will now start with interactive MySQL secure installation."
-                " If this is the first run, the current root password is blank. "
-                "Even if this is your local, "
-                "change it, and save the new one to your password manager. Then "
-                "answer with default answers (Y) to all other questions. Ready?")
-    sudo('/usr/bin/mysql_secure_installation')
-    sudo('service mysqld restart')
-    root_pass = getpass('So this script can stop bugging you, first enter your root mysql password: ')
-    sharkeyes_pass = getpass('And now the database password you specified in settings_local.py: ')
+    if exists('/opt/sharkeyes/src/config/mysql_setup_script_run.guard'):
+        print("MySQL setup has already run successfully. If you need to run it again, delete /opt/sharkeyes/src/config/mysql_setup_script_run.guard")
+    else:
+        confirm("You will now start with interactive MySQL secure installation."
+                    " If this is the first run, the current root password is blank. "
+                    "Even if this is your local, "
+                    "change it, and save the new one to your password manager. Then "
+                    "answer with default answers (Y) to all other questions. Ready?")
+        sudo('/usr/bin/mysql_secure_installation')
+        sudo('service mysqld restart')
+        root_pass = getpass('So this script can stop bugging you, first enter your root mysql password: ')
+        sharkeyes_pass = getpass('And now the database password you specified in settings_local.py: ')
 
-    with settings(warn_only=True):
-        if run('mysql --user=root --password={0} -e "show databases;" | grep sharkeyes'.format(root_pass)).return_code != 0:
-            run('mysql --user=root --password={0} -e "CREATE DATABASE sharkeyes;"'.format(root_pass))
-        if run('mysql --user=root --password={0} -e "SELECT user from mysql.user;" | grep sharkeyes'.format(root_pass)).return_code != 0:
-            run('mysql --user=root --password={0} -e "CREATE USER \'sharkeyes\'@\'localhost\' IDENTIFIED BY \'{1}\';"'.format(
-                root_pass, sharkeyes_pass))
-            # assuming if we created the user already, then we already gave it proper permissions
-            run('mysql --user=root --password={0} -e "GRANT ALL ON sharkeyes.* to  \'sharkeyes\'@\'localhost\';"'.format(
-                root_pass))
-            run('mysql --user=root --password={0} -e "FLUSH PRIVILEGES;"'.format(root_pass))
+        with settings(warn_only=True):
+            if run('mysql --user=root --password={0} -e "show databases;" | grep sharkeyes'.format(root_pass)).return_code != 0:
+                run('mysql --user=root --password={0} -e "CREATE DATABASE sharkeyes;"'.format(root_pass))
+            if run('mysql --user=root --password={0} -e "SELECT user from mysql.user;" | grep sharkeyes'.format(root_pass)).return_code != 0:
+                run('mysql --user=root --password={0} -e "CREATE USER \'sharkeyes\'@\'localhost\' IDENTIFIED BY \'{1}\';"'.format(
+                    root_pass, sharkeyes_pass))
+                # assuming if we created the user already, then we already gave it proper permissions
+                run('mysql --user=root --password={0} -e "GRANT ALL ON sharkeyes.* to  \'sharkeyes\'@\'localhost\';"'.format(
+                    root_pass))
+                run('mysql --user=root --password={0} -e "FLUSH PRIVILEGES;"'.format(root_pass))
+
+        # touch a file to note that we don't have to do all this again.
+        run('echo "This file notes that MySQL setup ran successfully. If you need to run it again, then delete this file." > '
+            '/opt/sharkeyes/src/config/mysql_setup_script_run.guard')
 
 
 def configure_rabbitmq():
