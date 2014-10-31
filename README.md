@@ -24,7 +24,7 @@ All these requirements should be cross platform. If you're on Windows, I like us
   - Then do `vagrant up` to bring the box online. You'll need to be in or below the directory where the vagrantfile is located. With our running example, you'd need to be in `~/code/sharkeyes/SharkEyesCore/`.
   - You should now be able to run `vagrant ssh` from inside the project directory and automatically ssh into the virtual machine. To suspend or shutdown the vm, use `vagrant suspend` or `vagrant halt`, respectively. To bring your VM online, it's always `vagrant up`.
   - Also check that your local project folder has been mounted in the VM at `/vagrant/`. This makes it easy to edit code in PyCharm or Sublime or something locally, and then run it in the VM without having to copy it.
-  - (Windows users, this would be a good place to check that trying to resume after a `vagrant suspend` doesn't wipe your VM. There's a bug in some versions of VirtualBox that causes it to lose track of suspended VMs, and then you have to start from scratch. If this is the case, always use `vagrant halt`.)
+  - (Windows users, this would be a good place to check that trying to resume after a `vagrant suspend` doesn't wipe your VM. There's a bug in some versions of VirtualBox that causes it to lose track of suspended VMs, and then you have to start from scratch. (Look for it unpacking the box again. If it is, then it lost it.) If this is the case, always use `vagrant halt`.)
 
 ####To configure the VM:
 Ok, so you've got the vagrant vm up and running. Great! We use fabric to provision the VM and set it up with everything we need. This will take awhile to download and compile everything we need, so you can leave it for a bit, but unfortunately it'll need some babysitting at the end.
