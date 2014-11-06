@@ -1,0 +1,3 @@
+#default to set line endings to unix style always
+
+* text eol=lf
