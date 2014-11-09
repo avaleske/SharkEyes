@@ -97,4 +97,5 @@ CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IMPORTS = ('SharkEyesCore.tasks',)
 
 # import local settings. PyCharm thinks it's unused, but PyCharm is silly.
+# noinspection PyUnresolvedReferences
 from .settings_local import *

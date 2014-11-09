@@ -1,0 +1,3 @@
+This folder has files used to configure things, or that are copied elsewhere.
+
+If you change something, you'll need to copy it to where it's actually used. (Check the fabfile to see where it gets copied.)

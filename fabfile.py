@@ -245,10 +245,14 @@ def configure_rabbitmq():
             sudo('rabbitmqctl set_permissions -p sharkeyes sharkeyes ".*" ".*" ".*"')
         if sudo('rabbitmqctl list_users | grep guest').return_code == 0:
             sudo('rabbitmqctl delete_user guest')
+    sudo('usermod -a -G sharkeyes rabbitmq')
 
 
 def configure_celery():
-    pass
+    with settings(warn_only=True):
+        if run('grep celery /etc/passwd').return_code != 0:
+            sudo('useradd celery')
+    sudo('usermod -a -G sharkeyes celery')
 
 
 def deploy():
@@ -284,8 +288,11 @@ def startdev():
            "This will then block, as it's meant to show you what celery is doing. Leave it running, or ctl-c it \n"
            "and do './runcelery.sh' again if you want to restart it. \n"
            "Now you'll be able to run the site from PyCharm or the runserver. \n"
-           "Sorry this sucks, in a bit this last step will be automated. Got it? Good.")
+           "Sorry this sucks, in a bit this last step will be automated. Got it? Good. Hit enter to continue.")
 
+def runserver():
+    with cd('/opt/sharkeyes/src'):
+        run('./runserver.sh')
 
 def provision():
     install_prereqs()
