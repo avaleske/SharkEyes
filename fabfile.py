@@ -32,6 +32,10 @@ python_packages = ['numpy==1.8',
                    'pygdal==1.10.1.0',
                    ]
 
+# these aren't used everywhere yet...
+PROJECT_ROOT = '/opt/sharkeyes'
+SRC_ROOT = '/opt/sharkeyes/src'
+
 def vagrant():
     """Allow fabric to manage a Vagrant VM/LXC container"""
     env.user = 'vagrant'
@@ -253,7 +257,11 @@ def configure_celery():
         if run('grep celery /etc/passwd').return_code != 0:
             sudo('useradd celery')
     sudo('usermod -a -G sharkeyes celery')
-
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd.sysconfig /etc/sysconfig/celeryd')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd /etc/init.d/celeryd')
+    sudo('chmod +x /etc/sysconfig/celeryd')
+    sudo('chmod +x /etc/init.d/celeryd')
+    sudo('service celeryd start')
 
 def deploy():
     with cd('/opt/sharkeyes/src/'):
@@ -280,15 +288,10 @@ def startdev():
     # starts everything that needs to run for the dev environment
     sudo('service mysqld start')
     sudo('service rabbitmq-server start')
+    sudo('service celeryd start')
     sudo('service httpd stop')  # stop apache so it's not in the way
     print("!-"*50)
-    prompt("Now go ssh into the virtual machine with 'vagrant ssh'. \n"
-           "Then do 'source /opt/sharkeyes/env_sharkeyes/bin/activate' to activate the virtual environment. \n"
-           "Then cd to /opt/sharkeyes/src and do './runcelery.sh' \n"
-           "This will then block, as it's meant to show you what celery is doing. Leave it running, or ctl-c it \n"
-           "and do './runcelery.sh' again if you want to restart it. \n"
-           "Now you'll be able to run the site from PyCharm or the runserver. \n"
-           "Sorry this sucks, in a bit this last step will be automated. Got it? Good. Hit enter to continue.")
+    prompt("And you're good to go! Hit enter to continue.")
 
 def runserver():
     with cd('/opt/sharkeyes/src'):
