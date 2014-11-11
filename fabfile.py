@@ -259,9 +259,12 @@ def configure_celery():
     sudo('usermod -a -G sharkeyes celery')
     sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd.sysconfig /etc/sysconfig/celeryd')
     sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd /etc/init.d/celeryd')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celerybeat /etc/init.d/celerybeat')
     sudo('chmod +x /etc/sysconfig/celeryd')
     sudo('chmod +x /etc/init.d/celeryd')
+    sudo('chmod +x /etc/init.d/celerybeat')
     sudo('service celeryd start')
+    sudo('service celerybeat start')
 
 def deploy():
     with cd('/opt/sharkeyes/src/'):
@@ -289,6 +292,7 @@ def startdev():
     sudo('service mysqld start')
     sudo('service rabbitmq-server start')
     sudo('service celeryd start')
+    sudo('service celerybeat start')
     sudo('service httpd stop')  # stop apache so it's not in the way
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")

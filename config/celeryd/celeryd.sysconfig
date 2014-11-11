@@ -5,6 +5,7 @@ CELERYD_NODES="sharkeyes_1"
 
 # Where to chdir at start. 
 CELERYD_CHDIR="/opt/sharkeyes/src"
+CELERYBEAT_CHDIR="/opt/sharkeyes/src"
 
 #python interpreter for sharkeyes
 ENV_PYTHON="/opt/sharkeyes/env_sharkeyes/bin/python"
@@ -14,6 +15,7 @@ CELERYD_MULTI="$ENV_PYTHON $CELERYD_CHDIR/manage.py celeryd_multi"
 
 # How to call "manage.py celeryd"
 CELERYD="$ENV_PYTHON $CELERYD_CHDIR/manage.py celeryd"
+CELERYBEAT="$ENV_PYTHON $CELERYD_CHDIR/manage.py celerybeat"
 
 # How to call "manage.py celeryctl"
 CELERYCTL="$ENV_PYTHON $CELERYD_CHDIR/manage.py celeryctl"
@@ -27,6 +29,11 @@ CELERY_CREATE_DIRS=1
 # %n will be replaced with the nodename
 CELERYD_LOG_FILE="/var/log/sharkeyes/celery/%n.log"
 CELERYD_PID_FILE="/home/celery/run/%n.pid"
+CELERYBEAT_LOG_FILE="/var/log/sharkeyes/celery/beat.log"
+CELERYBEAT_PID_FILE="/home/celery/run/beat.pid"
+
+CELERYD_LOGLEVEL="INFO"
+CELERYBEAT_LOGLEVEL="INFO"
 
 # Name of the projects settings module.
 export DJANGO_SETTINGS_MODULE="SharkEyesCore.settings"

@@ -11,6 +11,9 @@ from __future__ import absolute_import
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from celery.schedules import crontab
+from datetime import timedelta
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -95,6 +98,14 @@ BROKER_VHOST = "sharkeyes"
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IMPORTS = ('SharkEyesCore.tasks',)
+
+CELERYBEAT_SCHEDULE = {
+    'add-every-30-seconds': {
+        'task': 'tasks.add',
+        'schedule': timedelta(seconds=45),
+        'args': (16, 16)
+    },
+}
 
 # import local settings. PyCharm thinks it's unused, but PyCharm is silly.
 # noinspection PyUnresolvedReferences
