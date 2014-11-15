@@ -1,7 +1,7 @@
 <VirtualHost *:80>
-ServerAdmin valeskea@onid.oregonstate.edu
-ServerName sharkeyes.local
-ServerAlias www.sharkeyes.local
+ServerAdmin avaleske@gmail.com
+ServerName seacast.org
+ServerAlias www.seacast.org *.seacast.org
 
 WSGIScriptAlias / /opt/sharkeyes/src/SharkEyesCore/apache/wsgi.py
 
