@@ -11,14 +11,10 @@ class Migration(DataMigration):
         # Note: Don't use "from appname.models import ModelName". 
         # Use orm.ModelName to refer to models in this application,
         # and orm['appname.ModelName'] for models in other applications.
-        salinity = orm.OverlayDefinition.objects.get(pk=2)
-        salinity.is_base = False
-        salinity.save()
+        pass    # when the fixture is loaded this is handeled, so we don't need it anymore.
 
     def backwards(self, orm):
-        salinity = orm.OverlayDefinition.objects.get(pk=2)
-        salinity.is_base = False
-        salinity.save()
+        pass
 
     models = {
         u'pl_plot.overlay': {
