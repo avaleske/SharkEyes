@@ -1,0 +1,17 @@
+<VirtualHost *:80>
+ServerAdmin avaleske@gmail.com
+ServerName seacast.org
+ServerAlias www.seacast.org *.seacast.org
+
+WSGIScriptAlias / /opt/sharkeyes/src/SharkEyesCore/apache/wsgi.py
+
+Alias /static/ /opt/sharkeyes/static/
+Alias /media/ /opt/sharkeyes/media/
+
+<Directory /opt/sharkeyes/src/SharkEyesCore/apache>
+<Files wsgi.py>
+Order deny,allow
+Allow from all
+</Files>
+</Directory>
+</VirtualHost>

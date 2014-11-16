@@ -138,7 +138,7 @@ var overlayList = [
             proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
               );
               if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
-            return "{% static ''%}"+"tiles/"+"{{item.tile_dir}}"+"/" +
+            return "{{ MEDIA_URL }}"+"tiles/"+"{{item.tile_dir}}"+"/" +
             + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
 
         },

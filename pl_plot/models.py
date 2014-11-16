@@ -64,7 +64,9 @@ class OverlayManager(models.Manager):
         # (Yay lazy evaluation...)
 
         overlays_to_display = Overlay.objects.filter(id__in=ids_of_these).order_by('definition', 'applies_at_datetime')
-        return overlays_to_display
+
+        # filtering out the non-base ones, for now, because the javascript that displays the menu is hacky.
+        return overlays_to_display.filter(definition__is_base=True)
 
     @classmethod
     def make_all_base_plots(cls, time_index=0, file_id=None):
