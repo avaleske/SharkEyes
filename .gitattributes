@@ -1,3 +1,10 @@
 #default to set line endings to unix style always
 
 * text eol=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+
+# PDF files shall not modify CRLF line endings
+*.pdf -crlf

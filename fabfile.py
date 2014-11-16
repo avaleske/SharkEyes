@@ -47,24 +47,21 @@ def vagrant():
         env.key_filename = v['IdentityFile'][1:-1]
     else:
         env.key_filename = v['IdentityFile']
+    env.branch = 'develop'
 
 def staging():
     env.user = 'azureuser'
     hostname = 'fishable.cloudapp.net'
     port = 22
     env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
+    env.branch = 'staging'
 
 def install_prereqs():
     make_dir('/opt/installers')
     # repos
+    sudo('yum -y install epel-release')
     with settings(warn_only=True):
         with cd('/opt/installers'):
-            if run('rpm -q epel-release-6-8.noarch').return_code != 0:
-                if is_64():
-                    sudo('wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm')
-                else:
-                    sudo('wget http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm')
-                sudo('rpm -ivh epel-release-6-8.noarch.rpm')
             if run('rpm -q elgis-release-6-6_0.noarch').return_code != 0:
                 sudo('wget http://elgis.argeo.org/repos/6/elgis-release-6-6_0.noarch.rpm')
                 sudo('rpm -Uvh elgis-release-6-6_0.noarch.rpm')
@@ -100,6 +97,10 @@ def install_apache():
 
 
 def install_mysql():
+    if is_centos_7():
+        with settings(warn_only=True):
+            if run('rpm -q mysql-community-release-el7-5.noarch').return_code != 0:
+                sudo('rpm -Uvh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm')
     sudo('yum -y install mysql mysql-devel')
     #sudo('yum -y install MySQL-python') # moved to virtualenv
     sudo('yum -y install mysql-server')
@@ -171,6 +172,7 @@ def clone_repo():
         sudo('ln -s /vagrant /opt/sharkeyes/src')
     elif not exists('/opt/sharkeyes/src'):
         run('git clone git@github.com:avaleske/SharkEyes.git /opt/sharkeyes/src')
+        run('git checkout ' + env.branch)
 
 
 def configure_mod_wsgi():
@@ -181,7 +183,8 @@ def configure_mod_wsgi():
                 sudo('tar xvfz 4.2.7.tar.gz')
             with cd('mod_wsgi-4.2.7'):
                 with shell_env(LD_RUN_PATH='/usr/local/lib'):
-                    sudo('./configure --with-python=/usr/local/bin/python2.7')
+                    python_path = run('which python2.7')
+                    sudo('./configure --with-python=' + python_path)
                     sudo('make')
                     sudo('make install')
 
@@ -189,8 +192,8 @@ def configure_mod_wsgi():
         with cd('/etc/httpd/conf/'):
             if run('grep -x "LoadModule wsgi_module modules/mod_wsgi.so" httpd.conf').return_code != 0:
                 # get the line number where the module loading happens, and then add the load for wsgi at that point
-                line_num = run('grep -n "^LoadModule " httpd.conf -m 1').split(':')[0]
-                sudo(' gawk \'{print;if(NR==' + line_num + ')print"LoadModule wsgi_module modules/mod_wsgi.so"}\' httpd.conf>httpd.conf.temp')
+                line_num = int(run('grep -n "# LoadModule " httpd.conf -m 1').split(':')[0]) + 3 # to get out of comments
+                sudo(' gawk \'{print;if(NR==' + str(line_num) + ')print"LoadModule wsgi_module modules/mod_wsgi.so"}\' httpd.conf>httpd.conf.temp')
                 sudo('cp httpd.conf httpd.conf.bak')
                 sudo('mv httpd.conf.temp httpd.conf')
     # setup deamon mode
@@ -245,6 +248,7 @@ def configure_mysql():
 
 def configure_rabbitmq():
     sudo('service rabbitmq-server start')
+    sudo('service rabbitmq-server restart') # so new logins work.
     with settings(warn_only=True):
         if sudo('rabbitmqctl list_vhosts | grep sharkeyes').return_code != 0:
             sudo('rabbitmqctl add_vhost sharkeyes')
@@ -274,7 +278,8 @@ def configure_celery():
 def deploy():
     with cd('/opt/sharkeyes/src/'):
         if not exists('/vagrant/'): # then this is not a local vm
-            branch = prompt("Branch to run? (Enter for leave unchanged): ")
+            run('git status')
+            branch = prompt("Branch to run? (Enter to leave unchanged): ")
             if branch:
                 run('git checkout {0}'.format(branch))
             run('git pull')
@@ -336,5 +341,10 @@ def make_dir(path):
 
 def is_64():
     if run('uname -m') == 'x86_64':
+        return True
+    return False
+
+def is_centos_7():
+    if 'release 7' in run('cat /etc/redhat-release'):
         return True
     return False
