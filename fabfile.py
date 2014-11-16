@@ -291,6 +291,7 @@ def deploy():
             run('./manage.py migrate djcelery 0004')
             run('./manage.py migrate pl_download')
             run('./manage.py migrate pl_plot')
+            run('./manage.py loaddata initial_data.json')
             run('./manage.py migrate pl_chop')
     # manage.py migrate and stuff
     # start rabbit, celery
