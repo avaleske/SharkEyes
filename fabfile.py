@@ -48,6 +48,11 @@ def vagrant():
     else:
         env.key_filename = v['IdentityFile']
 
+def staging():
+    env.user = 'azureuser'
+    hostname = 'fishable.cloudapp.net'
+    port = 22
+    env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
 
 def install_prereqs():
     make_dir('/opt/installers')
