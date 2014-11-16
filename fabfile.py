@@ -298,6 +298,16 @@ def deploy():
     # do collect static
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
 
+def startsite():
+    # starts everything that needs to run for the production environment
+    sudo('service mysqld start')
+    sudo('service rabbitmq-server start')
+    sudo('service celeryd start')
+    sudo('service celerybeat start')
+    sudo('service httpd start')
+    print("!-"*50)
+    prompt("And you're good to go! Hit enter to continue.")
+
 def startdev():
     # starts everything that needs to run for the dev environment
     sudo('service mysqld start')
