@@ -13,7 +13,7 @@ import site
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "SharkEyesCore.settings")
 os.environ["CELERY_LOADER"] = "django"
-os.environ["MPLCONFIGDIR"] = "/tmp/"
+os.environ["MPLCONFIGDIR"] = "/opt/.mpl_tmp"
 
 site.addsitedir('/opt/sharkyes/env_sharkeyes/lib/python2.7/site-packages')
 sys.path.append('/opt/sharkeyes/src')

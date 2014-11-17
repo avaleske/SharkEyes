@@ -57,6 +57,13 @@ def staging():
     env.branch = 'staging'
 
 def install_prereqs():
+    #handle selinux
+    with settings(warn_only=True):
+        if run('rpm -qa |grep selinux').return_code == 0:
+            if 'Enforcing' in run('/usr/sbin/getenforce'):
+                with settings(warn_only=False):
+                    sudo('/usr/sbin/setsebool httpd_tmp_exec on')
+
     make_dir('/opt/installers')
     # repos
     sudo('yum -y install epel-release')
@@ -165,6 +172,10 @@ def setup_python():
     if not exists('/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
         run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap' + ' ' +   # explicit space because I fail
             '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
+    if not exists('/opt/.mpl_tmp'):
+        make_dir('/opt/.mpl_tmp')
+        sudo('chgrp -R sharkeyes /opt/.mpl_tmp')
+    sudo('chmod -R 770 /opt/.mpl_tmp')
 
 
 def clone_repo():
@@ -172,7 +183,8 @@ def clone_repo():
         sudo('ln -s /vagrant /opt/sharkeyes/src')
     elif not exists('/opt/sharkeyes/src'):
         run('git clone git@github.com:avaleske/SharkEyes.git /opt/sharkeyes/src')
-        run('git checkout ' + env.branch)
+        with cd('/opt/sharkeyes/src/'):
+            run('git checkout ' + env.branch)
 
 
 def configure_mod_wsgi():
@@ -187,6 +199,10 @@ def configure_mod_wsgi():
                     sudo('./configure --with-python=' + python_path)
                     sudo('make')
                     sudo('make install')
+    if not exists('/opt/.python_eggs'):
+        make_dir('/opt/.python_eggs')
+        sudo('chgrp -R sharkeyes /opt/.python_eggs')
+        sudo('chmod -R 770 /opt/.python_eggs')
 
     with settings(warn_only=True):
         with cd('/etc/httpd/conf/'):
@@ -211,6 +227,8 @@ def configure_apache():
             sudo('echo "NameVirtualHost *:80" >> /etc/httpd/conf/httpd.conf')
         if sudo('grep -x "Include /etc/httpd/sites-enabled/" /etc/httpd/conf/httpd.conf').return_code != 0:
             sudo('echo "Include /etc/httpd/sites-enabled/" >> /etc/httpd/conf/httpd.conf')
+        if sudo('grep -x "WSGIPythonEggs /opt/.python_eggs/" /etc/httpd/conf/httpd.conf').return_code != 0:
+            sudo('echo "WSGIPythonEggs /opt/.python_eggs/" >> /etc/httpd/conf/httpd.conf')
     sudo('service httpd restart')
 
 
@@ -293,9 +311,7 @@ def deploy():
             run('./manage.py migrate pl_plot')
             run('./manage.py loaddata initial_data.json')
             run('./manage.py migrate pl_chop')
-    # manage.py migrate and stuff
-    # start rabbit, celery
-    # do collect static
+            run('./manage.py collectstatic')
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
 
 def startsite():
@@ -359,3 +375,6 @@ def is_centos_7():
     if 'release 7' in run('cat /etc/redhat-release'):
         return True
     return False
+
+def restart():
+        reboot()
