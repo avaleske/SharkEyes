@@ -19,4 +19,5 @@ def setup_dirs():
             os.makedirs(dest)
 
 def run():
-    setup_dirs()
+   # setup_dirs() this is done by fabric now.
+    pass

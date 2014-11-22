@@ -135,6 +135,17 @@ def setup_project_directory():
     sudo('chmod -R 770 /opt/sharkeyes')
 
 
+def setup_media_directory():
+    if not exists('/opt/sharkeyes/media/'):
+        make_dir('/opt/sharkeyes/media/')
+    with cd('/opt/sharkeyes/media'):
+        for d in ['netcdf', 'unchoppped', 'vrt_files', 'tiles', 'keys']:
+            if not exists(d):
+                make_dir(d)
+    sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
+    sudo('chmod -R 774 /opt/sharkeyes/media')
+
+
 def install_geotools():
     sudo('yum -y install lapack atlas atlas-devel')
     sudo('yum -y install blas-devel lapack-devel libpng-devel')
@@ -345,6 +356,7 @@ def provision():
     install_mysql()
     setup_group()
     setup_project_directory()
+    setup_media_directory()
     install_geotools()
     setup_python()
     clone_repo()
