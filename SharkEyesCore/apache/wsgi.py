@@ -22,6 +22,9 @@ sys.path.append('/opt/sharkeyes/src/SharkEyesCore')
 activate_env = os.path.expanduser('/opt/sharkeyes/env_sharkeyes/bin/activate_this.py')
 execfile(activate_env, dict(__file__=activate_env))
 
+import SharkEyesCore.startup as startup
+startup.run()
+
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
 
