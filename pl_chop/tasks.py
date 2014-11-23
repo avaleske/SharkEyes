@@ -3,6 +3,7 @@ from pl_plot.models import Overlay
 from pl_chop import gdal2tiles
 from uuid import uuid4
 import os
+import subprocess
 from gdal2tiles import GDAL2Tiles
 from django.conf import settings
 
@@ -25,10 +26,15 @@ def chop_overlay(overlay_id):
     full_tile_dir = os.path.join(settings.MEDIA_ROOT, settings.TILE_STORAGE_DIR, overlay.tile_dir)
     vrt_path = os.path.join(settings.MEDIA_ROOT, settings.VRT_STORAGE_DIR, "{0}.vrt".format(uuid4()))
 
-    translate_cmd = ("gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -129 47.499 "
+    translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -129 47.499 "
                      "-gcp {0} 0 -123.726 47.499 -gcp {0} {1} -123.726 40.5833 {2} {3}").format(
             str(width), str(height), image.path, vrt_path)
-    os.system(translate_cmd)
+
+    # calling this with shell=True is insecure if we had input from the user,
+    # but all our input is trusted, so we're good.
+    status = subprocess.call(translate_cmd, shell=True)
+    if status != 0:
+        raise Exception("gdal_translate failed")
 
     # see if we don't need gdal_translate for this to work...
     params = ['--profile=mercator', '-z', zoom_levels, '-w', 'none', vrt_path, full_tile_dir]

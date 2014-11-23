@@ -21,7 +21,7 @@ CELERYBEAT="$ENV_PYTHON $CELERYD_CHDIR/manage.py celerybeat"
 CELERYCTL="$ENV_PYTHON $CELERYD_CHDIR/manage.py celeryctl"
 
 # Extra arguments
-CELERYD_OPTS=" --time-limit=1200 --concurrency=8 --loglevel=DEBUG"
+CELERYD_OPTS=" --time-limit=1200 --concurrency=8 --loglevel=DEBUG --events"
 
 # Create log/pid dirs, if they don't already exist
 CELERY_CREATE_DIRS=1
