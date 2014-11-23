@@ -18,18 +18,6 @@ def setup_dirs():
         if not os.path.exists(dest):
             os.makedirs(dest)
 
-
-def autoload(submodules):
-    for app in settings.INSTALLED_APPS:
-        mod = import_module(app)
-        for submodule in submodules:
-            try:
-                import_module("{}.{}".format(app, submodule))
-            except:
-                if module_has_submodule(mod, submodule):
-                    raise
-
-
 def run():
-    setup_dirs()
-    autoload(['base'])
+   # setup_dirs() this is done by fabric now.
+    pass

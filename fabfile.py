@@ -57,6 +57,13 @@ def staging():
     env.branch = 'staging'
 
 def install_prereqs():
+    #handle selinux
+    with settings(warn_only=True):
+        if run('rpm -qa |grep selinux').return_code == 0:
+            if 'Enforcing' in run('/usr/sbin/getenforce'):
+                with settings(warn_only=False):
+                    sudo('/usr/sbin/setsebool httpd_tmp_exec on')
+
     make_dir('/opt/installers')
     # repos
     sudo('yum -y install epel-release')
@@ -122,10 +129,27 @@ def setup_group():
             reboot()
 
 
+def disable_selinux():
+    sudo("sed -i 's/\=enforcing/\=permissive/g' /etc/selinux/config")
+    print("!-"*50)
+    print("Now you need to restart the system.")
+
+
 def setup_project_directory():
     make_dir('/opt/sharkeyes/')
     sudo('chgrp -R sharkeyes /opt/sharkeyes')
     sudo('chmod -R 770 /opt/sharkeyes')
+
+
+def setup_media_directory():
+    if not exists('/opt/sharkeyes/media/'):
+        make_dir('/opt/sharkeyes/media/')
+    with cd('/opt/sharkeyes/media'):
+        for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys']:
+            if not exists(d):
+                make_dir(d)
+    sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
+    sudo('chmod -R 774 /opt/sharkeyes/media')
 
 
 def install_geotools():
@@ -165,6 +189,10 @@ def setup_python():
     if not exists('/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
         run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap' + ' ' +   # explicit space because I fail
             '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
+    if not exists('/opt/.mpl_tmp'):
+        make_dir('/opt/.mpl_tmp')
+        sudo('chgrp -R sharkeyes /opt/.mpl_tmp')
+    sudo('chmod -R 770 /opt/.mpl_tmp')
 
 
 def clone_repo():
@@ -172,7 +200,8 @@ def clone_repo():
         sudo('ln -s /vagrant /opt/sharkeyes/src')
     elif not exists('/opt/sharkeyes/src'):
         run('git clone git@github.com:avaleske/SharkEyes.git /opt/sharkeyes/src')
-        run('git checkout ' + env.branch)
+        with cd('/opt/sharkeyes/src/'):
+            run('git checkout ' + env.branch)
 
 
 def configure_mod_wsgi():
@@ -187,6 +216,10 @@ def configure_mod_wsgi():
                     sudo('./configure --with-python=' + python_path)
                     sudo('make')
                     sudo('make install')
+    if not exists('/opt/.python_eggs'):
+        make_dir('/opt/.python_eggs')
+        sudo('chgrp -R sharkeyes /opt/.python_eggs')
+        sudo('chmod -R 770 /opt/.python_eggs')
 
     with settings(warn_only=True):
         with cd('/etc/httpd/conf/'):
@@ -211,6 +244,8 @@ def configure_apache():
             sudo('echo "NameVirtualHost *:80" >> /etc/httpd/conf/httpd.conf')
         if sudo('grep -x "Include /etc/httpd/sites-enabled/" /etc/httpd/conf/httpd.conf').return_code != 0:
             sudo('echo "Include /etc/httpd/sites-enabled/" >> /etc/httpd/conf/httpd.conf')
+        if sudo('grep -x "WSGIPythonEggs /opt/.python_eggs/" /etc/httpd/conf/httpd.conf').return_code != 0:
+            sudo('echo "WSGIPythonEggs /opt/.python_eggs/" >> /etc/httpd/conf/httpd.conf')
     sudo('service httpd restart')
 
 
@@ -275,6 +310,7 @@ def configure_celery():
     sudo('service celeryd start')
     sudo('service celerybeat start')
 
+
 def deploy():
     with cd('/opt/sharkeyes/src/'):
         if not exists('/vagrant/'): # then this is not a local vm
@@ -293,20 +329,25 @@ def deploy():
             run('./manage.py migrate pl_plot')
             run('./manage.py loaddata initial_data.json')
             run('./manage.py migrate pl_chop')
-    # manage.py migrate and stuff
-    # start rabbit, celery
-    # do collect static
+            run('./manage.py collectstatic')
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
 
-def startsite():
+
+def set_all_to_start_on_startup():
+    for service in ['mysqld', 'httpd', 'rabbitmq-server', 'celeryd', 'celerybeat']:
+        sudo('/sbin/chkconfig {0} on'.format(service))
+
+
+def restartsite():
     # starts everything that needs to run for the production environment
-    sudo('service mysqld start')
-    sudo('service rabbitmq-server start')
-    sudo('service celeryd start')
-    sudo('service celerybeat start')
-    sudo('service httpd start')
+    sudo('service mysqld restart')
+    sudo('service rabbitmq-server restart')
+    sudo('service celeryd restart')
+    sudo('service celerybeat restart')
+    sudo('service httpd restart')
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")
+
 
 def startdev():
     # starts everything that needs to run for the dev environment
@@ -318,9 +359,11 @@ def startdev():
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")
 
+
 def runserver():
     with cd('/opt/sharkeyes/src'):
         run('./runserver.sh')
+
 
 def provision():
     install_prereqs()
@@ -328,7 +371,9 @@ def provision():
     install_apache()
     install_mysql()
     setup_group()
+    disable_selinux()
     setup_project_directory()
+    setup_media_directory()
     install_geotools()
     setup_python()
     clone_repo()
@@ -337,8 +382,10 @@ def provision():
     configure_mysql()
     configure_rabbitmq()
     configure_celery()
+    set_all_to_start_on_startup()
     deploy()
-    print("And provisioning is complete. Awesome!")
+    print("!-"*50)
+    print("And provisioning is complete. Awesome! Just restart the system (so selinux is turned off) and you'll be good.")
 
 
 def uname():
@@ -359,3 +406,6 @@ def is_centos_7():
     if 'release 7' in run('cat /etc/redhat-release'):
         return True
     return False
+
+def restart():
+        reboot()
