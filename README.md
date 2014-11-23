@@ -1,4 +1,10 @@
-##SharkEyes - NVS Development Project
+##Seacast.org
+(formerly Project Sharkeyes)
+
+###About
+Seacast.org is a Django site created by students at Oregon State University for the College of Earth, Oceanic, and Atmospheric Sciences. It takes oceanic models and uses Matplotlib, Basemap, and Celery to plot them as Google Maps overlays, with the goal of helping Oregon's coastal fisherman find fish more easily.
+
+We just deployed a staging server at [staging.sharkeyes.org](http://staging.sharkeyes.org), and will be deploying to production soon.
 
 ###Setup
 
