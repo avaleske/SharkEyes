@@ -30,8 +30,6 @@ def chop_overlay(overlay_id):
                      "-gcp {0} 0 -123.726 47.499 -gcp {0} {1} -123.726 40.5833 {2} {3}").format(
             str(width), str(height), image.path, vrt_path)
 
-    print "translate cmd:"
-    print translate_cmd
     # calling this with shell=True is insecure if we had input from the user,
     # but all our input is trusted, so we're good.
     status = subprocess.call(translate_cmd, shell=True)
