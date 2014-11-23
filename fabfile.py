@@ -129,6 +129,12 @@ def setup_group():
             reboot()
 
 
+def disable_selinux():
+    sudo("sed -i 's/\=enforcing/\=permissive/g' /etc/selinux/config")
+    print("!-"*50)
+    print("Now you need to restart the system.")
+
+
 def setup_project_directory():
     make_dir('/opt/sharkeyes/')
     sudo('chgrp -R sharkeyes /opt/sharkeyes')
@@ -139,7 +145,7 @@ def setup_media_directory():
     if not exists('/opt/sharkeyes/media/'):
         make_dir('/opt/sharkeyes/media/')
     with cd('/opt/sharkeyes/media'):
-        for d in ['netcdf', 'unchoppped', 'vrt_files', 'tiles', 'keys']:
+        for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys']:
             if not exists(d):
                 make_dir(d)
     sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
@@ -304,6 +310,7 @@ def configure_celery():
     sudo('service celeryd start')
     sudo('service celerybeat start')
 
+
 def deploy():
     with cd('/opt/sharkeyes/src/'):
         if not exists('/vagrant/'): # then this is not a local vm
@@ -325,15 +332,22 @@ def deploy():
             run('./manage.py collectstatic')
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
 
-def startsite():
+
+def set_all_to_start_on_startup():
+    for service in ['mysqld', 'httpd', 'rabbitmq-server', 'celeryd', 'celerybeat']:
+        sudo('/sbin/chkconfig {0} on'.format(service))
+
+
+def restartsite():
     # starts everything that needs to run for the production environment
-    sudo('service mysqld start')
-    sudo('service rabbitmq-server start')
-    sudo('service celeryd start')
-    sudo('service celerybeat start')
-    sudo('service httpd start')
+    sudo('service mysqld restart')
+    sudo('service rabbitmq-server restart')
+    sudo('service celeryd restart')
+    sudo('service celerybeat restart')
+    sudo('service httpd restart')
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")
+
 
 def startdev():
     # starts everything that needs to run for the dev environment
@@ -345,9 +359,11 @@ def startdev():
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")
 
+
 def runserver():
     with cd('/opt/sharkeyes/src'):
         run('./runserver.sh')
+
 
 def provision():
     install_prereqs()
@@ -355,6 +371,7 @@ def provision():
     install_apache()
     install_mysql()
     setup_group()
+    disable_selinux()
     setup_project_directory()
     setup_media_directory()
     install_geotools()
@@ -365,8 +382,10 @@ def provision():
     configure_mysql()
     configure_rabbitmq()
     configure_celery()
+    set_all_to_start_on_startup()
     deploy()
-    print("And provisioning is complete. Awesome!")
+    print("!-"*50)
+    print("And provisioning is complete. Awesome! Just restart the system (so selinux is turned off) and you'll be good.")
 
 
 def uname():
