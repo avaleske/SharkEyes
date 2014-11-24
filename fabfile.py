@@ -148,8 +148,9 @@ def setup_media_directory():
         for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys']:
             if not exists(d):
                 make_dir(d)
-    sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
-    sudo('chmod -R 774 /opt/sharkeyes/media')
+    if not env.user == 'vagrant':
+        sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
+        sudo('chmod -R 774 /opt/sharkeyes/media')
 
 
 def install_geotools():
@@ -336,6 +337,9 @@ def deploy():
 def set_all_to_start_on_startup():
     for service in ['mysqld', 'httpd', 'rabbitmq-server', 'celeryd', 'celerybeat']:
         sudo('/sbin/chkconfig {0} on'.format(service))
+    if env.user == 'vagrant':
+        sudo('/sbin/chkconfig httpd off')
+        sudo('/sbin/chkconfig celerybeat off')
 
 
 def restartsite():
@@ -354,7 +358,7 @@ def startdev():
     sudo('service mysqld start')
     sudo('service rabbitmq-server start')
     sudo('service celeryd start')
-    sudo('service celerybeat start')
+    sudo('service celerybeat stop') # stop celerybeat so it doesn't run the main task
     sudo('service httpd stop')  # stop apache so it's not in the way
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")

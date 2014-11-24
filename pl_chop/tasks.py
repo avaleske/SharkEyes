@@ -8,8 +8,8 @@ from gdal2tiles import GDAL2Tiles
 from django.conf import settings
 
 
-@shared_task(name='pl_chop.chop_overlay')
-def chop_overlay(overlay_id):
+@shared_task(name='pl_chop.tile_overlay_task')
+def tile_overlay_task(overlay_id):
     overlay = Overlay.objects.get(pk=overlay_id)
     image = overlay.file
     width = image.width

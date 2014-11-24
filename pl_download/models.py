@@ -35,37 +35,13 @@ def extract_modified_datetime_from_xml(elem):
     return modified_datetime
 
 
-def is_new_file_to_download():
-    three_days_ago = timezone.now().date()-timedelta(days=3)
-    today = timezone.now().date()
-    recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today])
-
-    # empty lists return false
-    if not recent_netcdf_files:
-        return True
-
-    local_file_modified_datetime = recent_netcdf_files.latest('generated_datetime').generated_datetime
-
-    tree = get_ingria_xml_tree()
-    tags = tree.iter(XML_NAMESPACE + 'dataset')
-
-    for elem in tags:
-        if not elem.get('name').startswith('ocean_his'):
-            continue
-        server_file_modified_datetime = extract_modified_datetime_from_xml(elem)
-        if server_file_modified_datetime <= local_file_modified_datetime:
-            return False
-
-    return True
-
-
 class DataFileManager(models.Manager):
     # grabs file for next few days.
     # todo make each file download in a separate task
     @staticmethod
-    @shared_task(name='pl_download.fetch_new_files')
-    def fetch_new_files():
-        if not is_new_file_to_download():
+    @shared_task(name='pl_download.fetch_new_files_task')
+    def fetch_new_files_task():
+        if not DataFileManager.is_new_file_to_download():
             return False
 
         # download new file for next few days
@@ -107,8 +83,8 @@ class DataFileManager(models.Manager):
 
         return True
 
-    @staticmethod
-    def get_next_few_days_files_from_db():
+    @classmethod
+    def get_next_few_days_files_from_db(cls):
         next_few_days_of_files = DataFile.objects.filter(
             model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
             model_date__lte=(timezone.now()+timedelta(days=4)).date()
@@ -125,6 +101,30 @@ class DataFileManager(models.Manager):
         # assumes you're not redownloading the same file for the same model and generation dates.
         actual_datafile_objects = DataFile.objects.filter(reduce(OR, q_objects))
         return actual_datafile_objects
+
+    @classmethod
+    def is_new_file_to_download(cls):
+        three_days_ago = timezone.now().date()-timedelta(days=3)
+        today = timezone.now().date()
+        recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today])
+
+        # empty lists return false
+        if not recent_netcdf_files:
+            return True
+
+        local_file_modified_datetime = recent_netcdf_files.latest('generated_datetime').generated_datetime
+
+        tree = get_ingria_xml_tree()
+        tags = tree.iter(XML_NAMESPACE + 'dataset')
+
+        for elem in tags:
+            if not elem.get('name').startswith('ocean_his'):
+                continue
+            server_file_modified_datetime = extract_modified_datetime_from_xml(elem)
+            if server_file_modified_datetime <= local_file_modified_datetime:
+                return False
+
+        return True
 
 
 class DataFile(models.Model):

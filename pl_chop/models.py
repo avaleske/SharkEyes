@@ -1,7 +1,7 @@
 from django.db import models
 from pl_plot.models import OverlayManager, Overlay
 from celery import group
-from pl_chop.tasks import chop_overlay
+from pl_chop.tasks import tile_overlay_task
 import time
 
 
@@ -10,20 +10,25 @@ class TileManager():
         None
 
     @classmethod
-    def tile_most_recent_overlays(cls):
+    def tile_next_few_days_of_overlays(cls):
+        job = cls.get_task_to_tile_next_few_days_of_untiled_overlays()
+        result = job.apply_async()
+        return result
+
+    # These just return task signatures that can be executed whenever.
+    @classmethod
+    def get_task_to_tile_newest_untiled_overlays(cls):
         overlay_ids_to_tile = OverlayManager.get_newest_untiled_overlay_ids()
-        return cls.tile_overlays_from_ids(overlay_ids_to_tile)
+        return cls.get_tiling_task_by_ids(overlay_ids_to_tile)
 
     @classmethod
-    def tile_next_few_days_of_untiled_overlays(cls):
+    def get_task_to_tile_next_few_days_of_untiled_overlays(cls):
         overlay_ids_to_tile = OverlayManager.get_next_few_days_of_untiled_overlay_ids()
-        return cls.tile_overlays_from_ids(overlay_ids_to_tile)
+        return cls.get_tiling_task_by_ids(overlay_ids_to_tile)
 
-    @staticmethod
-    def tile_overlays_from_ids(overlay_ids):
+    @classmethod
+    def get_tiling_task_by_ids(cls, overlay_ids):
         if len(overlay_ids) != 0:
-            task_list = [chop_overlay.s(o_id) for o_id in overlay_ids]
-            job = group(task_list)
-            results = job.apply_async()  # this might just be returning results from the first task in each chain
-            return results
+            job = group((tile_overlay_task.s(o_id, immutable=True) for o_id in overlay_ids))
+            return job
         return None
