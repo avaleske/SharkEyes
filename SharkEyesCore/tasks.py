@@ -15,20 +15,29 @@ def add(a, b):
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
     if not DataFileManager.is_new_file_to_download():
-        return False
+     #   return None
+        pass
 
     # chain the pipeline steps together. si() creates the task signature immutably. Otherwise, the result of one task
     # gets passed to the next one in the chain, which isn't what we want.
     job = chain(
-        DataFileManager.fetch_new_files_task.si(),
-        OverlayManager.get_task_for_base_plots_for_next_few_days().si(),
-        spacer_task.si(),                                       # Need the spacer so all the plots finish before tiling
-        TileManager.get_task_to_tile_next_few_days_of_untiled_overlays().si()
+    #    DataFileManager.fetch_new_files_task.si(),
+        OverlayManager.get_task_for_base_plots_in_files.s(),
+        spacer_task.s()                                       # Need the spacer so all the plots finish before tiling
+     #   TileManager.get_task_to_tile_next_few_days_of_untiled_overlays.si()
     )
-    job.get()
-    return True
+    result = job.apply_async()
+    return result
 
 
-@shared_task(name='sharkeyescore.spacer')
-def spacer_task():
+@shared_task(name='sharkeyescore.spacer_task')
+def spacer_task(arg=None):
+    return arg
+
+
+def callback_task(callback):
     pass
+
+@shared_task(name='dummy')
+def dummy():
+    return [15,16,17]

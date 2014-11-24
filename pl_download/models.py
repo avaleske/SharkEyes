@@ -42,7 +42,7 @@ class DataFileManager(models.Manager):
     @shared_task(name='pl_download.fetch_new_files_task')
     def fetch_new_files_task():
         if not DataFileManager.is_new_file_to_download():
-            return False
+            return []
 
         # download new file for next few days
         days_to_retrieve = [timezone.now().date(),
@@ -67,6 +67,8 @@ class DataFileManager(models.Manager):
 
         destination_directory = os.path.join(settings.MEDIA_ROOT, settings.NETCDF_STORAGE_DIR)
 
+        new_file_ids = []
+
         for server_filename, model_date, modified_datetime in files_to_retrieve:
             url = urljoin(settings.BASE_NETCDF_URL, server_filename)
             local_filename = "{0}_{1}.nc".format(model_date, uuid4())
@@ -81,7 +83,9 @@ class DataFileManager(models.Manager):
             )
             datafile.save()
 
-        return True
+            new_file_ids.append(datafile.id)
+
+        return new_file_ids
 
     @classmethod
     def get_next_few_days_files_from_db(cls):

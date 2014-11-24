@@ -107,8 +107,8 @@ CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IMPORTS = ('SharkEyesCore.tasks',)
 
 CELERYBEAT_SCHEDULE = {
-   'plot_pipline': {
-       'task': 'sharkeyescore.pipline',
+   'plot_pipeline': {
+       'task': 'sharkeyescore.pipeline',
        'schedule': timedelta(hours=1),
        'args': ()
    },
