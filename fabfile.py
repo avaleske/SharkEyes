@@ -49,12 +49,22 @@ def vagrant():
         env.key_filename = v['IdentityFile']
     env.branch = 'develop'
 
+
 def staging():
     env.user = 'azureuser'
     hostname = 'fishable.cloudapp.net'
     port = 22
     env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
     env.branch = 'staging'
+
+
+def production():
+    env.user = 'developer'
+    hostname = 'baker.coas.oregonstate.edu'
+    port = 22
+    env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
+    env.branch = 'master'
+
 
 def install_prereqs():
     #handle selinux
