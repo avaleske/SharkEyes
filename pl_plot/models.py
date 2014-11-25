@@ -79,33 +79,31 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def get_task_for_all_base_plots(cls, time_index=0, file_id=None):
-        task_list = [cls.make_plot_task.s(od_id, time_index, file_id, immutable=True) for od_id in cls.get_all_base_definition_ids()]
+        task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in cls.get_all_base_definition_ids()]
         job = group(task_list)
         return job
 
-    @staticmethod
-    @shared_task(name='pl_plot.get_plots_in_files_group')
-    def get_task_for_base_plots_in_files(file_ids):
+    @classmethod
+    def get_task_for_base_plots_in_files(cls, file_ids):
         task_list = []
-        base_definition_ids = OverlayManager.get_all_base_definition_ids()
+        base_definition_ids = cls.get_all_base_definition_ids()
         for fid in file_ids:
             print fid
             datafile = DataFile.objects.get(pk=fid)
             plotter = Plotter(datafile.file.name)
             number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
             for t in xrange(number_of_times):
-                task_list.extend(OverlayManager.make_plot_task.s(od_id, t, fid, immutable=True) for od_id in base_definition_ids)
+                task_list.extend(cls.make_plot.s(od_id, t, fid, immutable=True) for od_id in base_definition_ids)
         return group(task_list)
 
-    @staticmethod
-    @shared_task(name='pl_plot.get_plot_next_few_days_group')
-    def get_task_for_base_plots_for_next_few_days():
+    @classmethod
+    def get_task_for_base_plots_for_next_few_days(cls):
         file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
-        return OverlayManager.get_task_for_base_plots_in_files(file_ids)
+        return cls.get_task_for_base_plots_in_files(file_ids)
 
     @staticmethod
-    @shared_task(name='pl_plot.make_plot_task')
-    def make_plot_task(overlay_definition_id, time_index=0, file_id=None):
+    @shared_task(name='pl_plot.make_plot')
+    def make_plot(overlay_definition_id, time_index=0, file_id=None):
         zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # todo fix hacky hack for expo
         zoom_levels_for_others = [(None, None)]
 

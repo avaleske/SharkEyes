@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from pl_plot.models import Overlay
-from pl_chop.tasks import tile_overlay_task
+from pl_chop.tasks import tile_overlay
 from pl_chop.models import TileManager
 
 

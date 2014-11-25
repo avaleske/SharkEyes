@@ -39,8 +39,8 @@ class DataFileManager(models.Manager):
     # grabs file for next few days.
     # todo make each file download in a separate task
     @staticmethod
-    @shared_task(name='pl_download.fetch_new_files_task')
-    def fetch_new_files_task():
+    @shared_task(name='pl_download.fetch_new_files')
+    def fetch_new_files():
         if not DataFileManager.is_new_file_to_download():
             return []
 
