@@ -2,6 +2,7 @@ from django.db import models
 from pl_plot.models import OverlayManager, Overlay
 from celery import group, shared_task
 from pl_chop.tasks import tile_overlay
+import numpy
 import time
 
 
@@ -29,6 +30,7 @@ class TileManager():
     @classmethod
     def get_tiling_task_by_ids(cls, overlay_ids):
         if len(overlay_ids) != 0:
-            job = group((tile_overlay.s(o_id, immutable=True) for o_id in overlay_ids))
+            flattened = numpy.hstack(overlay_ids)
+            job = group((tile_overlay.s(o_id, immutable=True) for o_id in flattened))
             return job
         return None

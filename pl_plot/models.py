@@ -73,18 +73,18 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def make_all_base_plots_for_next_few_days(cls):
-        job = cls.get_task_for_base_plots_for_next_few_days()
+        job = group(cls.get_tasks_for_base_plots_for_next_few_days())
         results = job.apply_async()
         return results
 
     @classmethod
-    def get_task_for_all_base_plots(cls, time_index=0, file_id=None):
+    def get_tasks_for_all_base_plots(cls, time_index=0, file_id=None):
         task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in cls.get_all_base_definition_ids()]
-        job = group(task_list)
+        job = task_list
         return job
 
     @classmethod
-    def get_task_for_base_plots_in_files(cls, file_ids):
+    def get_tasks_for_base_plots_in_files(cls, file_ids):
         task_list = []
         base_definition_ids = cls.get_all_base_definition_ids()
         for fid in file_ids:
@@ -93,13 +93,13 @@ class OverlayManager(models.Manager):
             plotter = Plotter(datafile.file.name)
             number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
             for t in xrange(number_of_times):
-                task_list.extend(cls.make_plot.s(od_id, t, fid, immutable=True) for od_id in base_definition_ids)
-        return group(task_list)
+                task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in base_definition_ids)
+        return task_list
 
     @classmethod
-    def get_task_for_base_plots_for_next_few_days(cls):
+    def get_tasks_for_base_plots_for_next_few_days(cls):
         file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
-        return cls.get_task_for_base_plots_in_files(file_ids)
+        return cls.get_tasks_for_base_plots_in_files(file_ids)
 
     @staticmethod
     @shared_task(name='pl_plot.make_plot')
