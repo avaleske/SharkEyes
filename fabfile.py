@@ -315,6 +315,7 @@ def configure_celery():
     sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd.sysconfig /etc/sysconfig/celeryd')
     sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd /etc/init.d/celeryd')
     sudo('cp /opt/sharkeyes/src/config/celeryd/celerybeat /etc/init.d/celerybeat')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryevcam /etc/init.d/celeryevcam')
     sudo('chmod +x /etc/sysconfig/celeryd')
     sudo('chmod +x /etc/init.d/celeryd')
     sudo('chmod +x /etc/init.d/celerybeat')
@@ -420,6 +421,7 @@ def is_64():
         return True
     return False
 
+
 def is_centos_7():
     if 'release 7' in run('cat /etc/redhat-release'):
         return True
@@ -427,3 +429,11 @@ def is_centos_7():
 
 def restart():
         reboot()
+
+
+def pull():
+    with cd('/opt/sharkeyes/src'):
+        run('git status')
+        branch = prompt("Branch to run? (Enter to leave default): ")
+        run('git checkout {0}'.format(branch if branch else env.branch))
+        run('git pull')
