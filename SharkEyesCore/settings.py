@@ -106,13 +106,13 @@ CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IMPORTS = ('SharkEyesCore.tasks',)
 
-#CELERYBEAT_SCHEDULE = {
-#    'add-every-30-seconds': {
-#        'task': 'tasks.add',
-#        'schedule': timedelta(seconds=45),
-#        'args': (16, 16)
-#    },
-#}
+CELERYBEAT_SCHEDULE = {
+   'plot_pipeline': {
+       'task': 'sharkeyescore.pipeline',
+       'schedule': timedelta(hours=1),
+       'args': ()
+   },
+}
 
 # import local settings. PyCharm thinks it's unused, but PyCharm is silly.
 # noinspection PyUnresolvedReferences
