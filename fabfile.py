@@ -326,7 +326,7 @@ def deploy():
             print("If this is your first run, Django will ask you to create a super user. "
                     "Store the password in your password manager.")
             run('./manage.py syncdb')
-            # run('./manage.py migrate djcelery 0004') if the djcelery migration dies, use thie line instead
+            # run('./manage.py migrate djcelery 0004') if the djcelery migration dies, use this line instead
             run('./manage.py migrate djcelery')
             run('./manage.py migrate pl_download')
             run('./manage.py migrate pl_plot')
