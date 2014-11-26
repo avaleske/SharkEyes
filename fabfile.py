@@ -25,8 +25,8 @@ python_packages = ['numpy==1.8',
                    'django==1.6.2',
                    'pillow==2.3.0',
                    'pytz==2013.9',
-                   'celery==3.1.9',
-                   'django-celery==3.1.9',
+                   'celery==3.1.17',
+                   'django-celery==3.1.16',
                    'south==0.8.4',
                    'defusedxml==0.4.1',
                    'pygdal==1.10.1.0',
@@ -158,8 +158,9 @@ def setup_media_directory():
         for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys']:
             if not exists(d):
                 make_dir(d)
-    sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
-    sudo('chmod -R 774 /opt/sharkeyes/media')
+    if not env.user == 'vagrant':
+        sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
+        sudo('chmod -R 774 /opt/sharkeyes/media')
 
 
 def install_geotools():
@@ -314,11 +315,13 @@ def configure_celery():
     sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd.sysconfig /etc/sysconfig/celeryd')
     sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd /etc/init.d/celeryd')
     sudo('cp /opt/sharkeyes/src/config/celeryd/celerybeat /etc/init.d/celerybeat')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryevcam /etc/init.d/celeryevcam')
     sudo('chmod +x /etc/sysconfig/celeryd')
     sudo('chmod +x /etc/init.d/celeryd')
     sudo('chmod +x /etc/init.d/celerybeat')
     sudo('service celeryd start')
     sudo('service celerybeat start')
+    sudo('service celeryevcam start')
 
 
 def deploy():
@@ -334,7 +337,8 @@ def deploy():
             print("If this is your first run, Django will ask you to create a super user. "
                     "Store the password in your password manager.")
             run('./manage.py syncdb')
-            run('./manage.py migrate djcelery 0004')
+            # run('./manage.py migrate djcelery 0004') if the djcelery migration dies, use this line instead
+            run('./manage.py migrate djcelery')
             run('./manage.py migrate pl_download')
             run('./manage.py migrate pl_plot')
             run('./manage.py loaddata initial_data.json')
@@ -344,8 +348,11 @@ def deploy():
 
 
 def set_all_to_start_on_startup():
-    for service in ['mysqld', 'httpd', 'rabbitmq-server', 'celeryd', 'celerybeat']:
+    for service in ['mysqld', 'httpd', 'rabbitmq-server', 'celeryd', 'celerybeat', 'celeryevcam']:
         sudo('/sbin/chkconfig {0} on'.format(service))
+    if env.user == 'vagrant':
+        sudo('/sbin/chkconfig httpd off')
+        sudo('/sbin/chkconfig celerybeat off')
 
 
 def restartsite():
@@ -354,6 +361,7 @@ def restartsite():
     sudo('service rabbitmq-server restart')
     sudo('service celeryd restart')
     sudo('service celerybeat restart')
+    sudo('service celeryevcam restart')
     sudo('service httpd restart')
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")
@@ -364,7 +372,8 @@ def startdev():
     sudo('service mysqld start')
     sudo('service rabbitmq-server start')
     sudo('service celeryd start')
-    sudo('service celerybeat start')
+    sudo('service celeryevcam start')
+    sudo('service celerybeat stop') # stop celerybeat so it doesn't run the main task
     sudo('service httpd stop')  # stop apache so it's not in the way
     print("!-"*50)
     prompt("And you're good to go! Hit enter to continue.")
@@ -412,6 +421,7 @@ def is_64():
         return True
     return False
 
+
 def is_centos_7():
     if 'release 7' in run('cat /etc/redhat-release'):
         return True
@@ -419,3 +429,11 @@ def is_centos_7():
 
 def restart():
         reboot()
+
+
+def pull():
+    with cd('/opt/sharkeyes/src'):
+        run('git status')
+        branch = prompt("Branch to run? (Enter to leave default): ")
+        run('git checkout {0}'.format(branch if branch else env.branch))
+        run('git pull')
