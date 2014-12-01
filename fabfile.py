@@ -25,12 +25,16 @@ python_packages = ['numpy==1.8',
                    'django==1.6.2',
                    'pillow==2.3.0',
                    'pytz==2013.9',
-                   'celery==3.1.9',
-                   'django-celery==3.1.9',
+                   'celery==3.1.17',
+                   'django-celery==3.1.16',
                    'south==0.8.4',
                    'defusedxml==0.4.1',
                    'pygdal==1.10.1.0',
                    ]
+
+# these aren't used everywhere yet...
+PROJECT_ROOT = '/opt/sharkeyes'
+SRC_ROOT = '/opt/sharkeyes/src'
 
 def vagrant():
     """Allow fabric to manage a Vagrant VM/LXC container"""
@@ -43,19 +47,38 @@ def vagrant():
         env.key_filename = v['IdentityFile'][1:-1]
     else:
         env.key_filename = v['IdentityFile']
+    env.branch = 'develop'
+
+
+def staging():
+    env.user = 'azureuser'
+    hostname = 'fishable.cloudapp.net'
+    port = 22
+    env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
+    env.branch = 'staging'
+
+
+def production():
+    env.user = 'developer'
+    hostname = 'baker.coas.oregonstate.edu'
+    port = 22
+    env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
+    env.branch = 'master'
 
 
 def install_prereqs():
+    #handle selinux
+    with settings(warn_only=True):
+        if run('rpm -qa |grep selinux').return_code == 0:
+            if 'Enforcing' in run('/usr/sbin/getenforce'):
+                with settings(warn_only=False):
+                    sudo('/usr/sbin/setsebool httpd_tmp_exec on')
+
     make_dir('/opt/installers')
     # repos
+    sudo('yum -y install epel-release')
     with settings(warn_only=True):
         with cd('/opt/installers'):
-            if run('rpm -q epel-release-6-8.noarch').return_code != 0:
-                if is_64():
-                    sudo('wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm')
-                else:
-                    sudo('wget http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm')
-                sudo('rpm -ivh epel-release-6-8.noarch.rpm')
             if run('rpm -q elgis-release-6-6_0.noarch').return_code != 0:
                 sudo('wget http://elgis.argeo.org/repos/6/elgis-release-6-6_0.noarch.rpm')
                 sudo('rpm -Uvh elgis-release-6-6_0.noarch.rpm')
@@ -91,6 +114,10 @@ def install_apache():
 
 
 def install_mysql():
+    if is_centos_7():
+        with settings(warn_only=True):
+            if run('rpm -q mysql-community-release-el7-5.noarch').return_code != 0:
+                sudo('rpm -Uvh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm')
     sudo('yum -y install mysql mysql-devel')
     #sudo('yum -y install MySQL-python') # moved to virtualenv
     sudo('yum -y install mysql-server')
@@ -112,10 +139,28 @@ def setup_group():
             reboot()
 
 
+def disable_selinux():
+    sudo("sed -i 's/\=enforcing/\=permissive/g' /etc/selinux/config")
+    print("!-"*50)
+    print("Now you need to restart the system.")
+
+
 def setup_project_directory():
     make_dir('/opt/sharkeyes/')
     sudo('chgrp -R sharkeyes /opt/sharkeyes')
     sudo('chmod -R 770 /opt/sharkeyes')
+
+
+def setup_media_directory():
+    if not exists('/opt/sharkeyes/media/'):
+        make_dir('/opt/sharkeyes/media/')
+    with cd('/opt/sharkeyes/media'):
+        for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys']:
+            if not exists(d):
+                make_dir(d)
+    if not env.user == 'vagrant':
+        sudo('chgrp -R sharkeyes /opt/sharkeyes/media')
+        sudo('chmod -R 774 /opt/sharkeyes/media')
 
 
 def install_geotools():
@@ -155,6 +200,10 @@ def setup_python():
     if not exists('/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap'):
         run('ln -s /opt/sharkeyes/env_sharkeyes/src/basemap/lib/mpl_toolkits/basemap' + ' ' +   # explicit space because I fail
             '/opt/sharkeyes/env_sharkeyes/lib/python2.7/site-packages/mpl_toolkits/basemap')
+    if not exists('/opt/.mpl_tmp'):
+        make_dir('/opt/.mpl_tmp')
+        sudo('chgrp -R sharkeyes /opt/.mpl_tmp')
+    sudo('chmod -R 770 /opt/.mpl_tmp')
 
 
 def clone_repo():
@@ -162,6 +211,8 @@ def clone_repo():
         sudo('ln -s /vagrant /opt/sharkeyes/src')
     elif not exists('/opt/sharkeyes/src'):
         run('git clone git@github.com:avaleske/SharkEyes.git /opt/sharkeyes/src')
+        with cd('/opt/sharkeyes/src/'):
+            run('git checkout ' + env.branch)
 
 
 def configure_mod_wsgi():
@@ -172,16 +223,21 @@ def configure_mod_wsgi():
                 sudo('tar xvfz 4.2.7.tar.gz')
             with cd('mod_wsgi-4.2.7'):
                 with shell_env(LD_RUN_PATH='/usr/local/lib'):
-                    sudo('./configure --with-python=/usr/local/bin/python2.7')
+                    python_path = run('which python2.7')
+                    sudo('./configure --with-python=' + python_path)
                     sudo('make')
                     sudo('make install')
+    if not exists('/opt/.python_eggs'):
+        make_dir('/opt/.python_eggs')
+        sudo('chgrp -R sharkeyes /opt/.python_eggs')
+        sudo('chmod -R 770 /opt/.python_eggs')
 
     with settings(warn_only=True):
         with cd('/etc/httpd/conf/'):
             if run('grep -x "LoadModule wsgi_module modules/mod_wsgi.so" httpd.conf').return_code != 0:
                 # get the line number where the module loading happens, and then add the load for wsgi at that point
-                line_num = run('grep -n "^LoadModule " httpd.conf -m 1').split(':')[0]
-                sudo(' gawk \'{print;if(NR==' + line_num + ')print"LoadModule wsgi_module modules/mod_wsgi.so"}\' httpd.conf>httpd.conf.temp')
+                line_num = int(run('grep -n "# LoadModule " httpd.conf -m 1').split(':')[0]) + 3 # to get out of comments
+                sudo(' gawk \'{print;if(NR==' + str(line_num) + ')print"LoadModule wsgi_module modules/mod_wsgi.so"}\' httpd.conf>httpd.conf.temp')
                 sudo('cp httpd.conf httpd.conf.bak')
                 sudo('mv httpd.conf.temp httpd.conf')
     # setup deamon mode
@@ -199,6 +255,8 @@ def configure_apache():
             sudo('echo "NameVirtualHost *:80" >> /etc/httpd/conf/httpd.conf')
         if sudo('grep -x "Include /etc/httpd/sites-enabled/" /etc/httpd/conf/httpd.conf').return_code != 0:
             sudo('echo "Include /etc/httpd/sites-enabled/" >> /etc/httpd/conf/httpd.conf')
+        if sudo('grep -x "WSGIPythonEggs /opt/.python_eggs/" /etc/httpd/conf/httpd.conf').return_code != 0:
+            sudo('echo "WSGIPythonEggs /opt/.python_eggs/" >> /etc/httpd/conf/httpd.conf')
     sudo('service httpd restart')
 
 
@@ -236,6 +294,7 @@ def configure_mysql():
 
 def configure_rabbitmq():
     sudo('service rabbitmq-server start')
+    sudo('service rabbitmq-server restart') # so new logins work.
     with settings(warn_only=True):
         if sudo('rabbitmqctl list_vhosts | grep sharkeyes').return_code != 0:
             sudo('rabbitmqctl add_vhost sharkeyes')
@@ -245,16 +304,31 @@ def configure_rabbitmq():
             sudo('rabbitmqctl set_permissions -p sharkeyes sharkeyes ".*" ".*" ".*"')
         if sudo('rabbitmqctl list_users | grep guest').return_code == 0:
             sudo('rabbitmqctl delete_user guest')
+    sudo('usermod -a -G sharkeyes rabbitmq')
 
 
 def configure_celery():
-    pass
+    with settings(warn_only=True):
+        if run('grep celery /etc/passwd').return_code != 0:
+            sudo('useradd celery')
+    sudo('usermod -a -G sharkeyes celery')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd.sysconfig /etc/sysconfig/celeryd')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryd /etc/init.d/celeryd')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celerybeat /etc/init.d/celerybeat')
+    sudo('cp /opt/sharkeyes/src/config/celeryd/celeryevcam /etc/init.d/celeryevcam')
+    sudo('chmod +x /etc/sysconfig/celeryd')
+    sudo('chmod +x /etc/init.d/celeryd')
+    sudo('chmod +x /etc/init.d/celerybeat')
+    sudo('service celeryd start')
+    sudo('service celerybeat start')
+    sudo('service celeryevcam start')
 
 
 def deploy():
     with cd('/opt/sharkeyes/src/'):
         if not exists('/vagrant/'): # then this is not a local vm
-            branch = prompt("Branch to run? (Enter for leave unchanged): ")
+            run('git status')
+            branch = prompt("Branch to run? (Enter to leave unchanged): ")
             if branch:
                 run('git checkout {0}'.format(branch))
             run('git pull')
@@ -263,28 +337,51 @@ def deploy():
             print("If this is your first run, Django will ask you to create a super user. "
                     "Store the password in your password manager.")
             run('./manage.py syncdb')
-            run('./manage.py migrate djcelery 0004')
+            # run('./manage.py migrate djcelery 0004') if the djcelery migration dies, use this line instead
+            run('./manage.py migrate djcelery')
             run('./manage.py migrate pl_download')
             run('./manage.py migrate pl_plot')
+            run('./manage.py loaddata initial_data.json')
             run('./manage.py migrate pl_chop')
-    # manage.py migrate and stuff
-    # start rabbit, celery
-    # do collect static
+            run('./manage.py collectstatic')
     sudo('service httpd restart') #replace this with touching wsgi after we deamonize that
+
+
+def set_all_to_start_on_startup():
+    for service in ['mysqld', 'httpd', 'rabbitmq-server', 'celeryd', 'celerybeat', 'celeryevcam']:
+        sudo('/sbin/chkconfig {0} on'.format(service))
+    if env.user == 'vagrant':
+        sudo('/sbin/chkconfig httpd off')
+        sudo('/sbin/chkconfig celerybeat off')
+
+
+def restartsite():
+    # starts everything that needs to run for the production environment
+    sudo('service mysqld restart')
+    sudo('service rabbitmq-server restart')
+    sudo('service celeryd restart')
+    sudo('service celerybeat restart')
+    sudo('service celeryevcam restart')
+    sudo('service httpd restart')
+    print("!-"*50)
+    prompt("And you're good to go! Hit enter to continue.")
+
 
 def startdev():
     # starts everything that needs to run for the dev environment
     sudo('service mysqld start')
     sudo('service rabbitmq-server start')
+    sudo('service celeryd start')
+    sudo('service celeryevcam start')
+    sudo('service celerybeat stop') # stop celerybeat so it doesn't run the main task
     sudo('service httpd stop')  # stop apache so it's not in the way
     print("!-"*50)
-    prompt("Now go ssh into the virtual machine with 'vagrant ssh'. \n"
-           "Then do 'source /opt/sharkeyes/env_sharkeyes/bin/activate' to activate the virtual environment. \n"
-           "Then cd to /opt/sharkeyes/src and do './runcelery.sh' \n"
-           "This will then block, as it's meant to show you what celery is doing. Leave it running, or ctl-c it \n"
-           "and do './runcelery.sh' again if you want to restart it. \n"
-           "Now you'll be able to run the site from PyCharm or the runserver. \n"
-           "Sorry this sucks, in a bit this last step will be automated. Got it? Good.")
+    prompt("And you're good to go! Hit enter to continue.")
+
+
+def runserver():
+    with cd('/opt/sharkeyes/src'):
+        run('./runserver.sh')
 
 
 def provision():
@@ -293,7 +390,9 @@ def provision():
     install_apache()
     install_mysql()
     setup_group()
+    disable_selinux()
     setup_project_directory()
+    setup_media_directory()
     install_geotools()
     setup_python()
     clone_repo()
@@ -302,8 +401,10 @@ def provision():
     configure_mysql()
     configure_rabbitmq()
     configure_celery()
+    set_all_to_start_on_startup()
     deploy()
-    print("And provisioning is complete. Awesome!")
+    print("!-"*50)
+    print("And provisioning is complete. Awesome! Just restart the system (so selinux is turned off) and you'll be good.")
 
 
 def uname():
@@ -319,3 +420,20 @@ def is_64():
     if run('uname -m') == 'x86_64':
         return True
     return False
+
+
+def is_centos_7():
+    if 'release 7' in run('cat /etc/redhat-release'):
+        return True
+    return False
+
+def restart():
+        reboot()
+
+
+def pull():
+    with cd('/opt/sharkeyes/src'):
+        run('git status')
+        branch = prompt("Branch to run? (Enter to leave default): ")
+        run('git checkout {0}'.format(branch if branch else env.branch))
+        run('git pull')

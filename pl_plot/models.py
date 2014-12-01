@@ -64,38 +64,42 @@ class OverlayManager(models.Manager):
         # (Yay lazy evaluation...)
 
         overlays_to_display = Overlay.objects.filter(id__in=ids_of_these).order_by('definition', 'applies_at_datetime')
-        return overlays_to_display
 
-    @classmethod
-    def make_all_base_plots(cls, time_index=0, file_id=None):
-        task_list = [cls.make_plot.s(od_id, time_index, file_id) for od_id in cls.get_all_base_definition_ids()]
-        job = group(task_list)
-        results = job.apply_async()  # this might just be returning results from the first task in each chain
-        return results
+        # filtering out the non-base ones, for now, because the javascript that displays the menu is hacky.
+        return overlays_to_display.filter(definition__is_base=True)
 
-    @classmethod
-    def make_all_base_plots_in_file(cls, file_id):
-        datafile = DataFile.objects.get(pk=file_id)
-        plotter = Plotter(datafile.file.name)
-        number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
-        group_results_list = []
-        for t in xrange(number_of_times):
-            group_result = cls.make_all_base_plots(time_index=t, file_id=file_id)
-            group_results_list.append(group_result)
-        return group_results_list
 
-    @classmethod
-    def make_all_base_plots_in_files(cls, file_ids):
-        group_results_list = []
-        for file_id in file_ids:
-            group_results = cls.make_all_base_plots_in_file(file_id)
-            group_results_list.extend(group_results)
-        return group_results_list
+    # these are for getting and running task groups
 
     @classmethod
     def make_all_base_plots_for_next_few_days(cls):
+        job = group(cls.get_tasks_for_base_plots_for_next_few_days())
+        results = job.apply_async()
+        return results
+
+    @classmethod
+    def get_tasks_for_all_base_plots(cls, time_index=0, file_id=None):
+        task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in cls.get_all_base_definition_ids()]
+        job = task_list
+        return job
+
+    @classmethod
+    def get_tasks_for_base_plots_in_files(cls, file_ids):
+        task_list = []
+        base_definition_ids = cls.get_all_base_definition_ids()
+        for fid in file_ids:
+            print fid
+            datafile = DataFile.objects.get(pk=fid)
+            plotter = Plotter(datafile.file.name)
+            number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
+            for t in xrange(number_of_times):
+                task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in base_definition_ids)
+        return task_list
+
+    @classmethod
+    def get_tasks_for_base_plots_for_next_few_days(cls):
         file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
-        return cls.make_all_base_plots_in_files(file_ids)
+        return cls.get_tasks_for_base_plots_in_files(file_ids)
 
     @staticmethod
     @shared_task(name='pl_plot.make_plot')

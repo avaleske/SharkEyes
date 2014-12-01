@@ -1,11 +1,17 @@
-##SharkEyes - NVS Development Project
+##Seacast.org
+(formerly Project Sharkeyes)
+
+###About
+Seacast.org is a Django site created by students at Oregon State University for the College of Earth, Oceanic, and Atmospheric Sciences. It takes oceanic models and uses Matplotlib, Basemap, and Celery to plot them as Google Maps overlays, with the goal of helping Oregon's coastal fisherman find fish more easily.
+
+We just deployed a staging server at [staging.sharkeyes.org](http://staging.sharkeyes.org), and will be deploying to production soon.
 
 ###Setup
 
 ####Installing prereqs:
 All these requirements should be cross platform. If you're on Windows, I like using the Git Bash for these over Command Prompt, but that's just me. Also, throughout these steps I mention the project directory, which is the directory that you clone from GitHub that contains `manage.py` and the hidden `.git` directory.
 - Install [Vagrant](http://www.vagrantup.com), [Git](http://git-scm.com/), and [VirtualBox](https://www.virtualbox.org/wiki/Downloads) (Windows, install 4.3.12 to avoid a bug that wipes your vm.)
-- Install [PyCharm](http://www.jetbrains.com/pycharm/) (There's a free 30 day trial and free academic license.)
+- Install [PyCharm](http://www.jetbrains.com/pycharm/) (There's a free 30 day trial and free academic license.  The community edition doesn't support Django, last I checked, so don't use that one.)
 - Install [Python 2.7](https://www.python.org/) or use the Python that comes with your system. The system python, however, is likely out of date. Don't install Python 3.x, as it is not backwards compatible with 2.x.
 - Install Python Pip using instructions from [here](https://pip.pypa.io/en/latest/installing.html). (Using the `get-pip.py` script described in the link makes this pretty easy.)
 - This step is likely Windows only. You have some dependencies you need to install before installing fabric:

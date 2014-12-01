@@ -11,11 +11,16 @@ from __future__ import absolute_import
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from celery.schedules import crontab
+from datetime import timedelta
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '.seacast.org',     # Allow domain and subdomains
+    '.seacast.org.',    # Also allow FQDN and subdomains
+]
 
 # Application definition
 
@@ -63,8 +68,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
+    ('django.template.loaders.cached.Loader', (
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader',
+    )),
 )
 
 TEMPLATE_DIRS = BASE_DIR + '/templates/'
@@ -87,6 +94,9 @@ MEDIA_URL = "/media/"
 
 BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 
+#some database
+CONN_MAX_AGE = None
+
 # For celery
 BROKER_HOST = "127.0.0.1"
 BROKER_PORT = 5672
@@ -96,5 +106,14 @@ CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IMPORTS = ('SharkEyesCore.tasks',)
 
+CELERYBEAT_SCHEDULE = {
+   'plot_pipeline': {
+       'task': 'sharkeyescore.pipeline',
+       'schedule': timedelta(hours=1),
+       'args': ()
+   },
+}
+
 # import local settings. PyCharm thinks it's unused, but PyCharm is silly.
+# noinspection PyUnresolvedReferences
 from .settings_local import *
