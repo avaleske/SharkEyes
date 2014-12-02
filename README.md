@@ -7,9 +7,11 @@ Seacast.org is a Django site created by students at Oregon State University for 
 We just deployed a staging server at [staging.sharkeyes.org](http://staging.sharkeyes.org), and we just deployed to production.
 
 Mobile:
+
 <img src="resources/ios_screenshot.png?raw=true">
 
 Desktop:
+
 <img src="resources/desktop_screenshot.png?raw=true">
 
 ###Setup
