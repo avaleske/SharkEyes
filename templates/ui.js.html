@@ -132,13 +132,13 @@ function RealtimeLL(event){
 // if sidebar is clicked before then, don't hide it!
 var timer;
 jQuery(document).ready(function () {
-    timer = setTimeout( "ToggleSidebar()",4000 );
+    //timer = setTimeout( "ToggleSidebar()",4000 );
 });
 $('#sidebar-left').on('click', function() {
-    clearTimeout(timer);
+    //clearTimeout(timer);
 });
 $('#sidebar-left-btn').click(function() {
-  clearTimeout(timer);
+  //clearTimeout(timer);
   ToggleSidebar();
 });
 
