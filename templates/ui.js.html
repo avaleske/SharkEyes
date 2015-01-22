@@ -17,8 +17,14 @@ var loc = "{{ MEDIA_URL }}"
 // global variables
 var map;
 var mapBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(40.5840806224, -129.0),
-  new google.maps.LatLng(47.499, -123.726199391));
+ // new google.maps.LatLng(40.5840806224, -129.0), //ne
+ // new google.maps.LatLng(47.499, -123.726199391)); //sw
+
+//Zoomed in so that most of the ocean area is covered by map
+// These coordinates are not as exact as they seem. Works on desktop
+// TODO test on mobile
+new google.maps.LatLng(42.7840806224, -126.0), //ne
+new google.maps.LatLng(45.0, -124.526199391)); //sw
 var mapMinZoom = 4;
 var mapMaxZoom = 10;
 var layers = [];
@@ -39,6 +45,12 @@ function initialize() {
     });
 
       var mapOptions = {
+          // Putting min and max zoom here fixed the issue that zoom was NOT actually range of 4--10.
+        //  minZoom: 4,
+        //  maxZoom: 10,
+          // But zoom still doesn't have any effect
+         // zoom: 10,
+
         panControl: true,
         panControlOptions: {
             position: google.maps.ControlPosition.TOP_RIGHT
@@ -53,6 +65,8 @@ function initialize() {
         scaleControl: true,
         streetViewControl: false,
         overviewMapControl: false,
+
+          // Do we want crosshairs? Or perhaps a hand-style cursor?
         draggableCursor: 'crosshair',
         mapTypeId: google.maps.MapTypeId.HYBRID
 
