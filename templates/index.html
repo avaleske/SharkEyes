@@ -2,7 +2,11 @@
 
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
+<!--
+<meta name="viewport" content="width=device-width,  initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
+  IOS 8 does not support minimal-ui any longer-->
+<meta name="viewport" content="width=device-width,  initial-scale=1.0,  user-scalable=no" />
+
 
 <title>Seacast</title>
 
@@ -39,7 +43,7 @@
 
 <div id="map_canvas" style="width:100%; height:100%"></div>
 
-<div id="key" class="transpose"><img id="key-img" src=""></img></div>
+<div id="key" class="transpose"><img id="key-img" src=""></div>
 
 {% include "v3_ll_grat.js.html" %}
 {% include "ui.js.html" %}
