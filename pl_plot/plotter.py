@@ -17,6 +17,7 @@ class Plotter:
         self.load_file(file_name)
 
     def load_file(self, file_name):
+        #Gives a netcdf file object with default mode of reading permissions only
         self.data_file = netcdf.netcdf_file(
             os.path.join(
                 settings.MEDIA_ROOT,
