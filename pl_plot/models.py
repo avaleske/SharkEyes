@@ -111,10 +111,7 @@ class OverlayManager(models.Manager):
             datafile = DataFile.objects.latest('model_date')
         else:
             datafile = DataFile.objects.get(pk=file_id)
-
-        #returns a netcdf file object with read mode
         plotter = Plotter(datafile.file.name)
-        #return overlaydefinition object
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
         if overlay_definition_id == 3:
@@ -123,9 +120,6 @@ class OverlayManager(models.Manager):
             zoom_levels = zoom_levels_for_others
 
         # todo fix hacky hack for expo
-        #.format lets you insert variables into a string
-        # {0} = overlaydefinition
-        #{1} = uuid4 which returns universally unique identifier
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
         overlay_ids = []
         for zoom_level in zoom_levels:

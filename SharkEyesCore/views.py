@@ -1,9 +1,6 @@
 from django.shortcuts import render
 from pl_plot.models import OverlayManager, OverlayDefinition
 from dateutil import tz
-import json
-from django.db import connection
-from django.db import IntegrityError, transaction
 
 def home(request):
     overlays_view_data = OverlayManager.get_next_few_days_of_tiled_overlays()
@@ -20,19 +17,3 @@ def home(request):
 
 def about(request):
     return render(request, 'about.html')
-
-def save_feedback(request):
-    #Access feedback data to be saved into the database
-    feedback_title = json.loads(request.body)["title"]
-    feedback_comment = json.loads(request.body)["comment"]
-
-    try:
-        #Establish DB Connection
-        cursor = connection.cursor()
-        #Execute SQL Query
-        cursor.execute("""INSERT INTO SharkEyesCore_feedbackhistory (feedback_title, feedback_comments) VALUES (%s, %s);""", (feedback_title, feedback_comment))
-        #Nothing needs to be returned
-    except IntegrityError as e:
-        print "Error Message: "
-        print e.message
-    return render(request, 'index.html')
