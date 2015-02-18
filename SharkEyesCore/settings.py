@@ -31,7 +31,6 @@ INSTALLED_APPS = (
     'pl_download',
     'pl_plot',
     'pl_chop',
-    'SharkEyesCore',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
