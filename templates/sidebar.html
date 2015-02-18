@@ -1,9 +1,5 @@
     <button id="sidebar-left-btn" class="btn left arrow-left">◄ Hide</button>
-
     <div class="sidebar left" id="sidebar-left">
-
-
-
         <h2>Forecast Date/Time</h2>
 
         <select id ="date-time">
@@ -98,15 +94,23 @@
         <tr>
             <td class="col-one"><a href="{% url "SharkEyesCore.views.about" %}" target="_self">About</a></td>
         </tr>
+        <tr>
+
+            <td class="col-one"><button id="feedback_button"> Give Feedback</button></td>
+        </tr>
     </table>
 	
 	<table>
 		<tr>
 			<td class="col-one"><b>Note: Key for the knots of the current vectors is estimated.</b></td>
 		</tr>
-        <tr></tr>
+        <!-- This is for the feedback pop up window -->
+        <tr><div id="dialog">
+            Subject: <br/><textarea rows="1" cols="35" id="feedback_title" onclick="feedback_click()"></textarea><br/>
+                  Comment: <br/><textarea rows="5" cols="35" id="feedback_comment" onclick="feedback_click()"></textarea>
+
+        </div></tr>
         <tr></tr>
         <tr></tr>
 	</table>
-
     </div>

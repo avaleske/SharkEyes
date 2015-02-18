@@ -11,7 +11,8 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^pl_plot/', include('pl_plot.urls')),
     url(r'^pl_download/', include('pl_download.urls')),
-    url(r'^pl_chop/', include('pl_chop.urls'))
+    url(r'^pl_chop/', include('pl_chop.urls')),
+    url(r'^SharkEyesCore', 'SharkEyesCore.views.save_feedback')
 )
 
 if settings.DEBUG == True:

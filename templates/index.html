@@ -18,10 +18,13 @@
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.0/fastclick.min.js"></script>
 -->
-
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/smoothness/jquery-ui.css" />
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
 <script>
+
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -30,6 +33,105 @@
   ga('create', 'UA-57018273-1', 'auto');
   ga('send', 'pageview');
 
+    //If error message has been displayed inside feedback box it should be deleted once the user edits the textbox
+    function feedback_click() {
+        var title = $('#feedback_title').val();
+        var comment = $('#feedback_comment').val();
+        if (title == "Please enter a title under 255 characters.") {
+            $('#feedback_title').val("");
+        }
+        if (comment == "Please enter a comment under 255 characters.") {
+            $('#feedback_comment').val("");
+        }
+    }
+
+    $(document).ready(function() {
+    //Ajax call needs to attach csrf token for secure connection, otherwhise we get forbidden error
+    //This function is used below
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    //The dialog div in sidebar.html should be hidden and only shown as pop up window
+    $("#dialog").hide();
+
+    //When the feedback button was clicked
+    $("#feedback_button").click(function () {
+        // using jQuery
+        $(function () {
+
+     //Attach csrftoken to ajax header, otherwhise we get forbidden error
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        });
+    });
+        $( "#dialog" ).dialog({
+            title: "Send Feedback",
+            modal: "false",
+            height: 550,
+            width: 650,
+            position: "center",
+            buttons: {
+                OK: function() {
+                    //Receive Data from User Input
+                    var title = $('#feedback_title').val().toString();
+                    var comment = $('#feedback_comment').val().toString();
+
+                    //Check User Input for Errors
+                    if (title.length < 255 && title.length >0
+                        && comment.length < 255 && comment.length > 0)
+                    {
+                        //Serialize Data to Json
+                        var myObj = {"title": title, "comment": comment};
+                        var jsonData = JSON.stringify(myObj);
+
+                        //Send information to views.py to be saved into the database
+                        $.ajax({
+                            type: 'POST',
+                            url: '{% url "SharkEyesCore.views.save_feedback" %}',
+                            data: jsonData,
+                            datatype: "JSON",
+                            success: function() {
+                                //clear feedback box
+                                $('#feedback_title').val("");
+                                $('#feedback_comment').val("");
+
+                            },
+                             error: function (xhr, ajaxOptions, thrownError) {
+                                 alert(xhr.status);
+                                 alert(thrownError);
+                             }
+                        });
+                         $( this ).dialog( "close" );
+                    }
+                    else {
+
+                        $('#feedback_title').val("Please enter a title under 255 characters.");
+                        $('#feedback_comment').val("Please enter a comment under 255 characters.");
+                    }
+                    },
+                    Cancel: function() {
+                         $('#feedback_title').val("");
+                         $('#feedback_comment').val("");
+                        $( this ).dialog( "close" );
+                    }
+            }
+});
+
+    });
+});
 </script>
 
 </head>
@@ -39,7 +141,7 @@
 
 <div id="map_canvas" style="width:100%; height:100%"></div>
 
-<div id="key" class="transpose"><img id="key-img" src=""></img></div>
+<div id="key" class="transpose"><img id="key-img" src=""/></div>
 
 {% include "v3_ll_grat.js.html" %}
 {% include "ui.js.html" %}
