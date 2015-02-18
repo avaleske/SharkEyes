@@ -12,7 +12,6 @@ def add(a, b):
     #time.sleep(5)
     return a + b
 
-#Plot automation
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
     if not DataFileManager.is_new_file_to_download():
