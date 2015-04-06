@@ -13,6 +13,7 @@ def setup_dirs():
                         settings.UNCHOPPED_STORAGE_DIR,
                         settings.VRT_STORAGE_DIR,
                         settings.TILE_STORAGE_DIR,
+                        settings.WAVE_WATCH_STORAGE_DIR,
                         settings.KEY_STORAGE_DIR]:
         dest = os.path.join(settings.MEDIA_ROOT, directory)
         if not os.path.exists(dest):
