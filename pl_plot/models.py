@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.files.storage import FileSystemStorage
 from django.core.files import File
+import math
 import os
 from django.conf import settings
 from celery import group
@@ -8,11 +9,12 @@ from datetime import datetime, time, tzinfo, timedelta
 from django.utils import timezone
 from celery import shared_task
 from pl_plot import plot_functions
-from pl_plot.plotter import Plotter
-from pl_download.models import DataFile, DataFileManager
+from pl_plot.plotter import Plotter, WaveWatchPlotter
+from pl_download.models import DataFile, DataFileManager,WaveWatchDataFile
 from django.db.models.aggregates import Max
 from uuid import uuid4
-
+from scipy.io import netcdf, netcdf_file
+import numpy
 
 class OverlayManager(models.Manager):
     @staticmethod
@@ -102,6 +104,65 @@ class OverlayManager(models.Manager):
         return cls.get_tasks_for_base_plots_in_files(file_ids)
 
     @staticmethod
+    @shared_task(name='pl_plot.make_wave_watch_plot')
+    def make_wave_watch_plot(overlay_definition_id, file_id =None):
+        overlay_ids = []
+
+        #grab the latest forecast file
+        if file_id is None:
+            datafile = WaveWatchDataFile.objects.latest('generated_datetime')
+        else:
+            datafile = WaveWatchDataFile.objects.get(pk=file_id)
+
+        generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
+
+        #get the the number of forecasts contained in the netCDF
+        datafile_read_object = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
+        all_forecasts = datafile_read_object.variables['HTSGW_surface'][:, :, :]
+
+        #obtain how many forecast are contained in the netcdf
+        #as of right now there are 85
+        lengths = numpy.shape(all_forecasts)
+        number_of_forecasts = lengths[0] #netCDF gives a 3D array (number of forecasts, latitudes, longitudes)
+
+        #returns a netcdf file object with read mode
+        plotter = WaveWatchPlotter(datafile.file.name)
+
+        new_dir = settings.MEDIA_ROOT + settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
+        if not os.path.exists(new_dir):
+            os.makedirs(new_dir)
+            os.chmod(new_dir,0o777)
+        wave_storage_dir = settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
+
+        for forecast_index in range(0, number_of_forecasts):
+
+            #return overlaydefinition object; 4 is for wave watch
+            overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+
+            plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+                                                             forecast_index=forecast_index, storage_dir=wave_storage_dir,
+                                                             generated_datetime=generated_datetime)
+
+            overlay = Wave_Watch_Overlay(
+                file=os.path.join(wave_storage_dir, plot_filename),
+                key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+                created_datetime=timezone.now(),
+                definition_id=overlay_definition_id,
+            )
+            overlay.save()
+            overlay_ids.append(overlay.id)
+
+        # # This code was used to view what is contained in the netCDF file
+        # file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
+        # variable_names_in_file = file.variables.keys()
+        # print variable_names_in_file
+        # # This prints all the wave height data
+        # file.variables['HTSGW_surface'][:]
+        # # This prints the dimensions of the wave height data
+        # value = numpy.shape(file.variables['HTSGW_surface'][:])
+        return overlay_ids
+
+    @staticmethod
     @shared_task(name='pl_plot.make_plot')
     def make_plot(overlay_definition_id, time_index=0, file_id=None):
         zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # todo fix hacky hack for expo
@@ -176,3 +237,16 @@ class Overlay(models.Model):
     applies_at_datetime = models.DateTimeField(null=False)
     zoom_levels = models.CharField(max_length=50, null=True)
     is_tiled = models.BooleanField(default=False)
+
+# Function defined to allow dynamic path creation
+# A new folder is created per forecast creation day that includes all the forecasts
+def get_upload_path(instance,filename):
+    return os.path.join(
+        settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + instance.created_datetime)
+
+class Wave_Watch_Overlay(models.Model):
+    definition = models.ForeignKey(OverlayDefinition)
+    created_datetime = models.DateTimeField()
+    file = models.ImageField(upload_to=get_upload_path, null=True, max_length=500)      #get_upload_path was defined in order to allow for dynamic path creation
+    key = models.ImageField(upload_to=settings.KEY_STORAGE_DIR, null=True)
+

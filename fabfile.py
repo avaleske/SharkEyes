@@ -155,7 +155,7 @@ def setup_media_directory():
     if not exists('/opt/sharkeyes/media/'):
         make_dir('/opt/sharkeyes/media/')
     with cd('/opt/sharkeyes/media'):
-        for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys']:
+        for d in ['netcdf', 'unchopped', 'vrt_files', 'tiles', 'keys', 'wave_watch_datafiles', 'wave_watch_forecasts']:
             if not exists(d):
                 make_dir(d)
     if not env.user == 'vagrant':

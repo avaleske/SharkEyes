@@ -33,5 +33,16 @@
             "display_name_short": "Currents",
             "function_name": "currents_function"
         }
+    },
+    {
+        "models": "pl_plot.overlaydefinition",
+        "pk": 4,
+        "fields": {
+            "display_name_long": "Waves",
+            "is_base": true,
+            "type": "FC",
+            "display_name_short": "Waves",
+            "function_name": "wave_function"
+        }
     }
 ]

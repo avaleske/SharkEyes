@@ -14,6 +14,7 @@ from dateutil import parser, tz
 from django.db.models.aggregates import Max
 from django.db.models import Q
 from operator import __or__ as OR
+from ftplib import FTP
 
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
@@ -40,6 +41,7 @@ class DataFileManager(models.Manager):
     # todo make each file download in a separate task
     @staticmethod
     @shared_task(name='pl_download.fetch_new_files')
+    #FETCH FILES FOR CURRENTS AND SST
     def fetch_new_files():
         if not DataFileManager.is_new_file_to_download():
             return []
@@ -87,6 +89,53 @@ class DataFileManager(models.Manager):
 
         return new_file_ids
 
+    @staticmethod
+    @shared_task(name='pl_download.get_latest_wave_watch_files')
+    def get_latest_wave_watch_files():
+
+        #TODO: set up a check to see if new files are available
+        #list of the new file ids created in this function
+        new_file_ids = []
+
+        #directory of where files will be saved at
+        destination_directory = os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR)
+
+        #file names might need to be created dynamically in the future if ftp site changes
+        file_name = "outer.nc"
+        #static_file_names = ["shelf1.nc", "shelf2.nc", "shelf3.nc"]
+
+        #Connect to FTP site to get the file modification data
+        ftp = FTP('cil-www.oce.orst.edu')
+        ftp.login()
+
+        #retrieve the ftp modified datetime format
+        ftp_dtm = ftp.sendcmd('MDTM' + " /pub/outgoing/ww3data/" + file_name)
+
+        #convert ftp datetime format to a string datetime
+        modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
+
+        #Create File Name and Download actual File into media folder
+        url = urljoin(settings.WAVE_WATCH_URL, file_name)
+        local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
+        urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
+
+        #Save the File name into the Database
+        datafile = WaveWatchDataFile(
+                type='NCDF',
+                download_datetime=timezone.now(),
+                generated_datetime=modified_datetime,
+                file=local_filename,
+            )
+
+        datafile.save()
+
+        new_file_ids.append(datafile.id)
+
+        #quit ftp connection cause we accessed all the data we need
+        ftp.quit()
+
+        return new_file_ids
+
     @classmethod
     def get_next_few_days_files_from_db(cls):
         next_few_days_of_files = DataFile.objects.filter(
@@ -129,6 +178,16 @@ class DataFileManager(models.Manager):
                 return False
 
         return True
+
+
+class WaveWatchDataFile(models.Model):
+    DATA_FILE_TYPES = (
+        ('NCDF', "NetCDF"),
+    )
+    type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
+    download_datetime = models.DateTimeField()
+    generated_datetime = models.DateTimeField()
+    file = models.FileField(upload_to=settings.NETCDF_STORAGE_DIR, null=True)
 
 
 class DataFile(models.Model):
