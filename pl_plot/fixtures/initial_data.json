@@ -35,7 +35,7 @@
         }
     },
     {
-        "models": "pl_plot.overlaydefinition",
+        "model": "pl_plot.overlaydefinition",
         "pk": 4,
         "fields": {
             "display_name_long": "Waves",
