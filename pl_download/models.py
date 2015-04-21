@@ -138,6 +138,8 @@ class DataFileManager(models.Manager):
 
     @classmethod
     def get_next_few_days_files_from_db(cls):
+
+        #TODO does this include WaveWatch files?
         next_few_days_of_files = DataFile.objects.filter(
             model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
             model_date__lte=(timezone.now()+timedelta(days=4)).date()
@@ -180,6 +182,8 @@ class DataFileManager(models.Manager):
         return True
 
 
+
+
 class WaveWatchDataFile(models.Model):
     DATA_FILE_TYPES = (
         ('NCDF', "NetCDF"),
@@ -188,6 +192,7 @@ class WaveWatchDataFile(models.Model):
     download_datetime = models.DateTimeField()
     generated_datetime = models.DateTimeField()
     file = models.FileField(upload_to=settings.NETCDF_STORAGE_DIR, null=True)
+
 
 
 class DataFile(models.Model):

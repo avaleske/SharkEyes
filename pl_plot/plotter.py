@@ -26,6 +26,15 @@ class WaveWatchPlotter:
             )
         )
 
+    # the unchopped file's index starts at noon: index = 0 and progresses throgh 85 forecasts, one per hour, for the next 85 hours.
+   # def get_time_from_index_of_file(self, index):
+     #   self.data_file.variables
+     #   ocean_time_epoch = datetime(day=1, month=1, year=2005, hour=0, minute=0, second=0, tzinfo=timezone.utc)
+      #  seconds_since_epoch = timedelta(seconds=self.data_file.variables['ocean_time'][index])
+      #  return ocean_time_epoch + seconds_since_epoch
+
+#make a plot, with the Function to use specified, the storage directory specified, and the Index (ie 0--85 forecasts)
+# based on the title of the file
     def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime):
 
         fig = pyplot.figure()
@@ -81,7 +90,7 @@ class Plotter:
         )
 
     def get_time_at_oceantime_index(self, index):
-        #todo add checking of times here. there's only three furthest out file
+        #Team 1 says todo add checking of times here. there's only three furthest out file
         ocean_time_epoch = datetime(day=1, month=1, year=2005, hour=0, minute=0, second=0, tzinfo=timezone.utc)
         seconds_since_epoch = timedelta(seconds=self.data_file.variables['ocean_time'][index])
         return ocean_time_epoch + seconds_since_epoch
