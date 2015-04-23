@@ -108,6 +108,7 @@ BROKER_HOST = "127.0.0.1"
 BROKER_PORT = 5672
 BROKER_VHOST = "sharkeyes"
 
+
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IMPORTS = ('SharkEyesCore.tasks',)

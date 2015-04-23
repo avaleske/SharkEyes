@@ -34,7 +34,7 @@ class TileManager():
         if len(overlay_ids) != 0:
             flattened = numpy.hstack(overlay_ids)
 
-            #this should tile all Overlays, which do include WaveWatch overlays
+            # this should tile all Overlays, which do include WaveWatch overlays
             job = group((tile_overlay.s(o_id, immutable=True) for o_id in flattened))
             return job
         return None

@@ -59,11 +59,17 @@ class OverlayManager(models.Manager):
 
 
         #now the Overlays should include WaveWatch items as well
+        #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
+        print "next few that are tiled:"
+        for each in that_are_tiled:
+            print each.applies_at_datetime, each.tile_dir
+
+
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
             .annotate(newest_id=Max('id'))
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
@@ -145,15 +151,18 @@ class OverlayManager(models.Manager):
         wave_storage_dir = settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
 
 
-        tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
-        print "tile_dir name = ", tile_dir
+
 
 
         for forecast_index in range(0, number_of_forecasts):
             #the forecast applies at some number of hours past the generated datetime.
             #plus NOON
-            applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index)
+            applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
             print "applies at", applies_at_datetime
+
+            #Need to set a new tile directory name for each forecast_index
+            tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
+            print "tile_dir name = ", tile_dir
 
             #return overlaydefinition object; 4 is for wave watch
             overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)

@@ -19,6 +19,10 @@ def do_pipeline():
 
     DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
 
+    #todo put Get New WAVEWATCh files here
+
+    #todo Auto delete
+
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
 

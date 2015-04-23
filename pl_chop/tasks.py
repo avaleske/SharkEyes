@@ -25,7 +25,7 @@ def tile_overlay(overlay_id):
 
     #the id's in the database progresses upwards from 1. If overlays are deleted, the new
     # overlays start numbering where the old ones
-    #left  off. Ie delete items 1-100, the new overlays will start numbering at 101.
+    #left  off. Ie if we delete items 1-100, the new overlays will start numbering at 101.
 
     overlay = Overlay.objects.get(pk=overlay_id)
     image = overlay.file
