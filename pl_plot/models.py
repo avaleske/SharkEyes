@@ -15,6 +15,7 @@ from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf, netcdf_file
 import numpy
+HOW_LONG_TO_KEEP_FILES = 5
 
 class OverlayManager(models.Manager):
     @staticmethod
@@ -206,6 +207,53 @@ class OverlayManager(models.Manager):
             overlay.save()
             overlay_ids.append(overlay.id)
         return overlay_ids
+
+
+
+
+    @classmethod
+    def delete_old_files(cls):
+
+
+
+        today = timezone.now().date()
+
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+
+        # UNCHOPPED database files
+        # this will delete wavewatch overlays too
+        old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
+        print " database: unchopped files to delete: "
+        for eachfile in old_unchopped_files:
+             print eachfile
+             eachfile.delete()
+
+        # Delete the actual files on disk: old PNG files from UNCHOPPED
+        directory = '/opt/sharkeyes/media/unchopped/'
+        actualfiles = os.listdir(directory)
+        print "actual files from UNCHOPPED:"
+        print "how old to keep:", how_old_to_keep
+        for eachfile in os.listdir(directory):
+            if eachfile.endswith('.png') :
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
+                if how_old_to_keep > timestamp:
+                    print eachfile
+                    os.remove(os.path.join(directory,eachfile))
+
+        #delete the Key files from disk
+        directory = '/opt/sharkeyes/media/keys/'
+        actualfiles = os.listdir(directory)
+        print "actual files fromKEYS:"
+        print "how old to keep:", how_old_to_keep
+        for eachfile in os.listdir(directory):
+            if eachfile.endswith('.png') :
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
+                if how_old_to_keep > timestamp:
+                    print eachfile
+                    os.remove(os.path.join(directory,eachfile))
+
+        return True
+
 
 
 class OverlayDefinition(models.Model):

@@ -15,7 +15,10 @@ from django.db.models.aggregates import Max
 from django.db.models import Q
 from operator import __or__ as OR
 from ftplib import FTP
+import shutil
 
+
+HOW_LONG_TO_KEEP_FILES = 5
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
 
@@ -178,6 +181,87 @@ class DataFileManager(models.Manager):
                 return False
 
         return True
+
+    @classmethod
+    def delete_old_files(cls):
+         #todo delete WAVEWATCH files too
+
+
+        today = timezone.now().date()
+
+        # NETCDF files
+        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
+        old_netcdf_files = DataFile.objects.filter(model_date__lte=today)  # don't need any old NETCDF files
+
+        # Delete the file names from the database
+        for filename in old_netcdf_files:
+            print "deleting DB file: ", filename
+            filename.delete() # delete the file INFO--this works, may only be visible at next run of function
+
+
+        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
+        old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=today)  # don't need any old NETCDF files
+#no model_date: can use download_datetime, file, generated_datetime, id, type
+
+        # Delete the file names from the database
+        for filename in old_wavewatch_netcdf_files:
+            print "deleting DB file: ", filename
+            filename.delete() # delete the file INFO--this works, may only be visible at next run of function
+
+
+        directory = '/opt/sharkeyes/media/netcdf/'
+        actualfiles = os.listdir(directory)
+
+        #keep only the last day's NETCDF file
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=1)
+
+        for eachfile in actualfiles:
+            if eachfile.endswith('.nc'):
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
+                #print timestamp
+                if how_old_to_keep > timestamp:
+                    print "removing netcdf file ", os.path.join(directory,eachfile)
+                    os.remove(os.path.join(directory,eachfile))
+
+        directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
+        actualfiles = os.listdir(directory)
+
+        #keep only the last day's NETCDF file
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=1)
+
+        for eachfile in actualfiles:
+            if eachfile.endswith('.nc'):
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
+                #print timestamp
+                if how_old_to_keep > timestamp:
+                    print "removing netcdf file ", os.path.join(directory,eachfile)
+                    os.remove(os.path.join(directory,eachfile))
+
+
+
+
+
+        #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+
+        directory=os.path.join('/opt/sharkeyes/media/tiles/')
+
+        # Referenced here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
+        for r,d,f in os.walk(directory):
+            for direc in d:
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
+
+                if how_old_to_keep > timestamp:
+                    try:
+                        print "removing ",os.path.join(r,direc)
+                        shutil.rmtree(os.path.join(r,direc))
+                    except Exception,e:
+                        print e
+                        pass
+
+        return True
+
+
 
 
 class WaveWatchDataFile(models.Model):
