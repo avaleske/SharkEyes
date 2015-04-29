@@ -15,6 +15,7 @@ from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf, netcdf_file
 import numpy
+HOW_LONG_TO_KEEP_FILES = 5
 
 
 class OverlayManager(models.Manager):
@@ -115,6 +116,54 @@ class OverlayManager(models.Manager):
         file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
         return cls.get_tasks_for_base_plots_in_files(file_ids)
 
+    @classmethod
+    def delete_old_files(cls):
+
+
+
+        today = timezone.now().date()
+
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+
+        # UNCHOPPED database files
+        # this will delete wavewatch overlays too
+        old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
+        print " database: unchopped files to delete: "
+        for eachfile in old_unchopped_files:
+             print eachfile
+             eachfile.delete()
+
+        # Delete the actual files on disk: old PNG files from UNCHOPPED
+        directory = '/opt/sharkeyes/media/unchopped/'
+        actualfiles = os.listdir(directory)
+        print "actual files from UNCHOPPED:"
+        print "how old to keep:", how_old_to_keep
+        for eachfile in os.listdir(directory):
+            if eachfile.endswith('.png') :
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
+                if how_old_to_keep > timestamp:
+                    print eachfile
+                    os.remove(os.path.join(directory,eachfile))
+
+        #delete the Key files from disk
+        directory = '/opt/sharkeyes/media/keys/'
+        actualfiles = os.listdir(directory)
+        print "actual files fromKEYS:"
+        print "how old to keep:", how_old_to_keep
+        for eachfile in os.listdir(directory):
+            if eachfile.endswith('.png') :
+                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
+                if how_old_to_keep > timestamp:
+                    print eachfile
+                    os.remove(os.path.join(directory,eachfile))
+
+        return True
+
+
+
+
+
+
     @staticmethod
     @shared_task(name='pl_plot.make_wave_watch_plot')
     def make_wave_watch_plot(overlay_definition_id, file_id =None):
@@ -153,10 +202,10 @@ class OverlayManager(models.Manager):
 
 
 
-
-        for forecast_index in range(0, number_of_forecasts):
+#for forecast_index in range(0, number_of_forecasts):
+        for forecast_index in range(60, 70):
             #the forecast applies at some number of hours past the generated datetime.
-            #plus NOON
+            #plus NOON: so we need to add 5. Something is off with the datetime.
             applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
             print "applies at", applies_at_datetime
 

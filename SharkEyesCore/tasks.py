@@ -14,6 +14,10 @@ def add(a, b):
 
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
+
+    DataFileManager.delete_old_files()
+    OverlayManager.delete_old_files()
+
     if not DataFileManager.is_new_file_to_download():
         return None
 
@@ -21,7 +25,8 @@ def do_pipeline():
 
     #todo put Get New WAVEWATCh files here
 
-    #todo Auto delete
+
+
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()

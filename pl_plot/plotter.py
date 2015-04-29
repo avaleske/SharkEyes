@@ -66,8 +66,12 @@ class WaveWatchPlotter:
              transparent=True, frameon=False)
         pyplot.close(fig)
 
-        if forecast_index == 0:
-            key_fig.savefig(
+       # if forecast_index == 0:
+            #key_fig.savefig(
+            #     os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
+             #    dpi=500, bbox_inches='tight', pad_inches=0,
+             #    transparent=True, facecolor=key_fig.get_facecolor())
+        key_fig.savefig(
                  os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
                  dpi=500, bbox_inches='tight', pad_inches=0,
                  transparent=True, facecolor=key_fig.get_facecolor())
