@@ -20,7 +20,7 @@ import shutil
 
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
-HOW_LONG_TO_KEEP_FILES = 5
+HOW_LONG_TO_KEEP_FILES = 7
 
 # delete() - https://docs.djangoproject.com/en/1.7/ref/contrib/admin/actions/
 
@@ -190,11 +190,11 @@ class DataFileManager(models.Manager):
          #todo delete WAVEWATCH files too
 
 
-        today = timezone.now().date()
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=2)
 
         # NETCDF files
         #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
-        old_netcdf_files = DataFile.objects.filter(model_date__lte=today)  # don't need any old NETCDF files
+        old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)  # don't need any old NETCDF files
 
         # Delete the file names from the database
         for filename in old_netcdf_files:
@@ -203,7 +203,7 @@ class DataFileManager(models.Manager):
 
 
         #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
-        old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=today)  # don't need any old NETCDF files
+        old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=how_old_to_keep)  # don't need any old NETCDF files
 #no model_date: can use download_datetime, file, generated_datetime, id, type
 
         # Delete the file names from the database
@@ -216,7 +216,7 @@ class DataFileManager(models.Manager):
         actualfiles = os.listdir(directory)
 
         #keep only the last day's NETCDF file
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=1)
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=2)
 
         for eachfile in actualfiles:
             if eachfile.endswith('.nc'):
@@ -230,7 +230,7 @@ class DataFileManager(models.Manager):
         actualfiles = os.listdir(directory)
 
         #keep only the last day's NETCDF file
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=1)
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=2)
 
         for eachfile in actualfiles:
             if eachfile.endswith('.nc'):
