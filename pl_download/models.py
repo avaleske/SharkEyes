@@ -15,14 +15,16 @@ from django.db.models.aggregates import Max
 from django.db.models import Q
 from operator import __or__ as OR
 from ftplib import FTP
+from django.db import models
+
+
 import shutil
 
 
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
-HOW_LONG_TO_KEEP_FILES = 7
+HOW_LONG_TO_KEEP_FILES = 10
 
-# delete() - https://docs.djangoproject.com/en/1.7/ref/contrib/admin/actions/
 
 def get_ingria_xml_tree():
     # todo: need to handle if the xml file isn't available
@@ -165,6 +167,8 @@ class DataFileManager(models.Manager):
     def is_new_file_to_download(cls):
         three_days_ago = timezone.now().date()-timedelta(days=3)
         today = timezone.now().date()
+
+        #Look back at the past 3 days of datafiles
         recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today])
 
         # empty lists return false
@@ -190,16 +194,17 @@ class DataFileManager(models.Manager):
          #todo delete WAVEWATCH files too
 
 
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=2)
+        how_old_to_keep = timezone.datetime.now()+timedelta(days=1)
 
         # NETCDF files
         #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
         old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)  # don't need any old NETCDF files
 
-        # Delete the file names from the database
+        # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
-            print "deleting DB file: ", filename
-            filename.delete() # delete the file INFO--this works, may only be visible at next run of function
+            print "deleting DB file: ", filename.file.name
+            filename.delete() # Custom delete method for DataFiles: this deletes the actual files from disk too
+
 
 
         #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
@@ -209,28 +214,13 @@ class DataFileManager(models.Manager):
         # Delete the file names from the database
         for filename in old_wavewatch_netcdf_files:
             print "deleting DB file: ", filename
-            filename.delete() # delete the file INFO--this works, may only be visible at next run of function
-
-
-        directory = '/opt/sharkeyes/media/netcdf/'
-        actualfiles = os.listdir(directory)
-
-        #keep only the last day's NETCDF file
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=2)
-
-        for eachfile in actualfiles:
-            if eachfile.endswith('.nc'):
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
-                #print timestamp
-                if how_old_to_keep > timestamp:
-                    print "removing netcdf file ", os.path.join(directory,eachfile)
-                    os.remove(os.path.join(directory,eachfile))
+           # filename.delete() # delete the file INFO--this works, may only be visible at next run of function
 
         directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
         actualfiles = os.listdir(directory)
 
-        #keep only the last day's NETCDF file
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=2)
+        #keep only the past 4 day's NETCDF file
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=4)
 
         for eachfile in actualfiles:
             if eachfile.endswith('.nc'):
@@ -238,10 +228,7 @@ class DataFileManager(models.Manager):
                 #print timestamp
                 if how_old_to_keep > timestamp:
                     print "removing netcdf file ", os.path.join(directory,eachfile)
-                    os.remove(os.path.join(directory,eachfile))
-
-
-
+                 #   os.remove(os.path.join(directory,eachfile))
 
 
         #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
@@ -249,7 +236,7 @@ class DataFileManager(models.Manager):
 
         directory=os.path.join('/opt/sharkeyes/media/tiles/')
 
-        # Referenced here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
+        # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
         for r,d,f in os.walk(directory):
             for direc in d:
                 timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
@@ -286,3 +273,17 @@ class DataFile(models.Model):
     generated_datetime = models.DateTimeField()
     model_date = models.DateField()
     file = models.FileField(upload_to=settings.NETCDF_STORAGE_DIR, null=True)
+
+    #Custom delete method which will also delete the DataFile's image file from the disk
+    def delete(self,*args,**kwargs):
+        #Seems to be a Django bug (?) which gives the wrong path for self.file.path. This is a workaround.
+        pathName = os.path.join(
+        settings.MEDIA_ROOT  + settings.NETCDF_STORAGE_DIR + "/" + self.file.name)
+
+        if os.path.isfile(pathName):
+            #Delete the physical file from disk
+            os.remove(pathName)
+
+        #Delete the model instance
+        super(DataFile, self).delete(*args,**kwargs)
+

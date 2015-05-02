@@ -15,7 +15,7 @@ from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf, netcdf_file
 import numpy
-HOW_LONG_TO_KEEP_FILES = 5
+HOW_LONG_TO_KEEP_FILES = 10
 
 
 class OverlayManager(models.Manager):
@@ -38,7 +38,7 @@ class OverlayManager(models.Manager):
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
 
-        #todo check that the Timezone works for WaveWatch files
+
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
@@ -108,6 +108,7 @@ class OverlayManager(models.Manager):
         base_definition_ids = cls.get_all_base_definition_ids()
         for fid in file_ids:
             print fid
+            #TODO add the WaveWatch files & plotter too
             datafile = DataFile.objects.get(pk=fid)
             plotter = Plotter(datafile.file.name)
 
@@ -127,49 +128,18 @@ class OverlayManager(models.Manager):
     @classmethod
     def delete_old_files(cls):
 
-
-
-        today = timezone.now().date()
-
+        #how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # UNCHOPPED database files
         # this will delete wavewatch overlays too
         old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
-        print " database: unchopped files to delete: "
+
         for eachfile in old_unchopped_files:
-             print eachfile
-             eachfile.delete()
-
-        # Delete the actual files on disk: old PNG files from UNCHOPPED
-        directory = '/opt/sharkeyes/media/unchopped/'
-        actualfiles = os.listdir(directory)
-        print "actual files from UNCHOPPED:"
-        print "how old to keep:", how_old_to_keep
-        for eachfile in os.listdir(directory):
-            if eachfile.endswith('.png') :
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
-                if how_old_to_keep > timestamp:
-                    print eachfile
-                    os.remove(os.path.join(directory,eachfile))
-
-        #delete the Key files from disk
-        directory = '/opt/sharkeyes/media/keys/'
-        actualfiles = os.listdir(directory)
-        print "actual files fromKEYS:"
-        print "how old to keep:", how_old_to_keep
-        for eachfile in os.listdir(directory):
-            if eachfile.endswith('.png') :
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
-                if how_old_to_keep > timestamp:
-                    print eachfile
-                    os.remove(os.path.join(directory,eachfile))
+            #Delete the overlay from DB, its image from disk, and its key image from disk, using the custom delete() method
+            Overlay.delete(eachfile)
 
         return True
-
-
-
-
 
 
     @staticmethod
@@ -215,7 +185,7 @@ class OverlayManager(models.Manager):
             #the forecast applies at some number of hours past the generated datetime.
             #plus NOON: so we need to add 5. Something is off with the datetime.
             #applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
-            applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) - timedelta(hours=5)
+            applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
             print "applies at", applies_at_datetime
 
             #Need to set a new tile directory name for each forecast_index
@@ -322,6 +292,23 @@ class Overlay(models.Model):
     applies_at_datetime = models.DateTimeField(null=False)
     zoom_levels = models.CharField(max_length=50, null=True)
     is_tiled = models.BooleanField(default=False)
+
+    #Custom delete method which will also delete the Overlay's image file from the disk and also the Key image
+    def delete(self,*args,**kwargs):
+
+        if os.path.isfile(self.file.path):
+            #Delete the physical file from disk
+            os.remove(self.file.path)
+
+        #Delete the Key image
+        if os.path.isfile(self.key.path):
+            os.remove(self.key.path)
+
+        #Delete the model instance
+        super(Overlay, self).delete(*args,**kwargs)
+
+
+
 
 # Function defined to allow dynamic path creation
 # A new folder is created per forecast creation day that includes all the forecasts
