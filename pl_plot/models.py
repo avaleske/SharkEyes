@@ -279,34 +279,12 @@ class OverlayManager(models.Manager):
         # UNCHOPPED database files
         # this will delete wavewatch overlays too
         old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
-        print " database: unchopped files to delete: "
+        #print " database: unchopped files to delete: "
         for eachfile in old_unchopped_files:
              print eachfile
              eachfile.delete()
 
-        # Delete the actual files on disk: old PNG files from UNCHOPPED
-        directory = '/opt/sharkeyes/media/unchopped/'
-        actualfiles = os.listdir(directory)
-        print "actual files from UNCHOPPED:"
-        print "how old to keep:", how_old_to_keep
-        for eachfile in os.listdir(directory):
-            if eachfile.endswith('.png') :
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
-                if how_old_to_keep > timestamp:
-                    print eachfile
-                    os.remove(os.path.join(directory,eachfile))
 
-        #delete the Key files from disk
-        directory = '/opt/sharkeyes/media/keys/'
-        actualfiles = os.listdir(directory)
-        print "actual files fromKEYS:"
-        print "how old to keep:", how_old_to_keep
-        for eachfile in os.listdir(directory):
-            if eachfile.endswith('.png') :
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory,eachfile)))
-                if how_old_to_keep > timestamp:
-                    print eachfile
-                    os.remove(os.path.join(directory,eachfile))
 
         return True
 
