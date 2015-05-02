@@ -203,7 +203,7 @@ class DataFileManager(models.Manager):
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
             print "deleting DB file: ", filename.file.name
-            filename.delete() # Custom delete method for DataFiles: this deletes the actual files from disk too
+            DataFile.delete(filename) # Custom delete method for DataFiles: this deletes the actual files from disk too
 
 
 
