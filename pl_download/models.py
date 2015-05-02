@@ -105,6 +105,9 @@ class DataFileManager(models.Manager):
     def get_latest_wave_watch_files():
 
         #TODO: set up a check to see if new files are available
+        if not DataFileManager.is_new_wave_watch_file_to_download():
+            return []
+
         #list of the new file ids created in this function
         new_file_ids = []
 
@@ -196,6 +199,38 @@ class DataFileManager(models.Manager):
         return True
 
     @classmethod
+    def is_new_wave_watch_file_to_download(cls):
+        three_days_ago = timezone.now().date()-timedelta(days=3)
+        today = timezone.now().date()
+
+        #Look back at the past 3 days of datafiles
+        recent_netcdf_files = WaveWatchDataFile.objects.filter(generated_date__range=[three_days_ago, today])
+        print "recent files:"
+        for each in recent_netcdf_files:
+            print each.generated_datetime
+
+        # empty lists return false
+        if not recent_netcdf_files:
+            return True
+
+        local_file_modified_datetime = recent_netcdf_files.latest('generated_datetime').generated_datetime
+
+        tree = get_ingria_xml_tree()
+        tags = tree.iter(XML_NAMESPACE + 'dataset')
+
+        for elem in tags:
+            if not elem.get('name').startswith('ocean_his'):
+                continue
+            server_file_modified_datetime = extract_modified_datetime_from_xml(elem)
+            if server_file_modified_datetime <= local_file_modified_datetime:
+                return False
+
+        return True
+
+
+
+
+    @classmethod
     def delete_old_files(cls):
          #todo delete WAVEWATCH files too
 
@@ -216,33 +251,33 @@ class DataFileManager(models.Manager):
 
 
         #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
-        old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=how_old_to_keep)  # don't need any old NETCDF files
+     #   old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=how_old_to_keep)  # don't need any old NETCDF files
 
 #no model_date: can use download_datetime, file, generated_datetime, id, type
 
         # Delete the file names from the database
-        for filename in old_wavewatch_netcdf_files:
+     #   for filename in old_wavewatch_netcdf_files:
             #print "deleting DB file: ", filename
 
-            filename.delete() # delete the file INFO--this works, may only be visible at next run of function
+        #    filename.delete() # delete the file INFO--this works, may only be visible at next run of function
 
 
-        directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
-        actualfiles = os.listdir(directory)
+       # directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
+       # actualfiles = os.listdir(directory)
 
 
         #keep only the past 4 day's NETCDF file
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+       # how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
 
-        for eachfile in actualfiles:
-            if eachfile.endswith('.nc'):
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
+    #    for eachfile in actualfiles:
+      #      if eachfile.endswith('.nc'):
+          #      timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
                 #print timestamp
-                if how_old_to_keep > timestamp:
-                    print "removing netcdf file ", os.path.join(directory,eachfile)
+          #      if how_old_to_keep > timestamp:
+             #       print "removing netcdf file ", os.path.join(directory,eachfile)
 
-                    os.remove(os.path.join(directory,eachfile))
+              #      os.remove(os.path.join(directory,eachfile))
 
 
 
