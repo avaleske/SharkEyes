@@ -271,9 +271,6 @@ class OverlayManager(models.Manager):
     def delete_old_files(cls):
 
 
-
-        today = timezone.now().date()
-
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # UNCHOPPED database files

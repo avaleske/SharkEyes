@@ -250,33 +250,33 @@ class DataFileManager(models.Manager):
 
 
         #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
-        old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=how_old_to_keep)  # don't need any old NETCDF files
+     #   old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=how_old_to_keep)  # don't need any old NETCDF files
 
 #no model_date: can use download_datetime, file, generated_datetime, id, type
 
         # Delete the file names from the database
-        for filename in old_wavewatch_netcdf_files:
+     #   for filename in old_wavewatch_netcdf_files:
             #print "deleting DB file: ", filename
 
-            filename.delete() # delete the file INFO--this works, may only be visible at next run of function
+        #    filename.delete() # delete the file INFO--this works, may only be visible at next run of function
 
 
-        directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
-        actualfiles = os.listdir(directory)
+       # directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
+       # actualfiles = os.listdir(directory)
 
 
         #keep only the past 4 day's NETCDF file
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+       # how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
 
-        for eachfile in actualfiles:
-            if eachfile.endswith('.nc'):
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
+    #    for eachfile in actualfiles:
+      #      if eachfile.endswith('.nc'):
+          #      timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
                 #print timestamp
-                if how_old_to_keep > timestamp:
-                    print "removing netcdf file ", os.path.join(directory,eachfile)
+          #      if how_old_to_keep > timestamp:
+             #       print "removing netcdf file ", os.path.join(directory,eachfile)
 
-                    os.remove(os.path.join(directory,eachfile))
+              #      os.remove(os.path.join(directory,eachfile))
 
 
 
