@@ -105,6 +105,9 @@ class DataFileManager(models.Manager):
     def get_latest_wave_watch_files():
 
         #TODO: set up a check to see if new files are available
+        if not DataFileManager.is_new_wave_watch_file_to_download():
+            return []
+
         #list of the new file ids created in this function
         new_file_ids = []
 
@@ -194,6 +197,38 @@ class DataFileManager(models.Manager):
                 return False
 
         return True
+
+    @classmethod
+    def is_new_wave_watch_file_to_download(cls):
+        three_days_ago = timezone.now().date()-timedelta(days=3)
+        today = timezone.now().date()
+
+        #Look back at the past 3 days of datafiles
+        recent_netcdf_files = WaveWatchDataFile.objects.filter(generated_date__range=[three_days_ago, today])
+        print "recent files:"
+        for each in recent_netcdf_files:
+            print each.generated_datetime
+
+        # empty lists return false
+        if not recent_netcdf_files:
+            return True
+
+        local_file_modified_datetime = recent_netcdf_files.latest('generated_datetime').generated_datetime
+
+        tree = get_ingria_xml_tree()
+        tags = tree.iter(XML_NAMESPACE + 'dataset')
+
+        for elem in tags:
+            if not elem.get('name').startswith('ocean_his'):
+                continue
+            server_file_modified_datetime = extract_modified_datetime_from_xml(elem)
+            if server_file_modified_datetime <= local_file_modified_datetime:
+                return False
+
+        return True
+
+
+
 
     @classmethod
     def delete_old_files(cls):
