@@ -4,6 +4,8 @@
 
 // init js data (from DB)
 var data = {'keys':[], 'tiles':[], 'defs':[], 'types':[]};
+
+// Overlays come from the sharkeyescore/views.py file.
 {% for item in overlays %}
 data.keys.push("{{item.key}}");
 data.tiles.push("{{item.tile_dir}}");

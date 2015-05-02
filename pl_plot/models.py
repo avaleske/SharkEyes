@@ -15,14 +15,17 @@ from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf, netcdf_file
 import numpy
-HOW_LONG_TO_KEEP_FILES = 5
+
+HOW_LONG_TO_KEEP_FILES = 10
+
+
 
 class OverlayManager(models.Manager):
     @staticmethod
     def get_all_base_definition_ids():
         return OverlayDefinition.objects.values_list('id', flat=True).filter(is_base=True)
 
-    # todo this will fail for multiple zoom levels
+    # Team 1 says: todo this will fail for multiple zoom levels
     @staticmethod
     def get_newest_untiled_overlay_ids():
         # assuming newer overlays have higher primary keys. Seems reasonable.
@@ -32,10 +35,11 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def get_next_few_days_of_untiled_overlay_ids(cls):
-        # starts with "current" overlay, which is the closest to now, forward or backwards, and goes forward 4 days or
+        # starts with "present" overlay, which is the closest to now, forward or backwards, and goes forward 4 days or
         # however far we have data, whichever is less
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
+
 
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
@@ -56,24 +60,38 @@ class OverlayManager(models.Manager):
 
         # should be okay that it doesn't know about zoom levels, since they should have the same tile_directory
 
+
+        #now the Overlays should include WaveWatch items as well
+        #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
+
+        #TODO set back to -2 timedelta: earlier range for testing
+      #  next_few_days_of_overlays = Overlay.objects.filter(
+     #       applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+      #      applies_at_datetime__lte=timezone.now()+timedelta(days=4)
+      #  )
+
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=24),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
+
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
+        print "next few that are tiled:"
+        for each in that_are_tiled:
+            print each.applies_at_datetime, each.tile_dir
+
+
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
             .annotate(newest_id=Max('id'))
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
-        # (Yay lazy evaluation...)
 
         overlays_to_display = Overlay.objects.filter(id__in=ids_of_these).order_by('definition', 'applies_at_datetime')
 
-        # filtering out the non-base ones, for now, because the javascript that displays the menu is hacky.
+        # Team 1 says: filtering out the non-base ones, for now, because the javascript that displays the menu is hacky.
         return overlays_to_display.filter(definition__is_base=True)
 
 
     # these are for getting and running task groups
-
     @classmethod
     def make_all_base_plots_for_next_few_days(cls):
         job = group(cls.get_tasks_for_base_plots_for_next_few_days())
@@ -92,17 +110,39 @@ class OverlayManager(models.Manager):
         base_definition_ids = cls.get_all_base_definition_ids()
         for fid in file_ids:
             print fid
+            #TODO add the WaveWatch files & plotter too
             datafile = DataFile.objects.get(pk=fid)
             plotter = Plotter(datafile.file.name)
+
+            #TODO: should this be WaveWatch plotter too?
             number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
             for t in xrange(number_of_times):
                 task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in base_definition_ids)
         return task_list
 
+
+    #TODO does DataFileManager know about WaveWatch files?
     @classmethod
     def get_tasks_for_base_plots_for_next_few_days(cls):
         file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
         return cls.get_tasks_for_base_plots_in_files(file_ids)
+
+    @classmethod
+    def delete_old_files(cls):
+
+        #how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+
+        # UNCHOPPED database files
+        # this will delete wavewatch overlays too
+        old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
+
+        for eachfile in old_unchopped_files:
+            #Delete the overlay from DB, its image from disk, and its key image from disk, using the custom delete() method
+            Overlay.delete(eachfile)
+
+        return True
+
 
     @staticmethod
     @shared_task(name='pl_plot.make_wave_watch_plot')
@@ -115,7 +155,11 @@ class OverlayManager(models.Manager):
         else:
             datafile = WaveWatchDataFile.objects.get(pk=file_id)
 
+        overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+
         generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
+        print "plot generated datetime is ", generated_datetime
+        print "download generated datetime is ", datafile.generated_datetime
 
         #get the the number of forecasts contained in the netCDF
         datafile_read_object = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
@@ -135,19 +179,37 @@ class OverlayManager(models.Manager):
             os.chmod(new_dir,0o777)
         wave_storage_dir = settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
 
+
+
+
+#for forecast_index in range(0, number_of_forecasts):
         for forecast_index in range(0, number_of_forecasts):
+            #the forecast applies at some number of hours past the generated datetime.
+            #plus NOON: so we need to add 5. Something is off with the datetime.
+            #applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
+            applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
+            print "applies at", applies_at_datetime
+
+            #Need to set a new tile directory name for each forecast_index
+            tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
+            print "tile_dir name = ", tile_dir
 
             #return overlaydefinition object; 4 is for wave watch
             overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
             plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
-                                                             forecast_index=forecast_index, storage_dir=wave_storage_dir,
+                                                             forecast_index=forecast_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
                                                              generated_datetime=generated_datetime)
 
-            overlay = Wave_Watch_Overlay(
-                file=os.path.join(wave_storage_dir, plot_filename),
+            overlay = Overlay(
+                file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
                 key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
                 created_datetime=timezone.now(),
+                applies_at_datetime=applies_at_datetime,
+                tile_dir = tile_dir,
+                zoom_levels = None,
+                is_tiled = False,
+
                 definition_id=overlay_definition_id,
             )
             overlay.save()
@@ -173,10 +235,7 @@ class OverlayManager(models.Manager):
             datafile = DataFile.objects.latest('model_date')
         else:
             datafile = DataFile.objects.get(pk=file_id)
-
-        #returns a netcdf file object with read mode
         plotter = Plotter(datafile.file.name)
-        #return overlaydefinition object
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
         if overlay_definition_id == 3:
@@ -185,9 +244,6 @@ class OverlayManager(models.Manager):
             zoom_levels = zoom_levels_for_others
 
         # todo fix hacky hack for expo
-        #.format lets you insert variables into a string
-        # {0} = overlaydefinition
-        #{1} = uuid4 which returns universally unique identifier
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
         overlay_ids = []
         for zoom_level in zoom_levels:
@@ -286,15 +342,41 @@ class Overlay(models.Model):
     zoom_levels = models.CharField(max_length=50, null=True)
     is_tiled = models.BooleanField(default=False)
 
+    #Custom delete method which will also delete the Overlay's image file from the disk and also the Key image
+    def delete(self,*args,**kwargs):
+
+        if os.path.isfile(self.file.path):
+            #Delete the physical file from disk
+            os.remove(self.file.path)
+
+        #Delete the Key image
+        if os.path.isfile(self.key.path):
+            os.remove(self.key.path)
+
+        #Delete the model instance
+        super(Overlay, self).delete(*args,**kwargs)
+
+
+
+
 # Function defined to allow dynamic path creation
 # A new folder is created per forecast creation day that includes all the forecasts
 def get_upload_path(instance,filename):
     return os.path.join(
         settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + instance.created_datetime)
 
+
+#note: in future it will be better to use Overlay for all new models, rather than adding different types of overlays for each model.
 class Wave_Watch_Overlay(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
     created_datetime = models.DateTimeField()
-    file = models.ImageField(upload_to=get_upload_path, null=True, max_length=500)      #get_upload_path was defined in order to allow for dynamic path creation
+
+
+    tile_dir = models.CharField(max_length=240, null=True)
+    #todo set nullable on the AppliesAt back to false, once we have set up the variable initialization.
+    applies_at_datetime = models.DateTimeField(null=True)
+    zoom_levels = models.CharField(max_length=50, null=True)
+    is_tiled = models.BooleanField(default=False)
+    #file = models.ImageField(upload_to=get_upload_path, null=True, max_length=500)      #get_upload_path was defined in order to allow for dynamic path creation
     key = models.ImageField(upload_to=settings.KEY_STORAGE_DIR, null=True)
 

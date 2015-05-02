@@ -39,7 +39,7 @@
 <hr />
 
 <p>
-    Seacast delivers an easy-to-use interface for Oregon coastal fishermen that shows sea conditions and projections for a three day period. The projections are determined using models provided by Oregon State University's College of Earth, Ocean, and Atmospheric Sciences (CEOAS).
+    Seacast delivers an easy-to-use interface for Oregon coastal fishermen that shows forecasted sea conditions for a three day period. The projections are determined using models provided by Oregon State University's College of Earth, Ocean, and Atmospheric Sciences (CEOAS).
 </p>
 
 <h3>State of Release</h3>
@@ -48,6 +48,40 @@
     This alpha of Seacast is an early release of work-in-progress for demonstration purposes. The release is targeted for those involved with development, alpha-testers, and Expo visitors. This release is <i>not</i> intended for end users in need of data for safety, commercial, or other purposes at this time.
 </p>
 
+<h3>What Seacast Does</h3>
+    <p>
+        Seacast displays forecasts for currents and sea surface temperature. These conditions are <i>predictions</i>, much like weather forecasts, based on scientists' models. They do not represent actual, real-time readings of ocean conditions, although the models do incorporate actual readings to create the predictions.
+        The Seacast website produces a visual display of these conditions, as image overlays on top of a Google Maps background.
+        The models used by the site, like all models, have limitations. The Seacast team would like to receive your feedback about both the layout of the website, and the accuracy of the data displayed on the website. This will allow us to improve Seacast, and give feedback to the model creators about their model.
+
+        </p>
+
+    <h3>How To Use Seacast</h3>
+    <p>
+    Sea Surface temperature is displayed as a colormap, and currents are displayed as vectors (arrows). The arrows point in the direction of the current, and their relative length indicates the speed of the current. Note that the key for current speed, at the bottom of the page, is estimated.
+        The WaveWatch III model, for wave height, is also displayed as a color map. We recommend only turning on one of the color maps at a time for better viewing.
+        Turn the overlays on or off by clicking the toggle buttons in the menu bar. The Chlorophyll toggle button is greyed-out and not available because that model has not been incorporated yet.
+</p>
+<p>
+        The model produces predictions for 4-hour intervals for 3 days into the future. Prediction dates/times can be selected by clicking the drop-down menu in the top left corner of the menu, then clicking on the desired date and time. The page will automatically refresh with the conditions for the chosen time.
+
+        Navigate the map, including zoom and pan, by clicking and dragging or using other navigation techniques used on Google Maps. Pinch-to-zoom on mobile devices should zoom in on the map.
+        The menu can be hidden by clicking the "Hide" button in the top left.
+
+        The overlays have keys that are visible in the bottom center of the screen. If several overlays are turned on at once, click the key to switch to the key for the other overlay.
+
+    </p>
+
+    <h3>
+        Purpose of Project
+    </h3>
+    <p>
+        Seacast's purpose is twofold. It is intended to provide fishermen with an easy-to-use way to access the model forecasts, and it is also intended to allow scientists to receive feedback from the fishermen about the accuracy of the forecast models. The software development team aims to serve both these communities.
+    </p>
+<h3>Setup</h3>
+    <p>
+        Seacast is hosted entirely as a website, so users can navigate to seacast.org on their computer or mobile device. No download or installation is required.
+    </p>
 <h3>Model Notes</h3>
 <p>
     The models for Seacast have been provided by CEOAS. The following are of note:
@@ -61,27 +95,12 @@
     <ul>
         <li>Model designed by Dr. Kurapov</li>
     </ul>
+    <h4>WaveWatch III Model</h4>
+    <ul>
+        <li>Model designed by Dr. Kurapov</li>
+    </ul>
 </p>
 
- <!--
-    <h3>Who is the Seacast team?</h3>
-
-
-<div class="seomwrapper">
-    <div id="seomone">
-        <figure>
-        <img src="{% static 'imgs/duncan.jpg' %}" class="team-photo" alt="Colin Duncan"></img>
-        <figcaption>Project Client: Colin Duncan</figcaption>
-        </figure>
-    </div>
-    <div>
-        <figure>
-        <img src="{% static 'imgs/dev_team.jpg' %}" class="team-photo"></img>
-        <figcaption>Development Team: Kevin Rich, Austin Valeske, Ryan Phillips</figcaption>
-        </figure>
-    </div>
-</div>
--->
 <h3>Contact</h3>
 
 <h4>Project Client</h4>
@@ -108,6 +127,8 @@
   </div>
 
 
+
+    <!-- TODO: if a user opens the About page in a new tab, that tab has no "back" history to go back to. Should make this a hard link. -->
     <button id="back" class="btn" onclick="goBack()">Back to Seacast</button>
 
 </div>

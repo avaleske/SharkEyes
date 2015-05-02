@@ -12,15 +12,19 @@ def add(a, b):
     #time.sleep(5)
     return a + b
 
-#Plot automation
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
+
+    DataFileManager.delete_old_files()
+    OverlayManager.delete_old_files()
+
     if not DataFileManager.is_new_file_to_download():
         return None
     DataFileManager.delete_old_files()
     OverlayManager.delete_old_files()
     
     DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
+    DataFileManager.get_latest_wave_watch_files()
 
 
     # get the list of plotting tasks based on the files we just downloaded.
