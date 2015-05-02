@@ -20,8 +20,7 @@ def do_pipeline():
 
     if not DataFileManager.is_new_file_to_download():
         return None
-    DataFileManager.delete_old_files()
-    OverlayManager.delete_old_files()
+
     
     DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
     DataFileManager.get_latest_wave_watch_files()
