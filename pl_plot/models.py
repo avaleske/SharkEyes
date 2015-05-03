@@ -114,7 +114,7 @@ class OverlayManager(models.Manager):
             datafile = DataFile.objects.get(pk=fid)
             plotter = Plotter(datafile.file.name)
 
-            #TODO: should this be WaveWatch plotter too?
+
             number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
             for t in xrange(number_of_times):
                 task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in base_definition_ids)
@@ -151,9 +151,9 @@ class OverlayManager(models.Manager):
 
         #grab the latest forecast file
         if file_id is None:
-            datafile = WaveWatchDataFile.objects.latest('generated_datetime')
+            datafile = DataFile.objects.latest('generated_datetime')
         else:
-            datafile = WaveWatchDataFile.objects.get(pk=file_id)
+            datafile = DataFile.objects.get(pk=file_id)
 
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
