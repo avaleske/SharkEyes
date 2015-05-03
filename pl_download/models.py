@@ -105,8 +105,8 @@ class DataFileManager(models.Manager):
     def get_latest_wave_watch_files():
 
         #TODO: set up a check to see if new files are available
-        if not DataFileManager.is_new_wave_watch_file_to_download():
-            return []
+        #if not DataFileManager.is_new_wave_watch_file_to_download():
+            #return []
 
         #list of the new file ids created in this function
         new_file_ids = []
@@ -133,11 +133,16 @@ class DataFileManager(models.Manager):
         local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
         urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
+
+
+
+
         #Save the File name into the Database
-        datafile = WaveWatchDataFile(
+        datafile = DataFile(
                 type='NCDF',
                 download_datetime=timezone.now(),
                 generated_datetime=modified_datetime,
+                model_date = modified_datetime,
                 file=local_filename,
             )
 
@@ -204,7 +209,7 @@ class DataFileManager(models.Manager):
         today = timezone.now().date()
 
         #Look back at the past 3 days of datafiles
-        recent_netcdf_files = WaveWatchDataFile.objects.filter(generated_date__range=[three_days_ago, today])
+        recent_netcdf_files = WaveWatchDataFile.objects.filter(generated_datetime__range=[three_days_ago, today])
         print "recent files:"
         for each in recent_netcdf_files:
             print each.generated_datetime
