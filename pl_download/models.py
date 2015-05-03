@@ -160,10 +160,15 @@ class DataFileManager(models.Manager):
 
         #TODO does this include WaveWatch files? not yet
 
+      #  next_few_days_of_files = DataFile.objects.filter(
+       #     model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
+       #     model_date__lte=(timezone.now()+timedelta(days=4)).date()
+       # )
+
         next_few_days_of_files = DataFile.objects.filter(
-            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
-            model_date__lte=(timezone.now()+timedelta(days=4)).date()
-        )
+           model_date__gte=(timezone.now()-timedelta(hours=24)).date(),
+           model_date__lte=(timezone.now()+timedelta(days=4)).date()
+     )
         and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(
             newest_generation_time=Max('generated_datetime'))
 
@@ -175,6 +180,9 @@ class DataFileManager(models.Manager):
 
         # assumes you're not redownloading the same file for the same model and generation dates.
         actual_datafile_objects = DataFile.objects.filter(reduce(OR, q_objects))
+        print "datafiles:"
+        for each in actual_datafile_objects:
+            print each.file.name
         return actual_datafile_objects
 
     @classmethod
