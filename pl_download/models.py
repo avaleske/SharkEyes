@@ -15,16 +15,8 @@ from django.db.models.aggregates import Max
 from django.db.models import Q
 from operator import __or__ as OR
 from ftplib import FTP
-
-import shutil
-
 from django.db import models
-
-
 import shutil
-
-
-
 
 
 CATALOG_XML_NAME = "catalog.xml"
@@ -128,6 +120,9 @@ class DataFileManager(models.Manager):
         #convert ftp datetime format to a string datetime
         modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
 
+        #todo check if we've downloaded it before: is there an entry in DataFiles whose
+        #modified_datetime matches this one? If not, download it.
+
         #Create File Name and Download actual File into media folder
         url = urljoin(settings.WAVE_WATCH_URL, file_name)
         local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
@@ -155,15 +150,22 @@ class DataFileManager(models.Manager):
 
         return new_file_ids
 
+
+    #now this includes WaveWatch files
     @classmethod
     def get_next_few_days_files_from_db(cls):
 
-        #TODO does this include WaveWatch files? not yet
+
+
+      #  next_few_days_of_files = DataFile.objects.filter(
+       #     model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
+       #     model_date__lte=(timezone.now()+timedelta(days=4)).date()
+       # )
 
         next_few_days_of_files = DataFile.objects.filter(
-            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
-            model_date__lte=(timezone.now()+timedelta(days=4)).date()
-        )
+           model_date__gte=(timezone.now()-timedelta(hours=24)).date(),
+           model_date__lte=(timezone.now()+timedelta(days=4)).date()
+     )
         and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(
             newest_generation_time=Max('generated_datetime'))
 
@@ -175,6 +177,9 @@ class DataFileManager(models.Manager):
 
         # assumes you're not redownloading the same file for the same model and generation dates.
         actual_datafile_objects = DataFile.objects.filter(reduce(OR, q_objects))
+        print "datafiles:"
+        for each in actual_datafile_objects:
+            print each.file.name
         return actual_datafile_objects
 
     @classmethod

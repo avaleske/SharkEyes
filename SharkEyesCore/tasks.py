@@ -27,8 +27,10 @@ def do_pipeline():
 
 
     # get the list of plotting tasks based on the files we just downloaded.
+    #This should know about WaveWatch files
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
 
+    #tile_overlay is independent of WaveWatch vs SST
     # create a task chain of (plot, tile) for each plot, and group them
     job = group(chain(pt, tile_overlay.s()) for pt in plot_task_list)
 
