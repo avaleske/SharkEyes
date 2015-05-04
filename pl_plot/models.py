@@ -19,7 +19,6 @@ import numpy
 HOW_LONG_TO_KEEP_FILES = 10
 
 
-
 class OverlayManager(models.Manager):
     @staticmethod
     def get_all_base_definition_ids():
@@ -64,22 +63,12 @@ class OverlayManager(models.Manager):
         #now the Overlays should include WaveWatch items as well
         #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
 
-        #TODO set back to -2 timedelta: earlier range for testing
-      #  next_few_days_of_overlays = Overlay.objects.filter(
-     #       applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
-      #      applies_at_datetime__lte=timezone.now()+timedelta(days=4)
-      #  )
-
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=24),
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
 
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
-        print "next few that are tiled:"
-        for each in that_are_tiled:
-            print each.applies_at_datetime, each.tile_dir
-
 
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
             .annotate(newest_id=Max('id'))
@@ -100,28 +89,43 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def get_tasks_for_all_base_plots(cls, time_index=0, file_id=None):
-        task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in cls.get_all_base_definition_ids()]
+        #Add the SST and currents plot commands
+        task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in [1, 3]]
+
+        #Add the wave watch plot command
+        task_list.append(cls.make_wave_watch_plot.s(4, file_id, immutable=True) )
         job = task_list
         return job
 
+
+#PASSING IN: the file IDs of all the DataFiles stored in the database for next few days of forecasts.
     @classmethod
     def get_tasks_for_base_plots_in_files(cls, file_ids):
         task_list = []
-        base_definition_ids = cls.get_all_base_definition_ids()
+
         for fid in file_ids:
-            print fid
-            #TODO add the WaveWatch files & plotter too
             datafile = DataFile.objects.get(pk=fid)
-            plotter = Plotter(datafile.file.name)
 
+            #NOTE: team 2 says determining what type of datafile it is based only on fileNAME is sort of hacky.
+            #May want to refactor: e.g. add a "model_type" to the DataFile class which says if it
+            #is a WaveWatch file or SST/Currents file.
+            #print "datafile name:", datafile.file.name
+            if datafile.file.name.startswith("OuterGrid"):
+                plotter = WaveWatchPlotter(datafile.file.name)
+                #TODO refactor to improve performance: change make_wave_watch_plot to only do 1 time_index at a time
+                task_list.append(cls.make_wave_watch_plot.subtask(args=(4, fid), immutable=True) )
 
-            number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
-            for t in xrange(number_of_times):
-                task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in base_definition_ids)
+            else:
+                plotter = Plotter(datafile.file.name)
+                number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
+
+                #make_plot needs to be called once for each time range
+                for t in xrange(number_of_times):
+                    #using EXTEND because we are adding multiple items: might also be able to use APPEND
+                    task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in [1, 3])
         return task_list
 
 
-    #TODO does DataFileManager know about WaveWatch files?
     @classmethod
     def get_tasks_for_base_plots_for_next_few_days(cls):
         file_ids = [datafile.id for datafile in DataFileManager.get_next_few_days_files_from_db()]
@@ -129,8 +133,6 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def delete_old_files(cls):
-
-        #how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # UNCHOPPED database files
@@ -158,8 +160,6 @@ class OverlayManager(models.Manager):
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
         generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
-        print "plot generated datetime is ", generated_datetime
-        print "download generated datetime is ", datafile.generated_datetime
 
         #get the the number of forecasts contained in the netCDF
         datafile_read_object = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
@@ -181,6 +181,8 @@ class OverlayManager(models.Manager):
 
 
 
+#TODO refactor to improve performance: change make_wave_watch_plot be called with the time_index to plot at,
+        #rather than doing all of the number_of_forecasts plots in the make_wave_watch_plot function.
 
 #for forecast_index in range(0, number_of_forecasts):
         for forecast_index in range(0, number_of_forecasts):
@@ -196,6 +198,9 @@ class OverlayManager(models.Manager):
 
             #return overlaydefinition object; 4 is for wave watch
             overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+
+#for zoom_level in zoom_levels:
+       #     plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
 
             plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
                                                              forecast_index=forecast_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
@@ -243,7 +248,6 @@ class OverlayManager(models.Manager):
         else:
             zoom_levels = zoom_levels_for_others
 
-        # todo fix hacky hack for expo
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
         overlay_ids = []
         for zoom_level in zoom_levels:
