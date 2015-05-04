@@ -44,6 +44,7 @@ class DataFileManager(models.Manager):
     # todo make each file download in a separate task
     @staticmethod
     @shared_task(name='pl_download.fetch_new_files')
+
     #FETCH FILES FOR CURRENTS AND SST
     def fetch_new_files():
         if not DataFileManager.is_new_file_to_download():
@@ -96,10 +97,6 @@ class DataFileManager(models.Manager):
     @shared_task(name='pl_download.get_latest_wave_watch_files')
     def get_latest_wave_watch_files():
 
-        #TODO: set up a check to see if new files are available
-        #if not DataFileManager.is_new_wave_watch_file_to_download():
-            #return []
-
         #list of the new file ids created in this function
         new_file_ids = []
 
@@ -120,20 +117,18 @@ class DataFileManager(models.Manager):
         #convert ftp datetime format to a string datetime
         modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
 
-        #todo check if we've downloaded it before: is there an entry in DataFiles whose
-        #modified_datetime matches this one? If not, download it.
+        # check if we've downloaded it before: does DataFile contain an entry whose model_date matches this one?
+        matches_old_file = DataFile.objects.filter(
+           model_date=modified_datetime
+        )
+        if not matches_old_file:
+            #Create File Name and Download actual File into media folder
+            url = urljoin(settings.WAVE_WATCH_URL, file_name)
+            local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
+            urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
-        #Create File Name and Download actual File into media folder
-        url = urljoin(settings.WAVE_WATCH_URL, file_name)
-        local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
-        urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
-
-
-
-
-
-        #Save the File name into the Database
-        datafile = DataFile(
+            #Save the File name into the Database
+            datafile = DataFile(
                 type='NCDF',
                 download_datetime=timezone.now(),
                 generated_datetime=modified_datetime,
@@ -141,31 +136,27 @@ class DataFileManager(models.Manager):
                 file=local_filename,
             )
 
-        datafile.save()
+            datafile.save()
 
-        new_file_ids.append(datafile.id)
+            new_file_ids.append(datafile.id)
 
-        #quit ftp connection cause we accessed all the data we need
-        ftp.quit()
+            #quit ftp connection cause we accessed all the data we need
+            ftp.quit()
+            return new_file_ids
 
-        return new_file_ids
+        #Must have already downloaded this file
+        else:
+            ftp.quit()
+            return []
 
-
-    #now this includes WaveWatch files
     @classmethod
     def get_next_few_days_files_from_db(cls):
 
-
-
-      #  next_few_days_of_files = DataFile.objects.filter(
-       #     model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
-       #     model_date__lte=(timezone.now()+timedelta(days=4)).date()
-       # )
-
         next_few_days_of_files = DataFile.objects.filter(
-           model_date__gte=(timezone.now()-timedelta(hours=24)).date(),
-           model_date__lte=(timezone.now()+timedelta(days=4)).date()
-     )
+            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
+            model_date__lte=(timezone.now()+timedelta(days=4)).date()
+        )
+
         and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(
             newest_generation_time=Max('generated_datetime'))
 
@@ -177,9 +168,7 @@ class DataFileManager(models.Manager):
 
         # assumes you're not redownloading the same file for the same model and generation dates.
         actual_datafile_objects = DataFile.objects.filter(reduce(OR, q_objects))
-        print "datafiles:"
-        for each in actual_datafile_objects:
-            print each.file.name
+
         return actual_datafile_objects
 
     @classmethod
@@ -215,9 +204,6 @@ class DataFileManager(models.Manager):
 
         #Look back at the past 3 days of datafiles
         recent_netcdf_files = WaveWatchDataFile.objects.filter(generated_datetime__range=[three_days_ago, today])
-        print "recent files:"
-        for each in recent_netcdf_files:
-            print each.generated_datetime
 
         # empty lists return false
         if not recent_netcdf_files:
@@ -237,74 +223,30 @@ class DataFileManager(models.Manager):
 
         return True
 
-
-
-
     @classmethod
     def delete_old_files(cls):
-         #todo delete WAVEWATCH files too
-
-
-
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # NETCDF files
-        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
-        old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)  # don't need any old NETCDF files
+        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 10 days)
+        old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)
 
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
-            #print "deleting DB file: ", filename.file.name
             filename.delete() # Custom delete method for DataFiles: this deletes the actual files from disk too
-
-
-
-        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 5 days)
-     #   old_wavewatch_netcdf_files = WaveWatchDataFile.objects.filter(download_datetime__lte=how_old_to_keep)  # don't need any old NETCDF files
-
-#no model_date: can use download_datetime, file, generated_datetime, id, type
-
-        # Delete the file names from the database
-     #   for filename in old_wavewatch_netcdf_files:
-            #print "deleting DB file: ", filename
-
-        #    filename.delete() # delete the file INFO--this works, may only be visible at next run of function
-
-
-       # directory = '/opt/sharkeyes/media/wave_watch_datafiles/'
-       # actualfiles = os.listdir(directory)
-
-
-        #keep only the past 4 day's NETCDF file
-       # how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
-
-
-    #    for eachfile in actualfiles:
-      #      if eachfile.endswith('.nc'):
-          #      timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(directory, eachfile)))
-                #print timestamp
-          #      if how_old_to_keep > timestamp:
-             #       print "removing netcdf file ", os.path.join(directory,eachfile)
-
-              #      os.remove(os.path.join(directory,eachfile))
-
-
 
         #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         directory=os.path.join('/opt/sharkeyes/media/tiles/')
 
-
         # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
-
         for r,d,f in os.walk(directory):
             for direc in d:
                 timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
 
                 if how_old_to_keep > timestamp:
                     try:
-                        print "removing ",os.path.join(r,direc)
                         shutil.rmtree(os.path.join(r,direc))
                     except Exception,e:
                         print e
@@ -313,7 +255,7 @@ class DataFileManager(models.Manager):
         return True
 
 
-
+#not using this right now. Better to just use DataFile for new model types rather than making a new class.
 class WaveWatchDataFile(models.Model):
     DATA_FILE_TYPES = (
         ('NCDF', "NetCDF"),
