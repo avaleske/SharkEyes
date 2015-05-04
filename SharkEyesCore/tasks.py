@@ -18,13 +18,12 @@ def do_pipeline():
     DataFileManager.delete_old_files()
     OverlayManager.delete_old_files()
 
+    # wave watch file takes care of its own check to see if there are new files
+    DataFileManager.get_latest_wave_watch_files()
     if not DataFileManager.is_new_file_to_download():
         return None
-
     
     DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
-    DataFileManager.get_latest_wave_watch_files()
-
 
     # get the list of plotting tasks based on the files we just downloaded.
     #This should know about WaveWatch files

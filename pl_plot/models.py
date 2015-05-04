@@ -335,9 +335,6 @@ class Overlay(models.Model):
         #Delete the model instance
         super(Overlay, self).delete(*args,**kwargs)
 
-
-
-
 # Function defined to allow dynamic path creation
 # A new folder is created per forecast creation day that includes all the forecasts
 def get_upload_path(instance,filename):
@@ -345,7 +342,9 @@ def get_upload_path(instance,filename):
         settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + instance.created_datetime)
 
 
-#note: in future it will be better to use Overlay for all new models, rather than adding different types of overlays for each model.
+#note: Note using this right not.
+# in future it will be better to use Overlay for all new models,
+# rather than adding different types of overlays for each model.
 class Wave_Watch_Overlay(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
     created_datetime = models.DateTimeField()
