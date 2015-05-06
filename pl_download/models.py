@@ -233,8 +233,7 @@ class DataFileManager(models.Manager):
 
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
-            filename.delete() # Custom delete method for DataFiles: this deletes the actual files from disk too
-
+            DataFile.delete(filename)
         #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
