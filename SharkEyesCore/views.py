@@ -16,7 +16,9 @@ def home(request):
     num_defs = len(OverlayDefinition.objects.filter(is_base=True))
 
     list_of_times = datetimes[:len(datetimes)/num_defs]
-
+    print "times:"
+    for each in datetimes:
+        print each
     context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True), 'times':list_of_times }
     return render(request, 'index.html', context)
 

@@ -65,12 +65,23 @@ class OverlayManager(models.Manager):
         #now the Overlays should include WaveWatch items as well
         #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
 #todo set back to -timedelta = 2 hours
+        all = Overlay.objects.filter()
+        print "all"
+        for each in all:
+            print each.applies_at_datetime
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=5),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
+        print "all in time range:"
+        for each in next_few_days_of_overlays:
+            print each.applies_at_datetime
 
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
+        print "tiled:"
+        for each in that_are_tiled:
+            print each.applies_at_datetime
+
 
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
             .annotate(newest_id=Max('id'))
@@ -187,6 +198,8 @@ class OverlayManager(models.Manager):
         #rather than doing all of the number_of_forecasts plots in the make_wave_watch_plot function.
 
 #for forecast_index in range(0, number_of_forecasts):
+        #todo this is making 4x as many plots as we actually need. Reduce so that it only plots at noon, 4 pm, 8 pm, etc
+        #to line up with SST/currents.
         for forecast_index in range(0, number_of_forecasts):
             #the forecast applies at some number of hours past the generated datetime.
             #plus NOON: so we need to add 5. Something is off with the datetime.
