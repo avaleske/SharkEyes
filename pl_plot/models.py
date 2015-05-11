@@ -39,9 +39,11 @@ class OverlayManager(models.Manager):
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
 
+        #set back to -timedelta 2 hrs
+
 
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
         and_the_newest_for_each = next_few_days_of_overlays.values('definition', 'applies_at_datetime', 'zoom_levels')\
@@ -62,9 +64,9 @@ class OverlayManager(models.Manager):
 
         #now the Overlays should include WaveWatch items as well
         #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
-
+#todo set back to -timedelta = 2 hours
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
 
@@ -188,7 +190,6 @@ class OverlayManager(models.Manager):
         for forecast_index in range(0, number_of_forecasts):
             #the forecast applies at some number of hours past the generated datetime.
             #plus NOON: so we need to add 5. Something is off with the datetime.
-            #applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
             applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
             print "applies at", applies_at_datetime
 
@@ -269,28 +270,6 @@ class OverlayManager(models.Manager):
         return overlay_ids
 
 
-
-
-    @classmethod
-    def delete_old_files(cls):
-
-
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
-
-        # UNCHOPPED database files
-        # this will delete wavewatch overlays too
-        old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
-        #print " database: unchopped files to delete: "
-        for eachfile in old_unchopped_files:
-             print eachfile
-             eachfile.delete()
-
-
-
-        return True
-
-
-
 class OverlayDefinition(models.Model):
     OVERLAY_TYPES = (
         ('V', 'Vector'),
@@ -342,7 +321,7 @@ def get_upload_path(instance,filename):
         settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + instance.created_datetime)
 
 
-#note: Note using this right not.
+#note: Not using this right now.
 # in future it will be better to use Overlay for all new models,
 # rather than adding different types of overlays for each model.
 class Wave_Watch_Overlay(models.Model):
