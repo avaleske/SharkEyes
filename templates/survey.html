@@ -1,0 +1,211 @@
+{% load staticfiles %}
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
+        <title>Seacast</title>
+        <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/fastclick.min.js' %}"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/smoothness/jquery-ui.css" />
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+        <link href="{% static 'css/survey.css' %}" rel="stylesheet" type="text/css"/>
+        <script type="text/javascript">
+            //Ajax call needs to attach csrf token for secure connection, otherwhise we get forbidden error
+            //This function is used below
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie != '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                            if ((cookie.substring(0, name.length + 1)).localeCompare(name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+            function save_feedback(){
+                //Access Data
+                var usage_location = "";
+                var usage_frequency = "";
+                var usage_device = "";
+                var sst_accuracy = "";
+                var currents_accuracy = "";
+                var wind_accuracy = "";
+                var wave_accuracy = "";
+                var usage_comparison = "";
+                var usage_likes = "";
+                var usage_suggestion = "";
+                var usage_model_suggestion = "";
+                var usage_comments = "";
+
+                if ($("input[name='usage_location']:checked").val()) {
+                    usage_location = $("input[name='usage_location']:checked").val();
+                }
+                if ($("input[name='usage_freq']:checked").val()) {
+                    usage_frequency = $("input[name='usage_freq']:checked").val();
+                }
+                if ($("input[name='usage_device']:checked").val()) {
+                    usage_device = $("input[name='usage_device']:checked").val();
+                }
+                if ($("input[name='sst_accuracy']:checked").val()) {
+                    sst_accuracy = $("input[name='sst_accuracy']:checked").val();
+                }
+                if ($("input[name='c_accuracy']:checked").val()) {
+                    currents_accuracy = $("input[name='c_accuracy']:checked").val();
+                }
+                if ($("input[name='wind_accuracy']:checked").val()) {
+                    wind_accuracy = $("input[name='wind_accuracy']:checked").val();
+                }
+                if ($("input[name='wave_accuracy']:checked").val()) {
+                    wave_accuracy = $("input[name='wave_accuracy']:checked").val();
+                }
+                if ($('#usage_comparison').val()) {
+                    usage_comparison = $('#usage_comparison').val().toString();
+                }
+                if ($('#usage_likes').val()) {
+                    usage_likes = $('#usage_likes').val().toString();
+                }
+                if ($('#usage_suggestion').val()) {
+                    usage_suggestion = $('#usage_suggestion').val().toString();
+                }
+                if ($('#usage_model_suggestion').val()) {
+                    usage_model_suggestion = $('#usage_model_suggestion').val().toString();
+                }
+                if ($('#usage_comment').val()) {
+                    usage_comments = $('#usage_comment').val().toString();
+                }
+
+                //Validate data
+                length_error = "Please enter a message less than 200 characters."
+                if (usage_comparison.length > 2000){
+                    $('#usage_comparison').val(length_error);
+                }
+                else if(usage_likes.length > 2000){
+                    $('#usage_likes').val(length_error);
+                }
+                else if(usage_suggestion.length > 2000){
+                    $('#usage_suggestion').val(length_error);
+                }
+                else if (usage_model_suggestion.length > 2000){
+                    $('#usage_model_suggestion').val(length_error);
+                }
+                else if(usage_comments.length > 2000){
+                    $('#usage_comment').val(length_error);
+                }
+                else{
+                    //Serialize Data to Json
+                    var myObj = {"usage_location": usage_location, "usage_frequency": usage_frequency,
+                                 "usage_device": usage_device, "sst_accuracy": sst_accuracy,
+                                 "currents_accuracy": currents_accuracy, "wave_accuracy": wave_accuracy,
+                                 "wind_accuracy": wind_accuracy, "usage_comparison": usage_comparison,
+                                 "usage_likes": usage_likes, "usage_suggestion": usage_suggestion,
+                                 "usage_model_suggestion": usage_model_suggestion, "usage_comments": usage_comments};
+                    var jsonData = JSON.stringify(myObj);
+
+                    //Attach csrftoken to ajax header, otherwhise we get forbidden error
+                    $.ajaxSetup({
+                        headers: { "X-CSRFToken": getCookie("csrftoken") }
+                    });
+
+                    //Send information to views.py to be saved into the database
+                            $.ajax({
+                                type: 'POST',
+                                url: '{% url "SharkEyesCore.views.save_survey" %}',
+                                data: jsonData,
+                                datatype: "JSON",
+                                success: function() {
+                                    $("input:radio[name=usage_location]").removeAttr("checked");
+                                    $("input:radio[name=usage_freq]").removeAttr("checked");
+                                    $("input:radio[name=usage_device]").removeAttr("checked");
+                                    $("input:radio[name=sst_accuracy]").removeAttr("checked");
+                                    $("input:radio[name=wave_accuracy]").removeAttr("checked");
+                                    $("input:radio[name=wind_accuracy]").removeAttr("checked");
+                                    $("input:radio[name=c_accuracy]").removeAttr("checked");
+                                    $('#usage_comparison').val("");
+                                    $('#usage_likes').val("");
+                                    $('#usage_suggestion').val("");
+                                    $('#usage_model_suggestion').val("");
+                                    $('#usage_comment').val("");
+                                    window.location.href = '{% url "SharkEyesCore.views.home" %}';
+                                },
+                                 error: function (xhr, ajaxOptions, thrownError) {
+                                     alert(xhr.status);
+                                     alert(thrownError);
+                                 }
+                            });
+                    }
+            }
+        </script>
+    </head>
+    <body>
+        <h1 align="center">Seacast.org Feedback Form</h1>
+        <div id="feedback_survey" class="survey">
+            <b>Where did you use Seacast.org?</b><br/>
+                <div class="survey_answers">
+                    <input type="radio" name="usage_location" value="S">At Sea <br/>
+                    <input type="radio" name="usage_location" value="L">On Land <br/>
+                </div>
+            <b>How many times? </b><br/>
+                <div class="survey_answers">
+                    <input type="radio" name="usage_freq" value="1">Once<br/>
+                    <input type="radio" name="usage_freq" value="2-5">2-5 times<br/>
+                    <input type="radio" name="usage_freq" value="6-10">6-10 times<br/>
+                    <input type="radio" name="usage_freq" value="10+">more than 10 times<br/>
+                </div>
+            <b>Did you use:</b><br/>
+                <div class="survey_answers">
+                    <input type="radio" name="usage_device" value="C">a Computer <br/>
+                    <input type="radio" name="usage_device" value="SM">a Smartphone <br/>
+                    <input type="radio" name="usage_device" value="T">a Tablet <br/>
+                </div>
+            <b>The Sea surface temperature forecast was:</b><br/>
+                <div class="survey_answers">
+                    <input type="radio" name="sst_accuracy" value="A">Accurate <br/>
+                    <input type="radio" name="sst_accuracy" value="NA">Not Accurate<br/>
+                    <input type="radio" name="sst_accuracy" value="U">Unsure <br/>
+                </div>
+            <b>The Sea surface currents forecast was:</b><br/>
+                <div class="survey_answers">
+                    <input type="radio" name="c_accuracy" value="A">Accurate <br/>
+                    <input type="radio" name="c_accuracy" value="NA">Not Accurate<br/>
+                    <input type="radio" name="c_accuracy" value="U">Unsure <br/>
+                </div>
+            <b> The Wave Watch forecast was:</b><br/>
+                <div class="survey_answers">
+                    <input type="radio" name="wave_accuracy" value="A">Accurate <br/>
+                    <input type="radio" name="wave_accuracy" value="NA">Not Accurate<br/>
+                    <input type="radio" name="wave_accuracy" value="U">Unsure <br/>
+                </div>
+            <b> The Wind forecast was:</b>
+                <div class="survey_answers">
+                    <input type="radio" name="wind_accuracy" value="A">Accurate <br/>
+                    <input type="radio" name="wind_accuracy" value="NA">Not Accurate<br/>
+                    <input type="radio" name="wind_accuracy" value="U">Unsure <br/>
+                </div>
+            <b>How does Seacast.org compare with other forecasts systems?</b><br/>
+                <textarea rows="5" cols="35" id="usage_comparison"></textarea><br/>
+            <b>What do you like about seacast.org?</b><br/>
+                <textarea rows="5" cols="35" id="usage_likes"></textarea><br/>
+            <b>What would you change about seacast.org?</b><br/>
+                <textarea rows="5" cols="35" id="usage_suggestion"></textarea><br/>
+            <b>What other ocean condition forecasts would you be interested in seeing added?</b><br/>
+                <textarea rows="5" cols="35" id="usage_model_suggestion"></textarea><br/>
+            <b>Please share any further comments about your experience:</b><br/>
+               <textarea rows="5" cols="35" id="usage_comment"></textarea><br/>
+            <br/>
+            <button id="save_feedback" onclick="save_feedback()">Save</button>
+        </div>
+        {% include "v3_ll_grat.js.html" %}
+        {% include "ui.js.html" %}
+    </body>
+</html>

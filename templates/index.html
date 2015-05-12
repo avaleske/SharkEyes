@@ -30,6 +30,106 @@
   ga('create', 'UA-57018273-1', 'auto');
   ga('send', 'pageview');
 
+    //If error message has been displayed inside feedback box it should be deleted once the user edits the textbox
+    function feedback_click() {
+        var title = $('#feedback_title').val();
+        var comment = $('#feedback_comment').val();
+        if (title == "Please enter a title under 255 characters.") {
+            $('#feedback_title').val("");
+        }
+        if (comment == "Please enter a comment under 255 characters.") {
+            $('#feedback_comment').val("");
+        }
+    }
+
+    $(document).ready(function() {
+    //Ajax call needs to attach csrf token for secure connection, otherwhise we get forbidden error
+    //This function is used below
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if ((cookie.substring(0, name.length + 1)).localeCompare(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    //The dialog div in sidebar.html should be hidden and only shown as pop up window
+    $("#dialog").hide();
+
+    $("#feedback_button").click(function() {
+        $(function() {
+            $.ajaxSetup({
+                headers: { "X-CSRFToken": getCookie("crsftoken") }
+            });
+
+            $( "#dialog" ).dialog({
+            title: "Send Feedback",
+            modal: "false",
+            height: 550,
+            width: 650,
+            position: "center",
+            buttons: {
+                OK: function() {
+                    //Receive Data from User Input
+                    var title = $('#feedback_title').val().toString();
+                    var comment = $('#feedback_comment').val().toString();
+
+                    //Check User Input for Errors
+                    if (title.length < 255 && title.length >0
+                        && comment.length < 255 && comment.length > 0)
+                    {
+                        //Serialize Data to Json
+                        var myObj = {"title": title, "comment": comment};
+                        var jsonData = JSON.stringify(myObj);
+
+                        //Send information to views.py to be saved into the database
+                        $.ajax({
+                            type: 'POST',
+                            url: '{% url "SharkEyesCore.views.save_feedback" %}',
+                            data: jsonData,
+                            datatype: "JSON",
+                            success: function() {
+                                //clear feedback box
+                                $('#feedback_title').val("");
+                                $('#feedback_comment').val("");
+
+                            },
+                             error: function (xhr, ajaxOptions, thrownError) {
+                                 alert(xhr.status);
+                                 alert(thrownError);
+                             }
+                        });
+                         $( this ).dialog( "close" );
+                    }
+                    else {
+
+                        $('#feedback_title').val("Please enter a title under 255 characters.");
+                        $('#feedback_comment').val("Please enter a comment under 255 characters.");
+                    }
+                    },
+                    Cancel: function() {
+                         $('#feedback_title').val("");
+                         $('#feedback_comment').val("");
+                        $( this ).dialog( "close" );
+                    }
+            }
+            });
+        });
+     });
+
+  });
 </script>
 
 </head>
