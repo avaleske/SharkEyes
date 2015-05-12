@@ -16,6 +16,7 @@ from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+TEST_RUNNER = 'SharkEyesCore.test_runner.CustomTestRunner'
 
 ALLOWED_HOSTS = [
     '.seacast.org',     # Allow domain and subdomains

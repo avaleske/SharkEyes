@@ -1,10 +1,18 @@
-from django.test import TestCase
-from pl_download.models import check_for_new_file
+
+from pl_download.models import DataFileManager
+import unittest
 
 
-class TestDownloader(TestCase):
+class UnitTestDownloader(unittest.TestCase):
     def setUp(self):
-        None
+        result = None
 
-    def test_check_for_new_file(self):
-        check_for_new_file()
+    def testWaveWatchDownload(self):
+        print "Running Wave Watch Download Test: "
+        result = DataFileManager.get_latest_wave_watch_files()
+        self.assertIsNotNone(result)
+
+    def testFetchingFiles(self):
+        print "Running Currents & SS Temperature Download Test: "
+        result = DataFileManager.fetch_new_files()
+        self.assertIsNotNone(result)

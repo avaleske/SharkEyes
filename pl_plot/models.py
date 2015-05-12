@@ -13,7 +13,7 @@ from pl_plot.plotter import Plotter, WaveWatchPlotter
 from pl_download.models import DataFile, DataFileManager,WaveWatchDataFile
 from django.db.models.aggregates import Max
 from uuid import uuid4
-from scipy.io import netcdf, netcdf_file
+from scipy.io import netcdf_file
 import numpy
 
 class OverlayManager(models.Manager):
