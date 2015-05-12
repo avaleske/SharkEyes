@@ -99,6 +99,12 @@
         <tr>
             <td class="col-one"><a href="{% url "SharkEyesCore.views.about" %}" target="_self">About</a></td>
         </tr>
+        <tr>
+            <td class="col-one"><button id="feedback_button">Feedback Comment</button></td>
+        </tr>
+        <tr>
+            <td class="col-one"><a href="{% url "SharkEyesCore.views.survey" %}" target="_self">Feedback Survey</a></td>
+        </tr>
     </table>
 	
 	<table>
@@ -106,6 +112,13 @@
 			<td class="col-one"><b>Note: Key for the knots of the current vectors is estimated.</b></td>
 		</tr>
         <tr></tr>
+        <!-- This is for the feedback pop up window -->
+        <tr><div id="dialog">
+            Subject: <br/><textarea rows="1" cols="35" id="feedback_title" onclick="feedback_click()"></textarea><br/>
+            Comment: <br/><textarea rows="5" cols="35" id="feedback_comment" onclick="feedback_click()"></textarea>
+        </div></tr>
+        <tr>
+        </tr>
         <tr></tr>
         <tr></tr>
 	</table>
