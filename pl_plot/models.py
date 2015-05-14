@@ -43,7 +43,7 @@ class OverlayManager(models.Manager):
 
 
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
         and_the_newest_for_each = next_few_days_of_overlays.values('definition', 'applies_at_datetime', 'zoom_levels')\
@@ -70,7 +70,7 @@ class OverlayManager(models.Manager):
         for each in all:
             print each.applies_at_datetime
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=5),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
         print "all in time range:"
@@ -81,6 +81,7 @@ class OverlayManager(models.Manager):
         print "tiled:"
         for each in that_are_tiled:
             print each.applies_at_datetime
+            print each.file.name
 
 
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
@@ -88,6 +89,11 @@ class OverlayManager(models.Manager):
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
 
         overlays_to_display = Overlay.objects.filter(id__in=ids_of_these).order_by('definition', 'applies_at_datetime')
+
+        print "overlays to display:"
+        for each in overlays_to_display:
+            print each.applies_at_datetime
+            print each.file.name
 
         # Team 1 says: filtering out the non-base ones, for now, because the javascript that displays the menu is hacky.
         return overlays_to_display.filter(definition__is_base=True)

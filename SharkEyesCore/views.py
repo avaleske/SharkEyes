@@ -16,6 +16,7 @@ def home(request):
     num_defs = len(OverlayDefinition.objects.filter(is_base=True))
 
     list_of_times = datetimes[:len(datetimes)/num_defs]
+    #list_of_times = datetimes
     print "times:"
     for each in list_of_times:
         print each
