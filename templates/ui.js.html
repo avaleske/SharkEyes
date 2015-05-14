@@ -21,8 +21,16 @@ var map;
 
 // Note: these bounds will need to be changed in order to change the zoom level
 var mapBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(42.0, -129.0), //ne
-  new google.maps.LatLng(46.0, -120.326199391)); //sw
+
+        new google.maps.LatLng(40.5840806224, -129.0),
+  new google.maps.LatLng(47.499, -123.726199391));
+
+
+    // Below are the actual bounds that we want
+    //new google.maps.LatLng(41.967778, -128.155278), //ne
+    //new google.maps.LatLng(46.293889, -118.476667)); //sw
+    //new google.maps.LatLng(42.967778, -129.155278), //ne
+    //new google.maps.LatLng(43.293889, -120.476667)); //sw
 var mapMinZoom = 4;
 var mapMaxZoom = 10;
 var layers = [];
@@ -53,6 +61,12 @@ function initialize() {
             style: google.maps.ZoomControlStyle.LARGE,
             position: google.maps.ControlPosition.TOP_RIGHT
         },
+
+          // todo remove center and zoom
+        center: new google.maps.LatLng(44.032222, -124.870556),
+
+
+        zoom: 7,
         mapTypeControl: false,
         scaleControl: true,
         streetViewControl: false,
@@ -63,7 +77,9 @@ function initialize() {
       }
 
       map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
-      map.fitBounds(mapBounds);
+
+    //todo uncomment
+     // map.fitBounds(mapBounds);
 
       grid = new Graticule(map, true); // lat long lines
 
@@ -202,6 +218,14 @@ $(".overlay-toggle").click(function(e) {
     var toggle = $(this).find('.toggle-checkbox');
     previous_state = !(toggle.prop("checked"));
 
+    //turn other toggles off
+    if($(this).find('.toggle-checkbox') == 'checked'){
+        //turn off everything else
+        //go to sidebar.html to set the id
+        //grab id by data.deefs?
+        //turn of the toggle for all
+    }
+
     //locate corresponding overlay in 'data' by 2d indexing
     defs_idx = data.defs.indexOf(this.id); //
     idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
@@ -211,14 +235,16 @@ $(".overlay-toggle").click(function(e) {
 
         //if it's a vector.. push normally; if it isn't... always put it at the bottom
           if (data.types[idx] == "V"){
+              //uncomment this and add comment for why
             visible_overlays = insert_overlay(visible_overlays, visible_overlays_idx,idx, true);
             visible_keys.push(data.keys[idx]);
 
         } else {
+              //TODO: visible overlay = []
             visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
             visible_keys.unshift(data.keys[idx]);
         }
-
+            //TODO: comment this
           visible_overlays_idx += 1;
           $("#key-img").attr("src",loc+data.keys[idx]);
           $("#key-img").show();
@@ -264,6 +290,7 @@ $('#date-time').change(function(e) {
 
         map.overlayMapTypes.removeAt(i);
         visible_overlays.splice(i, 1);
+        //TODO: visible overlay: []
         visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
 
         //replace keys...
