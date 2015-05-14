@@ -18,9 +18,11 @@ var loc = "{{ MEDIA_URL }}"
 
 // global variables
 var map;
+
+// Note: these bounds will need to be changed in order to change the zoom level
 var mapBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(40.5840806224, -129.0),
-  new google.maps.LatLng(47.499, -123.726199391));
+  new google.maps.LatLng(42.0, -129.0), //ne
+  new google.maps.LatLng(46.0, -120.326199391)); //sw
 var mapMinZoom = 4;
 var mapMaxZoom = 10;
 var layers = [];
