@@ -7,6 +7,7 @@ from django.db import IntegrityError, transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 
+
 #This is where we associate the Javascript variables (overlays, defs etc) with the Django objects from the database.
 def home(request):
 
@@ -31,9 +32,11 @@ def home(request):
 def about(request):
     return render(request, 'about.html')
 
+@csrf_exempt
 def survey(request):
     return render(request, 'survey.html')
 
+@csrf_exempt
 def save_survey(request):
     usage_location = json.loads(request.body)["usage_location"]
     usage_frequency = json.loads(request.body)["usage_frequency"]
@@ -59,7 +62,7 @@ def save_survey(request):
         print e.message
 
     return render(request, 'survey.html')
-
+@csrf_exempt
 def save_feedback(request):
     #Access feedback data to be saved into the database
     feedback_title = json.loads(request.body)["title"]
