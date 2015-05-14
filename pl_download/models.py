@@ -117,9 +117,11 @@ class DataFileManager(models.Manager):
         #convert ftp datetime format to a string datetime
         modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
 
-        # check if we've downloaded it before: does DataFile contain an entry whose model_date matches this one?
+        # check if we've downloaded it before: does DataFile contain an entry whose model_date matches this one
+        # that is also a WaveWatch file?
         matches_old_file = DataFile.objects.filter(
-           model_date=modified_datetime
+           model_date=modified_datetime,
+           file__startswith="OuterGrid"
         )
         if not matches_old_file:
             #Create File Name and Download actual File into media folder
@@ -153,7 +155,8 @@ class DataFileManager(models.Manager):
     def get_next_few_days_files_from_db(cls):
 
         next_few_days_of_files = DataFile.objects.filter(
-            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
+            #set back to -timedelta 2 hrs
+            model_date__gte=(timezone.now()-timedelta(days=2)).date(),
             model_date__lte=(timezone.now()+timedelta(days=4)).date()
         )
 
@@ -233,7 +236,9 @@ class DataFileManager(models.Manager):
 
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
+
             DataFile.delete(filename) # Custom delete method for DataFiles: this deletes the actual files from disk too
+
 
         #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
