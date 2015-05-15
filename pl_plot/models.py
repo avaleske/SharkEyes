@@ -207,38 +207,41 @@ class OverlayManager(models.Manager):
         #todo this is making 4x as many plots as we actually need. Reduce so that it only plots at noon, 4 pm, 8 pm, etc
         #to line up with SST/currents.
         for forecast_index in range(0, number_of_forecasts):
-            #the forecast applies at some number of hours past the generated datetime.
-            #plus NOON: so we need to add 5. Something is off with the datetime.
-            applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
-            print "applies at", applies_at_datetime
+            #remove this in order to plot all of the forecasts
+            if forecast_index % 4 ==0:
 
-            #Need to set a new tile directory name for each forecast_index
-            tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
-            print "tile_dir name = ", tile_dir
+                #the forecast applies at some number of hours past the generated datetime.
+                #plus NOON: so we need to add 5. Something is off with the datetime.
+                applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
+                print "applies at", applies_at_datetime
 
-            #return overlaydefinition object; 4 is for wave watch
-            overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+                #Need to set a new tile directory name for each forecast_index
+                tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
+                print "tile_dir name = ", tile_dir
+
+                #return overlaydefinition object; 4 is for wave watch
+                overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
 #for zoom_level in zoom_levels:
-       #     plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+        #     plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
 
-            plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+                plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
                                                              forecast_index=forecast_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
                                                              generated_datetime=generated_datetime)
 
-            overlay = Overlay(
-                file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
-                key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
-                created_datetime=timezone.now(),
-                applies_at_datetime=applies_at_datetime,
-                tile_dir = tile_dir,
-                zoom_levels = None,
-                is_tiled = False,
+                overlay = Overlay(
+                    file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+                    key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+                    created_datetime=timezone.now(),
+                    applies_at_datetime=applies_at_datetime,
+                    tile_dir = tile_dir,
+                    zoom_levels = None,
+                    is_tiled = False,
 
-                definition_id=overlay_definition_id,
-            )
-            overlay.save()
-            overlay_ids.append(overlay.id)
+                    definition_id=overlay_definition_id,
+                )
+                overlay.save()
+                overlay_ids.append(overlay.id)
 
         # # This code was used to view what is contained in the netCDF file
         # file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
