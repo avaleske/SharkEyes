@@ -219,12 +219,16 @@ $(".overlay-toggle").click(function(e) {
     var toggle = $(this).find('.toggle-checkbox');
     previous_state = !(toggle.prop("checked"));
 
-    //turn other toggles off
-    if($(this).find('.toggle-checkbox') == 'checked'){
-        //turn off everything else
-        //go to sidebar.html to set the id
-        //grab id by data.deefs?
-        //turn of the toggle for all
+    //this implement exclusive toggles
+    //so that if one toggle gets turned on the others get turned of
+    if(toggle.prop("checked")){
+        for (overlay in data.defs) {
+             var id = "#" + data.defs[overlay] + ".toggle-checkbox";
+            if (data.defs[overlay] != $(this).attr('id')){
+                $(id).prop("checked", false);
+            }
+
+        }
     }
 
     //locate corresponding overlay in 'data' by 2d indexing
@@ -234,19 +238,28 @@ $(".overlay-toggle").click(function(e) {
     //turn overlay on
     if (previous_state == false){
 
+        //Implement this again when we want to stack overlays on top of each other
         //if it's a vector.. push normally; if it isn't... always put it at the bottom
-          if (data.types[idx] == "V"){
+     /*    if (data.types[idx] == "V"){
               //uncomment this and add comment for why
             visible_overlays = insert_overlay(visible_overlays, visible_overlays_idx,idx, true);
             visible_keys.push(data.keys[idx]);
 
         } else {
-              //TODO: visible overlay = []
+
             visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
             visible_keys.unshift(data.keys[idx]);
         }
-            //TODO: comment this
+*/
+
+
+
+
+        visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
+        visible_keys.unshift(data.keys[idx]);
+
           visible_overlays_idx += 1;
+
           $("#key-img").attr("src",loc+data.keys[idx]);
           $("#key-img").show();
           $("#key").show();
@@ -257,6 +270,7 @@ $(".overlay-toggle").click(function(e) {
             //which key/overlay are we removing?
             to_remove = visible_keys.indexOf(data.keys[idx]);
 
+            // At position "to_remove" remove "1" item
             visible_keys.splice(to_remove, 1);
             visible_overlays.splice(to_remove, 1);
             map.overlayMapTypes.removeAt(to_remove);
@@ -291,7 +305,7 @@ $('#date-time').change(function(e) {
 
         map.overlayMapTypes.removeAt(i);
         visible_overlays.splice(i, 1);
-        //TODO: visible overlay: []
+
         visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
 
         //replace keys...
@@ -321,11 +335,21 @@ function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
 
       });
 
+    // Delete any previous overlays and keys so that just one appears at a time
+    map.overlayMapTypes.clear();
+    visible_keys.pop();
+    visible_overlays.pop();
+    visible_overlays_idx -= 1;
+    $("#key-img").attr("src","");
+    $("#key-img").hide();
+    $("#key").hide();
      if (push){
+
          visible_overlays.push(x);
     } else {
         visible_overlays.unshift(x);
     }
+
       map.overlayMapTypes.insertAt(gmaps_stack_position, x);
       return visible_overlays;
 }

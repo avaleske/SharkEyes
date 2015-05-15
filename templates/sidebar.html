@@ -21,9 +21,10 @@
           <td class="col-one">{{ item.display_name_long }}</td>
           <td class="col-two">
             <div class="toggle">
-              <input type="checkbox" class="toggle-checkbox" id="t1"></input>
+         <!--     <input type="checkbox" class="toggle-checkbox" id="t1"/>  -->
+                <input type="checkbox" class="toggle-checkbox" id="{{ item.function_name }}"/>
                 <!--TODO set the id to be unique, not "t1": one ID for each toggle so we can access them individually-->
-              <label class="toggle-label" for="t1">
+              <label class="toggle-label" for="{{ item.function_name }}">
               <div class="toggle-inner"></div>
               <div class="toggle-switch"></div>
               </label>
