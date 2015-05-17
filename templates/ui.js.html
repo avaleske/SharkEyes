@@ -260,9 +260,10 @@ $(".overlay-toggle").click(function(e) {
 
           visible_overlays_idx += 1;
 
-          $("#key-img").attr("src",loc+data.keys[idx]);
+        //HERE
+     /*     $("#key-img").attr("src",loc+data.keys[idx]);
           $("#key-img").show();
-          $("#key").show();
+          $("#key").show();  */
 
     } else{ //turn overlay off
 
@@ -350,6 +351,9 @@ function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
         visible_overlays.unshift(x);
     }
 
+    $("#key-img").attr("src",loc+data.keys[idx]);
+          $("#key-img").show();
+          $("#key").show();
       map.overlayMapTypes.insertAt(gmaps_stack_position, x);
       return visible_overlays;
 }
