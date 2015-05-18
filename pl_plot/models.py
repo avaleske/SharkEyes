@@ -142,14 +142,15 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def delete_old_files(cls):
-        #how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=1)
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+
         # UNCHOPPED database files
         # this will delete wavewatch overlays too
         old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
 
         for eachfile in old_unchopped_files:
-            #Delete the overlay from DB, its image from disk, and its key image from disk, using the custom delete() method
+            #Delete the overlay from DB, its image from disk, its tiles from disk, and its key image from disk,
+            # using the custom delete() method
             Overlay.delete(eachfile)
 
         return True
@@ -194,7 +195,6 @@ class OverlayManager(models.Manager):
         #the forecast applies at some number of hours past the generated datetime.
         #plus NOON: so we need to add 5. Something is off with the datetime.
         applies_at_datetime = datafile.generated_datetime + timedelta(hours=time_index) + timedelta(hours=5)
-        #print "applies at", applies_at_datetime
 
         #Set a new tile directory name for each forecast_index
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
@@ -311,25 +311,29 @@ class Overlay(models.Model):
         if os.path.isfile(self.key.path):
             os.remove(self.key.path)
 
-
-
         directory=os.path.join('/opt/sharkeyes/media/tiles/', self.tile_dir)
-        print "directory = ", directory
+
         #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
         # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
         for r,d,f in os.walk(directory):
             for direc in d:
                 try:
-                    print direc
-                    print os.path.join(r, direc)
-                    #shutil.rmtree(os.path.join(r, direc))
+                    #delete the items recursively
+                    shutil.rmtree(os.path.join(r, direc))
+
                 except Exception,e:
                     print e
                     pass
+        #then remove the tile directory itself
+        try:
+            shutil.rmtree(directory)
 
+        except Exception,e:
+                    print e
+                    pass
 
         #Delete the model instance
-        super(Overlay, self).delete(*args,**kwargs)
+        #super(Overlay, self).delete(*args,**kwargs)
 
 # Function defined to allow dynamic path creation
 # A new folder is created per forecast creation day that includes all the forecasts
