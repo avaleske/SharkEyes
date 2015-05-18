@@ -15,6 +15,7 @@ from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf_file
 import numpy
+import shutil
 
 HOW_LONG_TO_KEEP_FILES = 10
 
@@ -108,14 +109,14 @@ class OverlayManager(models.Manager):
 
         for fid in file_ids:
             datafile = DataFile.objects.get(pk=fid)
-            print "datafile name:", datafile.file.name
+            #print "datafile name:", datafile.file.name
 
             #NOTE: team 2 says determining what type of datafile it is based only on fileNAME is sort of hacky.
             #May want to refactor: e.g. add a "model_type" to the DataFile class which says if it
             #is a WaveWatch file or SST/Currents file.
 
             if datafile.file.name.startswith("OuterGrid"):
-                print "adding wavewatch file to task list"
+                #print "adding wavewatch file to task list"
                 plotter = WaveWatchPlotter(datafile.file.name)
                 for t in xrange(0, 85):
                     #Here you could pick whether to only plot the items whose time is a multiple of 4, to match with the
@@ -141,8 +142,8 @@ class OverlayManager(models.Manager):
 
     @classmethod
     def delete_old_files(cls):
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
-
+        #how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+        how_old_to_keep = timezone.datetime.now()-timedelta(days=1)
         # UNCHOPPED database files
         # this will delete wavewatch overlays too
         old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
@@ -193,11 +194,11 @@ class OverlayManager(models.Manager):
         #the forecast applies at some number of hours past the generated datetime.
         #plus NOON: so we need to add 5. Something is off with the datetime.
         applies_at_datetime = datafile.generated_datetime + timedelta(hours=time_index) + timedelta(hours=5)
-        print "applies at", applies_at_datetime
+        #print "applies at", applies_at_datetime
 
         #Set a new tile directory name for each forecast_index
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
-        print "tile_dir name = ", tile_dir
+        #print "tile_dir name = ", tile_dir
 
         #return overlaydefinition object; 4 is for wave watch
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
@@ -299,7 +300,7 @@ class Overlay(models.Model):
     zoom_levels = models.CharField(max_length=50, null=True)
     is_tiled = models.BooleanField(default=False)
 
-    #Custom delete method which will also delete the Overlay's image file from the disk and also the Key image
+    #Custom delete method which will also delete the Overlay's image file from the disk and also the Key image and Tiles
     def delete(self,*args,**kwargs):
 
         if os.path.isfile(self.file.path):
@@ -309,6 +310,23 @@ class Overlay(models.Model):
         #Delete the Key image
         if os.path.isfile(self.key.path):
             os.remove(self.key.path)
+
+
+
+        directory=os.path.join('/opt/sharkeyes/media/tiles/', self.tile_dir)
+        print "directory = ", directory
+        #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
+        # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
+        for r,d,f in os.walk(directory):
+            for direc in d:
+                try:
+                    print direc
+                    print os.path.join(r, direc)
+                    #shutil.rmtree(os.path.join(r, direc))
+                except Exception,e:
+                    print e
+                    pass
+
 
         #Delete the model instance
         super(Overlay, self).delete(*args,**kwargs)

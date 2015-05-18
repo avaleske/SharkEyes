@@ -27,14 +27,14 @@ def do_pipeline():
     other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
 
     if not wave_watch_files and not other_files:
-        print "no files downloaded"
+        #print "no files downloaded"
         return None
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
-    print "Plot tasks:"
-    for each in plot_task_list:
-        print each
+    #print "Plot tasks:"
+    #for each in plot_task_list:
+        #print each
 
 
     #tile_overlay is independent of WaveWatch vs SST: it will do both
