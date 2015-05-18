@@ -65,35 +65,19 @@ class OverlayManager(models.Manager):
         #now the Overlays should include WaveWatch items as well
         #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
 #todo set back to -timedelta = 2 hours
-        all = Overlay.objects.filter()
-        print "all"
-        for each in all:
-            print each.applies_at_datetime
+
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(days=1),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
-        print "all in time range:"
-        for each in next_few_days_of_overlays:
-            print each.applies_at_datetime
 
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
-        print "tiled:"
-        for each in that_are_tiled:
-            print each.applies_at_datetime
-            print each.file.name
-
 
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
             .annotate(newest_id=Max('id'))
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
 
         overlays_to_display = Overlay.objects.filter(id__in=ids_of_these).order_by('definition', 'applies_at_datetime')
-
-        print "overlays to display:"
-        for each in overlays_to_display:
-            print each.applies_at_datetime
-            print each.file.name
 
         # Team 1 says: filtering out the non-base ones, for now, because the javascript that displays the menu is hacky.
         return overlays_to_display.filter(definition__is_base=True)
@@ -112,7 +96,7 @@ class OverlayManager(models.Manager):
         task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in [1, 3]]
 
         #Add the wave watch plot command
-        task_list.append(cls.make_wave_watch_plot.s(4, file_id, immutable=True) )
+        task_list.append(cls.make_wave_watch_plot.s(4, time_index, file_id, immutable=True) )
         job = task_list
         return job
 
@@ -124,15 +108,20 @@ class OverlayManager(models.Manager):
 
         for fid in file_ids:
             datafile = DataFile.objects.get(pk=fid)
+            print "datafile name:", datafile.file.name
 
             #NOTE: team 2 says determining what type of datafile it is based only on fileNAME is sort of hacky.
             #May want to refactor: e.g. add a "model_type" to the DataFile class which says if it
             #is a WaveWatch file or SST/Currents file.
-            #print "datafile name:", datafile.file.name
+
             if datafile.file.name.startswith("OuterGrid"):
+                print "adding wavewatch file to task list"
                 plotter = WaveWatchPlotter(datafile.file.name)
-                #TODO refactor to improve performance: change make_wave_watch_plot to only do 1 time_index at a time
-                task_list.append(cls.make_wave_watch_plot.subtask(args=(4, fid), immutable=True) )
+                for t in xrange(0, 85):
+                    #Here you could pick whether to only plot the items whose time is a multiple of 4, to match with the
+                    #SST/Currents times.
+
+                    task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True) )
 
             else:
                 plotter = Plotter(datafile.file.name)
@@ -167,7 +156,7 @@ class OverlayManager(models.Manager):
 
     @staticmethod
     @shared_task(name='pl_plot.make_wave_watch_plot')
-    def make_wave_watch_plot(overlay_definition_id, file_id =None):
+    def make_wave_watch_plot(overlay_definition_id, time_index=0, file_id =None):
         overlay_ids = []
 
         #grab the latest forecast file
@@ -192,56 +181,44 @@ class OverlayManager(models.Manager):
         #returns a netcdf file object with read mode
         plotter = WaveWatchPlotter(datafile.file.name)
 
-        new_dir = settings.MEDIA_ROOT + settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
-        if not os.path.exists(new_dir):
-            os.makedirs(new_dir)
-            os.chmod(new_dir,0o777)
-        wave_storage_dir = settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
+        #Here is code in case you want to save the overlays in a separate folder. Recommend saving them all
+        # in the UNCHOPPED folder however.
+        #new_dir = settings.MEDIA_ROOT + settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
+        #if not os.path.exists(new_dir):
+            #os.makedirs(new_dir)
+            #os.chmod(new_dir,0o777)
+        #wave_storage_dir = settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + generated_datetime
 
 
+        #the forecast applies at some number of hours past the generated datetime.
+        #plus NOON: so we need to add 5. Something is off with the datetime.
+        applies_at_datetime = datafile.generated_datetime + timedelta(hours=time_index) + timedelta(hours=5)
+        print "applies at", applies_at_datetime
 
-#TODO refactor to improve performance: change make_wave_watch_plot be called with the time_index to plot at,
-        #rather than doing all of the number_of_forecasts plots in the make_wave_watch_plot function.
+        #Set a new tile directory name for each forecast_index
+        tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
+        print "tile_dir name = ", tile_dir
 
-#for forecast_index in range(0, number_of_forecasts):
-        #todo this is making 4x as many plots as we actually need. Reduce so that it only plots at noon, 4 pm, 8 pm, etc
-        #to line up with SST/currents.
-        for forecast_index in range(0, number_of_forecasts):
-            #remove this in order to plot all of the forecasts
-            if forecast_index % 4 ==0:
+        #return overlaydefinition object; 4 is for wave watch
+        overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
-                #the forecast applies at some number of hours past the generated datetime.
-                #plus NOON: so we need to add 5. Something is off with the datetime.
-                applies_at_datetime = datafile.generated_datetime + timedelta(hours=forecast_index) + timedelta(hours=5)
-                print "applies at", applies_at_datetime
 
-                #Need to set a new tile directory name for each forecast_index
-                tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
-                print "tile_dir name = ", tile_dir
+        plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+                        forecast_index=time_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
+                        generated_datetime=generated_datetime)
 
-                #return overlaydefinition object; 4 is for wave watch
-                overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-
-#for zoom_level in zoom_levels:
-        #     plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
-
-                plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
-                                                             forecast_index=forecast_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
-                                                             generated_datetime=generated_datetime)
-
-                overlay = Overlay(
-                    file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
-                    key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
-                    created_datetime=timezone.now(),
-                    applies_at_datetime=applies_at_datetime,
-                    tile_dir = tile_dir,
-                    zoom_levels = None,
-                    is_tiled = False,
-
-                    definition_id=overlay_definition_id,
-                )
-                overlay.save()
-                overlay_ids.append(overlay.id)
+        overlay = Overlay(
+            file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+            key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+            created_datetime=timezone.now(),
+            applies_at_datetime=applies_at_datetime,
+            tile_dir = tile_dir,
+            zoom_levels = None,
+            is_tiled = False,
+            definition_id=overlay_definition_id,
+        )
+        overlay.save()
+        overlay_ids.append(overlay.id)
 
         # # This code was used to view what is contained in the netCDF file
         # file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))

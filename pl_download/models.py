@@ -131,7 +131,7 @@ class DataFileManager(models.Manager):
 
             #Save the File name into the Database
             datafile = DataFile(
-                type='NCDF',
+                type='WAVE',
                 download_datetime=timezone.now(),
                 generated_datetime=modified_datetime,
                 model_date = modified_datetime,
@@ -160,13 +160,14 @@ class DataFileManager(models.Manager):
             model_date__lte=(timezone.now()+timedelta(days=4)).date()
         )
 
-        and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(
-            newest_generation_time=Max('generated_datetime'))
+        #Select the most recent within each model date and type (ie wave or SST)
+        and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(newest_generation_time=Max('generated_datetime'))
 
         # if we expected a lot of new files, this would be bad (we're making a Q object for each file we want, basically)
         q_objects = []
         for filedata in and_the_newest_for_each_model_date:
-            new_q = Q(type=filedata.get('type'), model_date=filedata.get('model_date'), generated_datetime=filedata.get('newest_generation_time'))
+            new_q = Q(type=filedata.get('type'), model_date=filedata.get('model_date'),
+                      generated_datetime=filedata.get('newest_generation_time'))
             q_objects.append(new_q)
 
         # assumes you're not redownloading the same file for the same model and generation dates.
@@ -274,7 +275,7 @@ class WaveWatchDataFile(models.Model):
 
 class DataFile(models.Model):
     DATA_FILE_TYPES = (
-        ('NCDF', "NetCDF"),
+        ('NCDF', "NetCDF", "Wave"),
     )
     type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
     download_datetime = models.DateTimeField()
