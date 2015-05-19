@@ -155,8 +155,7 @@ class DataFileManager(models.Manager):
     def get_next_few_days_files_from_db(cls):
 
         next_few_days_of_files = DataFile.objects.filter(
-            #set back to -timedelta 2 hrs
-            model_date__gte=(timezone.now()-timedelta(days=1)).date(),
+            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
             model_date__lte=(timezone.now()+timedelta(days=4)).date()
         )
 
@@ -232,32 +231,31 @@ class DataFileManager(models.Manager):
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # NETCDF files
-        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 10 days)
+        #delete files whose model date is earlier than how old we want to keep.
         old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)
 
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
-
             DataFile.delete(filename) # Custom delete method for DataFiles: this deletes the actual files from disk too
 
 
 
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
-
-        directory=os.path.join('/opt/sharkeyes/media/tiles/')
-
-        #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
-        # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
-        for r,d,f in os.walk(directory):
-            for direc in d:
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
-
-                if how_old_to_keep > timestamp:
-                    try:
-                        shutil.rmtree(os.path.join(r,direc))
-                    except Exception,e:
-                        print e
-                        pass
+        # how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+        #
+        # directory=os.path.join('/opt/sharkeyes/media/tiles/')
+        #
+        # #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
+        # # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
+        # for r,d,f in os.walk(directory):
+        #     for direc in d:
+        #         timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
+        #
+        #         if how_old_to_keep > timestamp:
+        #             try:
+        #                 shutil.rmtree(os.path.join(r,direc))
+        #             except Exception,e:
+        #                 print e
+        #                 pass
 
         return True
 
@@ -276,7 +274,7 @@ class WaveWatchDataFile(models.Model):
 
 class DataFile(models.Model):
     DATA_FILE_TYPES = (
-        ('NCDF', "NetCDF"),( 'WAVE', "Wave"),
+        ('NCDF', "NetCDF"),( 'WAVE', "WaveNETCDF"),
     )
     type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
     download_datetime = models.DateTimeField()

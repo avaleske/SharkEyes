@@ -40,11 +40,8 @@ class OverlayManager(models.Manager):
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
 
-        #set back to -timedelta 2 hrs
-
-
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
         and_the_newest_for_each = next_few_days_of_overlays.values('definition', 'applies_at_datetime', 'zoom_levels')\
@@ -65,10 +62,9 @@ class OverlayManager(models.Manager):
 
         #now the Overlays should include WaveWatch items as well
         #This is probably where you could select Past items: the -timedelta could go back a few days rather than just 2 hours.
-#todo set back to -timedelta = 2 hours
 
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
 
@@ -109,14 +105,9 @@ class OverlayManager(models.Manager):
 
         for fid in file_ids:
             datafile = DataFile.objects.get(pk=fid)
-            #print "datafile name:", datafile.file.name
 
-            #NOTE: team 2 says determining what type of datafile it is based only on fileNAME is sort of hacky.
-            #May want to refactor: e.g. add a "model_type" to the DataFile class which says if it
-            #is a WaveWatch file or SST/Currents file.
-
+            #Wavewatch and SST/currents files use a separate Plot function.
             if datafile.file.name.startswith("OuterGrid"):
-                #print "adding wavewatch file to task list"
                 plotter = WaveWatchPlotter(datafile.file.name)
                 for t in xrange(0, 85):
                     #Here you could pick whether to only plot the items whose time is a multiple of 4, to match with the
@@ -145,12 +136,12 @@ class OverlayManager(models.Manager):
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # UNCHOPPED database files
-        # this will delete wavewatch overlays too
         old_unchopped_files = Overlay.objects.filter(applies_at_datetime__lte=how_old_to_keep)
 
+
+        # the Overlay class has a custom delete method that deletes the overlay's
+        #TILES, KEYS, and OVERLAY images from the disk.
         for eachfile in old_unchopped_files:
-            #Delete the overlay from DB, its image from disk, its tiles from disk, and its key image from disk,
-            # using the custom delete() method
             Overlay.delete(eachfile)
 
         return True
@@ -234,7 +225,7 @@ class OverlayManager(models.Manager):
     @staticmethod
     @shared_task(name='pl_plot.make_plot')
     def make_plot(overlay_definition_id, time_index=0, file_id=None):
-        zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # todo fix hacky hack for expo
+        zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # Team 1 says this is a hack. Team 2 is unsure why it is a hack.
         zoom_levels_for_others = [(None, None)]
 
         if file_id is None:
@@ -303,8 +294,8 @@ class Overlay(models.Model):
     #Custom delete method which will also delete the Overlay's image file from the disk and also the Key image and Tiles
     def delete(self,*args,**kwargs):
 
+        #Delete the physical file from disk
         if os.path.isfile(self.file.path):
-            #Delete the physical file from disk
             os.remove(self.file.path)
 
         #Delete the Key image
@@ -329,11 +320,11 @@ class Overlay(models.Model):
             shutil.rmtree(directory)
 
         except Exception,e:
-                    print e
-                    pass
+            print e
+            pass
 
-        #Delete the model instance
-        #super(Overlay, self).delete(*args,**kwargs)
+        #Delete the actual model instance from the database
+        super(Overlay, self).delete(*args,**kwargs)
 
 # Function defined to allow dynamic path creation
 # A new folder is created per forecast creation day that includes all the forecasts
@@ -348,11 +339,8 @@ def get_upload_path(instance,filename):
 class Wave_Watch_Overlay(models.Model):
     definition = models.ForeignKey(OverlayDefinition)
     created_datetime = models.DateTimeField()
-
-
     tile_dir = models.CharField(max_length=240, null=True)
-    #todo set nullable on the AppliesAt back to false, once we have set up the variable initialization.
-    applies_at_datetime = models.DateTimeField(null=True)
+    applies_at_datetime = models.DateTimeField(null=False)
     zoom_levels = models.CharField(max_length=50, null=True)
     is_tiled = models.BooleanField(default=False)
     #file = models.ImageField(upload_to=get_upload_path, null=True, max_length=500)      #get_upload_path was defined in order to allow for dynamic path creation
