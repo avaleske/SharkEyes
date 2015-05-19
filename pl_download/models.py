@@ -117,11 +117,11 @@ class DataFileManager(models.Manager):
         #convert ftp datetime format to a string datetime
         modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
 
-        # check if we've downloaded it before: does DataFile contain an entry whose model_date matches this one
-        # that is also a WaveWatch file?
+        # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
            model_date=modified_datetime,
-           file__startswith="OuterGrid"
+           #file__startswith="OuterGrid",
+           type='WAVE'
         )
         if not matches_old_file:
             #Create File Name and Download actual File into media folder
@@ -131,7 +131,7 @@ class DataFileManager(models.Manager):
 
             #Save the File name into the Database
             datafile = DataFile(
-                type='NCDF',
+                type='WAVE',
                 download_datetime=timezone.now(),
                 generated_datetime=modified_datetime,
                 model_date = modified_datetime,
@@ -155,18 +155,18 @@ class DataFileManager(models.Manager):
     def get_next_few_days_files_from_db(cls):
 
         next_few_days_of_files = DataFile.objects.filter(
-            #set back to -timedelta 2 hrs
-            model_date__gte=(timezone.now()-timedelta(days=2)).date(),
+            model_date__gte=(timezone.now()-timedelta(hours=2)).date(),
             model_date__lte=(timezone.now()+timedelta(days=4)).date()
         )
 
-        and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(
-            newest_generation_time=Max('generated_datetime'))
+        #Select the most recent within each model date and type (ie wave or SST)
+        and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(newest_generation_time=Max('generated_datetime'))
 
         # if we expected a lot of new files, this would be bad (we're making a Q object for each file we want, basically)
         q_objects = []
         for filedata in and_the_newest_for_each_model_date:
-            new_q = Q(type=filedata.get('type'), model_date=filedata.get('model_date'), generated_datetime=filedata.get('newest_generation_time'))
+            new_q = Q(type=filedata.get('type'), model_date=filedata.get('model_date'),
+                      generated_datetime=filedata.get('newest_generation_time'))
             q_objects.append(new_q)
 
         # assumes you're not redownloading the same file for the same model and generation dates.
@@ -180,7 +180,7 @@ class DataFileManager(models.Manager):
         today = timezone.now().date()
 
         #Look back at the past 3 days of datafiles
-        recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today])
+        recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today], type='NCDF')
 
         # empty lists return false
         if not recent_netcdf_files:
@@ -231,31 +231,31 @@ class DataFileManager(models.Manager):
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # NETCDF files
-        #The old files are those whose model_date is less than the time after which we want to keep (ie going back 10 days)
+        #delete files whose model date is earlier than how old we want to keep.
         old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)
 
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
-
             DataFile.delete(filename) # Custom delete method for DataFiles: this deletes the actual files from disk too
 
 
-        #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
-        how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
-        directory=os.path.join('/opt/sharkeyes/media/tiles/')
-
-        # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
-        for r,d,f in os.walk(directory):
-            for direc in d:
-                timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
-
-                if how_old_to_keep > timestamp:
-                    try:
-                        shutil.rmtree(os.path.join(r,direc))
-                    except Exception,e:
-                        print e
-                        pass
+        # how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
+        #
+        # directory=os.path.join('/opt/sharkeyes/media/tiles/')
+        #
+        # #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
+        # # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
+        # for r,d,f in os.walk(directory):
+        #     for direc in d:
+        #         timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
+        #
+        #         if how_old_to_keep > timestamp:
+        #             try:
+        #                 shutil.rmtree(os.path.join(r,direc))
+        #             except Exception,e:
+        #                 print e
+        #                 pass
 
         return True
 
@@ -274,7 +274,7 @@ class WaveWatchDataFile(models.Model):
 
 class DataFile(models.Model):
     DATA_FILE_TYPES = (
-        ('NCDF', "NetCDF"),
+        ('NCDF', "NetCDF"),( 'WAVE', "WaveNETCDF"),
     )
     type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
     download_datetime = models.DateTimeField()

@@ -101,7 +101,7 @@ def tile_wave_watch_overlay(overlay_id):
 
 #from 127.8 to 123.758W (see Fig. 1).
     translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.8 47.508 "
-                     "-gcp {0} 0 -123.758 47.499 -gcp {0} {1} -123.726 41.458 {2} {3}").format(
+                     "-gcp {0} 0 -123.758 47.508 -gcp {0} {1} -123.758 41.458 {2} {3}").format(
             str(width), str(height), image.path, vrt_path)
 
     # Team 1 says: calling this with shell=True is insecure if we had input from the user,

@@ -58,6 +58,8 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     cbar.ax.tick_params(labelsize=10)
     cbar.ax.xaxis.label.set_color('white')
     cbar.ax.xaxis.set_tick_params(labelcolor='white')
+
+    #todo DIVISION by ZERO
     locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS))[::10]    # we just want every sixth label
     float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
     labels = ["%.1f" % num for num in float_labels]
