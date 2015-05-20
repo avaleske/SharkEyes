@@ -14,18 +14,13 @@ def home(request):
     overlays_view_data = OverlayManager.get_next_few_days_of_tiled_overlays()
 
     datetimes = [ i.applies_at_datetime.astimezone(tz.tzlocal()).strftime('%D, %I %p') for i in overlays_view_data ]
-    unrendereddatetimes = [ i.applies_at_datetime.strftime('%D, %I %p') for i in overlays_view_data ]
-
 
     # Team 1 says: a complete hack! it just divides a list of all of the times for all the overlays by the number
     # of defs to get a singular list of overlay times
     num_defs = len(OverlayDefinition.objects.filter(is_base=True))
 
     list_of_times = datetimes[:len(datetimes)/num_defs]
-    #list_of_times = datetimes
-    print "times:"
-    for each in list_of_times:
-        print each
+
     context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True), 'times':list_of_times }
     return render(request, 'index.html', context)
 
