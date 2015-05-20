@@ -96,6 +96,11 @@ def tile_wave_watch_overlay(overlay_id):
     full_tile_dir = os.path.join(settings.MEDIA_ROOT, settings.TILE_STORAGE_DIR, overlay.tile_dir)
     vrt_path = os.path.join(settings.MEDIA_ROOT, settings.VRT_STORAGE_DIR, "{0}.vrt".format(uuid4()))
 
+
+ #translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -129 47.499 "
+           #          "-gcp {0} 0 -123.726 47.499 -gcp {0} {1} -123.726 40.5833 {2} {3}").format(
+          #  str(width), str(height), image.path, vrt_path)
+
     #wavewatch co-ords are:
     # This grid covers a region from 41.458 to 47.508N and
 
