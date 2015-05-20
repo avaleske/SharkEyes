@@ -131,10 +131,9 @@ class OverlayManager(models.Manager):
             if datafile.file.name.startswith("OuterGrid"):
                 plotter = WaveWatchPlotter(datafile.file.name)
                 for t in xrange(0, 85):
-                    #Here you could pick whether to only plot the items whose time is a multiple of 4, to match with the
-                    #SST/Currents times.
-
-                    task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True) )
+                    # Only plot every 4th index to match up with the SST forecast
+                    if t % 4 == 0:
+                        task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True) )
 
             else:
                 plotter = Plotter(datafile.file.name)
