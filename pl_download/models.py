@@ -21,7 +21,7 @@ import shutil
 
 CATALOG_XML_NAME = "catalog.xml"
 XML_NAMESPACE = "{http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0}"
-HOW_LONG_TO_KEEP_FILES = 10
+HOW_LONG_TO_KEEP_FILES = 5
 
 
 def get_ingria_xml_tree():
@@ -237,25 +237,6 @@ class DataFileManager(models.Manager):
         # Delete the file items from the database, and the actual image files.
         for filename in old_netcdf_files:
             DataFile.delete(filename) # Custom delete method for DataFiles: this deletes the actual files from disk too
-
-
-
-        # how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
-        #
-        # directory=os.path.join('/opt/sharkeyes/media/tiles/')
-        #
-        # #TILES folder holds directories only. There are no Tile items in the database so we don't have to delete those.
-        # # Reference here:  http://stackoverflow.com/questions/2237909/delete-old-directories-in-python
-        # for r,d,f in os.walk(directory):
-        #     for direc in d:
-        #         timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(os.path.join(r,direc)))
-        #
-        #         if how_old_to_keep > timestamp:
-        #             try:
-        #                 shutil.rmtree(os.path.join(r,direc))
-        #             except Exception,e:
-        #                 print e
-        #                 pass
 
         return True
 
