@@ -19,15 +19,12 @@ def do_pipeline():
     DataFileManager.delete_old_files()
     OverlayManager.delete_old_files()
 
-    # wave watch file takes care of its own check to see if there are new WaveWatchfiles
     wave_watch_files = DataFileManager.get_latest_wave_watch_files()
-    #if not DataFileManager.is_new_file_to_download():
-        #return None
-    
+
     other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
 
+    # If no new files were returned, don't plot or tile anything.
     if not wave_watch_files and not other_files:
-        #print "no files downloaded"
         return None
 
     # get the list of plotting tasks based on the files we just downloaded.
@@ -39,7 +36,6 @@ def do_pipeline():
 
     #tile_overlay is independent of WaveWatch vs SST: it will do both
     # create a task chain of (plot, tile) for each plot, and group them
-    #job = group(chain(pt, tile_overlay.s()) for pt in plot_task_list if pt.args[0] != 4)
     list_of_chains = []
     for pt in plot_task_list:
         if pt.args[0] != 4:
@@ -49,9 +45,9 @@ def do_pipeline():
             list_of_chains.append(chain(pt, tile_wave_watch_overlay.s()))
 
     job = group(item for item in list_of_chains)
-    print "jobs:"
-    for each in job:
-        print each
+    #print "jobs:"
+    #for each in job:
+        #print each
     # and run the group.
     result = job.apply_async()
     return result

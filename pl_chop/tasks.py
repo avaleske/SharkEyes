@@ -105,9 +105,21 @@ def tile_wave_watch_overlay(overlay_id):
     # This grid covers a region from 41.458 to 47.508N and
 
 #from 127.8 to 123.758W (see Fig. 1).
+   # try this one 1st: what it "ought" to be
+ #   translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.8 47.508 "
+   #                  "-gcp {0} 0 -123.758 47.508 -gcp {0} {1} -123.758 41.458 {2} {3}").format(
+    #        str(width), str(height), image.path, vrt_path)
+
+
+# too far Right
+   # translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.8 47.508 "
+    #                "-gcp {0} 0 -123.071389 47.508 -gcp {0} {1} -123.071389 41.458 {2} {3}").format(
+     #       str(width), str(height), image.path, vrt_path)
+#
     translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.8 47.508 "
-                     "-gcp {0} 0 -123.758 47.508 -gcp {0} {1} -123.758 41.458 {2} {3}").format(
+                    "-gcp {0} 0 -123.69 47.508 -gcp {0} {1} -123.69 41.458 {2} {3}").format(
             str(width), str(height), image.path, vrt_path)
+#
 
     # Team 1 says: calling this with shell=True is insecure if we had input from the user,
     # but all our input is trusted, so we're good.
