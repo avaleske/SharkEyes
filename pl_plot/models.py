@@ -56,11 +56,9 @@ class OverlayManager(models.Manager):
 #TODO set back to -2 hours
         # Pick how many days into the future and past we want to display overlays for
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
-
             is_tiled=True,
-            definition__is_base=True
         )
 
         next_few_days_of_sst_overlays = next_few_days_of_overlays.filter(definition_id__in=[1, 3])
@@ -82,15 +80,15 @@ class OverlayManager(models.Manager):
         newest_sst_overlays_to_display = next_few_days_of_sst_overlays.filter(id__in=sst_ids).order_by('definition', 'applies_at_datetime')
         newest_wave_overlays_to_display = next_few_days_of_wave_overlays.filter(id__in=wave_ids).order_by('definition', 'applies_at_datetime')
 
-        wave_dates = newest_wave_overlays_to_display.values('applies_at_datetime')
-        sst_dates = newest_sst_overlays_to_display.values('applies_at_datetime')
+        wave_dates = newest_wave_overlays_to_display.values_list( 'applies_at_datetime', flat=True)
+        sst_dates = newest_sst_overlays_to_display.values_list( 'applies_at_datetime', flat=True)
 
         #Get the distinct dates where there is an SST, currents, and wave overlay
-        date_overlap = next_few_days_of_overlays.filter(applies_at_datetime__in=sst_dates).filter(applies_at_datetime__in=wave_dates).values('applies_at_datetime').distinct()
+        date_overlap = next_few_days_of_overlays.filter(applies_at_datetime__in=list(sst_dates)).filter(applies_at_datetime__in=list(wave_dates)).values_list('applies_at_datetime', flat=True).distinct()
 
         # Now get the actual overlays where there is an overlap
-        overlapped_sst_items_to_display = newest_sst_overlays_to_display.filter(applies_at_datetime__in=date_overlap)
-        overlapped_wave_items_to_display = newest_wave_overlays_to_display.filter(applies_at_datetime__in=date_overlap)
+        overlapped_sst_items_to_display = newest_sst_overlays_to_display.filter(applies_at_datetime__in=list(date_overlap))
+        overlapped_wave_items_to_display = newest_wave_overlays_to_display.filter(applies_at_datetime__in=list(date_overlap))
 
         #Join the two sets
         all_items_to_display = overlapped_sst_items_to_display | overlapped_wave_items_to_display
