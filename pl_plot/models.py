@@ -52,22 +52,19 @@ class OverlayManager(models.Manager):
     @classmethod
     def get_next_few_days_of_tiled_overlays(cls):
 
+
+#TODO set back to -2 hours
         # Pick how many days into the future and past we want to display overlays for
-        next_few_days_of_wave_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+        next_few_days_of_overlays = Overlay.objects.filter(
+            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
-            definition_id=4,
+
             is_tiled=True,
             definition__is_base=True
         )
 
-        next_few_days_of_sst_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
-            applies_at_datetime__lte=timezone.now()+timedelta(days=4),
-            definition_id__in=[3 , 1],
-            is_tiled=True,
-            definition__is_base=True
-        )
+        next_few_days_of_sst_overlays = next_few_days_of_overlays.filter(definition_id__in=[1, 3])
+        next_few_days_of_wave_overlays = next_few_days_of_overlays.filter(definition_id=4)
 
         # Get the newest overlay for each Model type and time. This assumes that for a certain model date,
         # a larger ID value
@@ -88,8 +85,8 @@ class OverlayManager(models.Manager):
         wave_dates = newest_wave_overlays_to_display.values('applies_at_datetime')
         sst_dates = newest_sst_overlays_to_display.values('applies_at_datetime')
 
-        #Get the dates where there is an SST, currents, and wave overlay
-        date_overlap = Overlay.objects.filter(applies_at_datetime__in=sst_dates).filter(applies_at_datetime__in=wave_dates).values('applies_at_datetime')
+        #Get the distinct dates where there is an SST, currents, and wave overlay
+        date_overlap = next_few_days_of_overlays.filter(applies_at_datetime__in=sst_dates).filter(applies_at_datetime__in=wave_dates).values('applies_at_datetime').distinct()
 
         # Now get the actual overlays where there is an overlap
         overlapped_sst_items_to_display = newest_sst_overlays_to_display.filter(applies_at_datetime__in=date_overlap)
@@ -131,10 +128,9 @@ class OverlayManager(models.Manager):
             if datafile.file.name.startswith("OuterGrid"):
                 plotter = WaveWatchPlotter(datafile.file.name)
                 for t in xrange(0, 85):
-                    #Here you could pick whether to only plot the items whose time is a multiple of 4, to match with the
-                    #SST/Currents times.
-
-                    task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True) )
+                    # Only plot every 4th index to match up with the SST forecast
+                    if t % 4 == 0:
+                        task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True) )
 
             else:
                 plotter = Plotter(datafile.file.name)
