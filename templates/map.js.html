@@ -11,6 +11,7 @@ var mapBounds = new google.maps.LatLngBounds(
         // below: corresponds to actual view we want
     //new google.maps.LatLng(41.967778, -128.155278), //ne
     //new google.maps.LatLng(46.293889, -118.476667)); //sw
+       // TODO remove: if we are not using the map bounds
     new google.maps.LatLng(42.967778, -129.155278), //ne
     new google.maps.LatLng(43.293889, -120.476667)); //sw
 var mapMinZoom = 4;
@@ -42,7 +43,11 @@ function initialize() {
     },
 
       // todo remove center and zoom
-    center: new google.maps.LatLng(44.032222, -124.870556),
+      // center needs to be further to the west
+      // below: this is the old one
+    //center: new google.maps.LatLng(44.032222, -124.870556),
+      center: new google.maps.LatLng(44.032222, -129.0),
+     // -120.476667)); //sw
 
 
     zoom: 7,
