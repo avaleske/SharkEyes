@@ -87,7 +87,7 @@ class OverlayManager(models.Manager):
 
         #Get the distinct dates where there is an SST, currents, and wave overlay
         date_overlap = next_few_days_of_overlays.filter(applies_at_datetime__in=sst_dates).filter(applies_at_datetime__in=wave_dates).values('applies_at_datetime').distinct()
-        
+
         # Now get the actual overlays where there is an overlap
         overlapped_sst_items_to_display = newest_sst_overlays_to_display.filter(applies_at_datetime__in=date_overlap)
         overlapped_wave_items_to_display = newest_wave_overlays_to_display.filter(applies_at_datetime__in=date_overlap)
