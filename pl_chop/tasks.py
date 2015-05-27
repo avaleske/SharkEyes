@@ -13,6 +13,7 @@ from django.conf import settings
 #tile one overlay (SST, currents or wavewatch), based on the ID of that overlay
 @shared_task(name='pl_chop.tile_overlay')
 def tile_overlay(overlay_id):
+    print "tiling SST/currents overlay for ", overlay_id
     # todo if we get a list of overlay_ids (which happens if there are multiple zoom levels) then recursively call
     # itself with the ids in the list. It should only be two or three things. Once there's a better way for
     # handling multiple zoom levels, this can likely go away.
@@ -66,6 +67,7 @@ def tile_overlay(overlay_id):
 
 @shared_task(name='pl_chop.tile_wave_watch_overlay')
 def tile_wave_watch_overlay(overlay_id):
+    print "tiling WAVE overlay for ", overlay_id
    # todo if we get a list of overlay_ids (which happens if there are multiple zoom levels) then recursively call
     # itself with the ids in the list. It should only be two or three things. Once there's a better way for
     # handling multiple zoom levels, this can likely go away.
