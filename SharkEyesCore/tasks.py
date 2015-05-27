@@ -16,16 +16,16 @@ def add(a, b):
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
 
-    DataFileManager.delete_old_files()
-    OverlayManager.delete_old_files()
+ #   DataFileManager.delete_old_files()
+ #   OverlayManager.delete_old_files()
 
-    wave_watch_files = DataFileManager.get_latest_wave_watch_files()
+  #  wave_watch_files = DataFileManager.get_latest_wave_watch_files()
 
-    other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
+  #  other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
 
     # If no new files were returned, don't plot or tile anything.
-    if not wave_watch_files and not other_files:
-        return None
+  #  if not wave_watch_files and not other_files:
+   #     return None
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
@@ -37,18 +37,27 @@ def do_pipeline():
     #tile_overlay is independent of WaveWatch vs SST: it will do both
     # create a task chain of (plot, tile) for each plot, and group them
     list_of_chains = []
+    print "tasks:"
     for pt in plot_task_list:
+        print pt, pt.args
         if pt.args[0] != 4:
+            # chaining passes the result of first function to second function
             list_of_chains.append(chain(pt, tile_overlay.s()))
+            print "appending SST tiling for ", pt.args
         else:
             #Use the Wavewatch tiler for Wavewatch files
             list_of_chains.append(chain(pt, tile_wave_watch_overlay.s()))
+            print "appending WAVE tiling for ", pt.args
+
+    print "chains:"
+    for each in list_of_chains:
+        print each
 
     job = group(item for item in list_of_chains)
-    #print "jobs:"
-    #for each in job:
-        #print each
-    # and run the group.
+    print "jobs:"
+    for each in job:
+        print each
+     #and run the group.
     result = job.apply_async()
     return result
 

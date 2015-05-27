@@ -39,8 +39,9 @@ class OverlayManager(models.Manager):
         # however far we have data, whichever is less
         # here assuming that the primary keys for the overlays are only monotonically increasing
         # and that the newer one is better.
+        #TODO set back to -hours =2
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4)
         )
         and_the_newest_for_each = next_few_days_of_overlays.values('definition', 'applies_at_datetime', 'zoom_levels')\
@@ -55,8 +56,11 @@ class OverlayManager(models.Manager):
 
 #TODO set back to -2 hours
         # Pick how many days into the future and past we want to display overlays for
+
+
+#TODO put in the ISBASE
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=1),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
             is_tiled=True,
         )
