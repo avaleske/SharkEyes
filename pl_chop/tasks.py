@@ -14,13 +14,13 @@ from django.conf import settings
 @shared_task(name='pl_chop.tile_overlay')
 def tile_overlay(overlay_id):
     print "tiling SST/currents overlay for ", overlay_id
+
     # todo if we get a list of overlay_ids (which happens if there are multiple zoom levels) then recursively call
     # itself with the ids in the list. It should only be two or three things. Once there's a better way for
     # handling multiple zoom levels, this can likely go away.
     if isinstance(overlay_id, list):
         tile_dirs = []
         for oid in overlay_id:
-
             tile_dirs.extend(tile_overlay(oid))
         return tile_dirs
 
@@ -44,8 +44,7 @@ def tile_overlay(overlay_id):
     full_tile_dir = os.path.join(settings.MEDIA_ROOT, settings.TILE_STORAGE_DIR, overlay.tile_dir)
     vrt_path = os.path.join(settings.MEDIA_ROOT, settings.VRT_STORAGE_DIR, "{0}.vrt".format(uuid4()))
 
-    #TODO
-    #These co-ordinates seem to be okay for both WaveWatch and currents/sst
+    #These co-ordinates are only OK for the SST/currents model
     translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -129 47.499 "
                      "-gcp {0} 0 -123.726 47.499 -gcp {0} {1} -123.726 40.5833 {2} {3}").format(
             str(width), str(height), image.path, vrt_path)
@@ -75,7 +74,7 @@ def tile_wave_watch_overlay(overlay_id):
         tile_dirs = []
         for oid in overlay_id:
 
-            tile_dirs.extend(tile_overlay(oid))
+            tile_dirs.extend(tile_wave_watch_overlay(oid))
         return tile_dirs
 
     #the id's in the database progresses upwards from 1. If overlays are deleted, the new
