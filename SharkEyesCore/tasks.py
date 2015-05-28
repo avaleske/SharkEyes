@@ -29,29 +29,18 @@ def do_pipeline():
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
-    #print "Plot tasks:"
-    #for each in plot_task_list:
-        #print each
 
-
-    #tile_overlay is independent of WaveWatch vs SST: it will do both
-    # create a task chain of (plot, tile) for each plot, and group them
     list_of_chains = []
-    print "tasks:"
+
     for pt in plot_task_list:
-        print pt, pt.args
+
         if pt.args[0] != 4:
             # chaining passes the result of first function to second function
             list_of_chains.append(chain(pt, tile_overlay.s()))
-            print "appending SST tiling for ", pt.args
+
         else:
             #Use the Wavewatch tiler for Wavewatch files
             list_of_chains.append(chain(pt, tile_wave_watch_overlay.s()))
-            print "appending WAVE tiling for ", pt.args
-
-    print "chains:"
-    for each in list_of_chains:
-        print each
 
     job = group(item for item in list_of_chains)
     print "jobs:"
