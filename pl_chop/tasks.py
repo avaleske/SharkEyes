@@ -18,11 +18,10 @@ def tile_overlay(overlay_id):
     # itself with the ids in the list. It should only be two or three things. Once there's a better way for
     # handling multiple zoom levels, this can likely go away.
     if isinstance(overlay_id, list):
-        if len(overlay_id)>1:
-            tile_dirs = []
-            for oid in overlay_id:
-                tile_dirs.extend(tile_overlay(oid))
-            return tile_dirs
+        tile_dirs = []
+        for oid in overlay_id:
+            tile_dirs.extend(tile_overlay(oid))
+        return tile_dirs
 
     #the id's in the database progresses upwards from 1. If overlays are deleted, the new
     # overlays start numbering where the old ones
@@ -71,11 +70,10 @@ def tile_wave_watch_overlay(overlay_id):
     # itself with the ids in the list. It should only be two or three things. Once there's a better way for
     # handling multiple zoom levels, this can likely go away.
     if isinstance(overlay_id, list):
-        if len(overlay_id)>1:
-            tile_dirs = []
-            for oid in overlay_id:
-                tile_dirs.extend(tile_wave_watch_overlay(oid))
-            return tile_dirs
+        tile_dirs = []
+        for oid in overlay_id:
+            tile_dirs.extend(tile_wave_watch_overlay(oid))
+        return tile_dirs
 
     #the id's in the database progresses upwards from 1. If overlays are deleted, the new
     # overlays start numbering where the old ones
