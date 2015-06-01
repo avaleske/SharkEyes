@@ -141,8 +141,9 @@ class OverlayManager(models.Manager):
         #Add the SST and currents plot commands
         task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in [1, 3]]
 
+#TODO put waves in though it appears this function is not used
         #Add the wave watch plot command
-        task_list.append(cls.make_wave_watch_plot.s(4, time_index, file_id, immutable=True) )
+        #task_list.append(cls.make_wave_watch_plot.s(4, time_index, file_id, immutable=True) )
         job = task_list
         return job
 

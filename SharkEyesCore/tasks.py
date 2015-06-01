@@ -15,6 +15,10 @@ def add(a, b):
 
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
+
+    DataFileManager.delete_old_files()
+    OverlayManager.delete_old_files()
+
     if not DataFileManager.is_new_file_to_download():
         return None
 
