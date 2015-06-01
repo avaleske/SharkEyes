@@ -299,6 +299,10 @@ $('#date-time').change(function(e) {
     time_idx = parseInt(time_idx) + 1;
     delta_idx = (time_idx - old_idx);
 
+    if (time_idx == (dates-1)):
+        document.getElementById("next").disabled='true'
+
+
     max = visible_overlays.length;
     for (var i = 0; i < max; i++){
 
@@ -356,6 +360,26 @@ function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
           $("#key").show();
       map.overlayMapTypes.insertAt(gmaps_stack_position, x);
       return visible_overlays;
+}
+
+function next_onclick(){
+    index = document.getElementById('date-time').value;
+    if(index >= (dates-1))
+        return
+    else{
+        document.getElementById("date-time").value = ++index;
+        $("#date-time").change();
+    }
+}
+
+function prev_onclick(){
+    index = document.getElementById('date-time').value;
+    if(index == 0)
+        return;
+    else{
+        document.getElementById("date-time").selectedIndex = --index;
+     $("#date-time").change();
+    }
 }
 
 </script>
