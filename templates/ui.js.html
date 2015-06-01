@@ -16,6 +16,11 @@ data.defs.push("{{item.function_name}}");
 {% endfor %}
 var loc = "{{ MEDIA_URL }}"
 
+var dates = 0;
+{% for item in times %}
+    dates++;
+{% endfor %}
+
 // global variables
 var map;
 
@@ -299,9 +304,12 @@ $('#date-time').change(function(e) {
     time_idx = parseInt(time_idx) + 1;
     delta_idx = (time_idx - old_idx);
 
-    if (time_idx == (dates-1)):
-        document.getElementById("next").disabled='true'
-
+    document.getElementById("next").removeAttribute('disabled');
+    document.getElementById("previous").removeAttribute('disabled');
+    if (time_idx == (dates))
+        document.getElementById("next").disabled = 'true';
+    if (time_idx == 1)
+        document.getElementById("previous").disabled = 'true';
 
     max = visible_overlays.length;
     for (var i = 0; i < max; i++){
@@ -364,22 +372,20 @@ function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
 
 function next_onclick(){
     index = document.getElementById('date-time').value;
-    if(index >= (dates-1))
-        return
-    else{
-        document.getElementById("date-time").value = ++index;
-        $("#date-time").change();
-    }
+    document.getElementById("date-time").value = ++index;
+    $("#date-time").change();
+    document.getElementById("previous").removeAttribute("disabled");
+    if (index == (dates-1))
+        document.getElementById("next").disabled = 'true';
 }
 
 function prev_onclick(){
     index = document.getElementById('date-time').value;
-    if(index == 0)
-        return;
-    else{
-        document.getElementById("date-time").selectedIndex = --index;
-     $("#date-time").change();
-    }
+    document.getElementById("date-time").value = --index;
+    $("#date-time").change();
+    document.getElementById("next").removeAttribute("disabled");
+    if (index == 0)
+        document.getElementById("previous").disabled = 'true';
 }
 
 </script>

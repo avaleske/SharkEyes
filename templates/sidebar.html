@@ -8,7 +8,7 @@
 
         <table>
             <tr>
-              <td class="col-one"><button id="previous" type="button" onclick="prev_onclick()">Prev</button></td>
+              <td class="col-one"><button id="previous" type="button" disabled="true" onclick="prev_onclick()">Prev</button></td>
                 <td><select id ="date-time">
                   {% for item in times %}
                   <option value="{{forloop.counter0}}">{{ item }}</option>
