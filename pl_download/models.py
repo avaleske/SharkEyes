@@ -179,7 +179,12 @@ class DataFileManager(models.Manager):
         today = timezone.now().date()
 
         #Look back at the past 3 days of datafiles
-        recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today], type='NCDF')
+        #TODO WAVE: specify the TYPE too
+    #    recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today], type='NCDF')
+
+        #Just for ROMS model
+        recent_netcdf_files = DataFile.objects.filter(model_date__range=[three_days_ago, today])
+
 
         # empty lists return false
         if not recent_netcdf_files:
@@ -199,6 +204,8 @@ class DataFileManager(models.Manager):
 
         return True
 
+
+    # Not using this right now, because we moved Wave datafiles to the DataFile class
     @classmethod
     def is_new_wave_watch_file_to_download(cls):
         three_days_ago = timezone.now().date()-timedelta(days=3)

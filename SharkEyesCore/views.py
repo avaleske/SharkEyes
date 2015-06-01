@@ -17,11 +17,12 @@ def home(request):
 
     # Team 1 says: a complete hack! it just divides a list of all of the times for all the overlays by the number
     # of defs to get a singular list of overlay times
-    num_defs = len(OverlayDefinition.objects.filter(is_base=True))
+    num_defs = len(OverlayDefinition.objects.filter(is_base=True).exclude(definition_id=4))
 
     list_of_times = datetimes[:len(datetimes)/num_defs]
 
-    context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True), 'times':list_of_times }
+    #TODO remove the DEFINITION ID spec in order to display WIND and WAVE items
+    context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True).exclude(definition_id=4), 'times':list_of_times }
     return render(request, 'index.html', context)
 
 def about(request):
