@@ -6,6 +6,8 @@ import numpy
 import time
 
 
+#Automated tiling: an Overlay is created (one image that covers the whole screen), then it is Tiled/Chopped or broken up
+#into small pieces that Google Maps can knit together into a zoomable image.
 class TileManager():
     def __init__(self):
         None
@@ -34,3 +36,5 @@ class TileManager():
             job = group((tile_overlay.s(o_id, immutable=True) for o_id in flattened))
             return job
         return None
+
+

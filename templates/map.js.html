@@ -5,8 +5,15 @@
 // global variables
 var map;
 var mapBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(40.5840806224, -129.0),
-  new google.maps.LatLng(47.499, -123.726199391));
+  //new google.maps.LatLng(40.5840806224, -129.0),
+  //new google.maps.LatLng(47.499, -123.726199391));
+
+        // below: corresponds to actual view we want
+    //new google.maps.LatLng(41.967778, -128.155278), //ne
+    //new google.maps.LatLng(46.293889, -118.476667)); //sw
+       // TODO remove: if we are not using the map bounds
+    new google.maps.LatLng(42.967778, -129.155278), //ne
+    new google.maps.LatLng(43.293889, -120.476667)); //sw
 var mapMinZoom = 4;
 var mapMaxZoom = 10;
 var layers = [];
@@ -34,11 +41,22 @@ function initialize() {
         style: google.maps.ZoomControlStyle.LARGE,
         position: google.maps.ControlPosition.TOP_RIGHT
     },
+
+      // todo remove center and zoom
+      // center needs to be further to the west
+      // below: this is the old one
+    //center: new google.maps.LatLng(44.032222, -124.870556),
+      center: new google.maps.LatLng(44.032222, -128.2),
+     // -120.476667)); //sw
+
+
+    zoom: 7,
     mapTypeControl: false,
     scaleControl: true,
     streetViewControl: false,
     overviewMapControl: false,
-    draggableCursor: 'crosshair',
+    //draggableCursor: 'crosshair',
+    draggableCursor: '',
     mapTypeId: google.maps.MapTypeId.HYBRID
 
   }
@@ -46,7 +64,8 @@ function initialize() {
 
 
   map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
-  map.fitBounds(mapBounds);
+// TODO uncomment this item below
+  //map.fitBounds(mapBounds);
   //map.setMapTypeId('hybrid');
 
   grid = new Graticule(map, true);

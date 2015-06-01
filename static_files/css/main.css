@@ -48,7 +48,8 @@ h2 {
 
 #date-time{
     margin-top:5px;
-    margin-left:18px;
+    margin-left:5px;
+    margin-right:5px;
 }
 
 #sidebar-left {
@@ -341,3 +342,17 @@ a.about {
     color: #444444;
     font-size: 16px;
 }
+
+/*Make Button look like a link*/
+table td #feedback_button {
+    background:none!important;
+    border:none;
+    padding:0!important;
+       /*optional*/
+    font-family:arial,sans-serif; /*input has OS specific font-family*/
+     color:#000052;
+     text-decoration:underline;
+     cursor:pointer;
+
+}
+

@@ -4,6 +4,8 @@
 
 // init js data (from DB)
 var data = {'keys':[], 'tiles':[], 'defs':[], 'types':[]};
+
+// Overlays come from the sharkeyescore/views.py file.
 {% for item in overlays %}
 data.keys.push("{{item.key}}");
 data.tiles.push("{{item.tile_dir}}");
@@ -14,11 +16,26 @@ data.defs.push("{{item.function_name}}");
 {% endfor %}
 var loc = "{{ MEDIA_URL }}"
 
+var dates = 0;
+{% for item in times %}
+    dates++;
+{% endfor %}
+
 // global variables
 var map;
+
+// Note: these bounds will need to be changed in order to change the zoom level
 var mapBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(40.5840806224, -129.0),
+
+        new google.maps.LatLng(40.5840806224, -129.0),
   new google.maps.LatLng(47.499, -123.726199391));
+
+
+    // Below are the actual bounds that we want
+    //new google.maps.LatLng(41.967778, -128.155278), //ne
+    //new google.maps.LatLng(46.293889, -118.476667)); //sw
+    //new google.maps.LatLng(42.967778, -129.155278), //ne
+    //new google.maps.LatLng(43.293889, -120.476667)); //sw
 var mapMinZoom = 4;
 var mapMaxZoom = 10;
 var layers = [];
@@ -49,17 +66,26 @@ function initialize() {
             style: google.maps.ZoomControlStyle.LARGE,
             position: google.maps.ControlPosition.TOP_RIGHT
         },
+
+          // todo remove center and zoom
+        //center: new google.maps.LatLng(44.032222, -124.870556),
+        center: new google.maps.LatLng(44.032222, -128.2),
+
+        zoom: 7,
         mapTypeControl: false,
         scaleControl: true,
         streetViewControl: false,
         overviewMapControl: false,
-        draggableCursor: 'crosshair',
+        //draggableCursor: 'crosshair',
+        draggableCursor: '',
         mapTypeId: google.maps.MapTypeId.HYBRID
 
       }
 
       map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
-      map.fitBounds(mapBounds);
+
+    //todo uncomment
+     // map.fitBounds(mapBounds);
 
       grid = new Graticule(map, true); // lat long lines
 
@@ -198,6 +224,18 @@ $(".overlay-toggle").click(function(e) {
     var toggle = $(this).find('.toggle-checkbox');
     previous_state = !(toggle.prop("checked"));
 
+    //this implement exclusive toggles
+    //so that if one toggle gets turned on the others get turned of
+    if(toggle.prop("checked")){
+        for (overlay in data.defs) {
+             var id = "#" + data.defs[overlay] + ".toggle-checkbox";
+            if (data.defs[overlay] != $(this).attr('id')){
+                $(id).prop("checked", false);
+            }
+
+        }
+    }
+
     //locate corresponding overlay in 'data' by 2d indexing
     defs_idx = data.defs.indexOf(this.id); //
     idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
@@ -205,20 +243,32 @@ $(".overlay-toggle").click(function(e) {
     //turn overlay on
     if (previous_state == false){
 
+        //Implement this again when we want to stack overlays on top of each other
         //if it's a vector.. push normally; if it isn't... always put it at the bottom
-          if (data.types[idx] == "V"){
+     /*    if (data.types[idx] == "V"){
+              //uncomment this and add comment for why
             visible_overlays = insert_overlay(visible_overlays, visible_overlays_idx,idx, true);
             visible_keys.push(data.keys[idx]);
 
         } else {
+
             visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
             visible_keys.unshift(data.keys[idx]);
         }
+*/
+
+
+
+
+        visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
+        visible_keys.unshift(data.keys[idx]);
 
           visible_overlays_idx += 1;
-          $("#key-img").attr("src",loc+data.keys[idx]);
+
+        //HERE
+     /*     $("#key-img").attr("src",loc+data.keys[idx]);
           $("#key-img").show();
-          $("#key").show();
+          $("#key").show();  */
 
     } else{ //turn overlay off
 
@@ -226,6 +276,7 @@ $(".overlay-toggle").click(function(e) {
             //which key/overlay are we removing?
             to_remove = visible_keys.indexOf(data.keys[idx]);
 
+            // At position "to_remove" remove "1" item
             visible_keys.splice(to_remove, 1);
             visible_overlays.splice(to_remove, 1);
             map.overlayMapTypes.removeAt(to_remove);
@@ -253,6 +304,13 @@ $('#date-time').change(function(e) {
     time_idx = parseInt(time_idx) + 1;
     delta_idx = (time_idx - old_idx);
 
+    document.getElementById("next").removeAttribute('disabled');
+    document.getElementById("previous").removeAttribute('disabled');
+    if (time_idx == (dates))
+        document.getElementById("next").disabled = 'true';
+    if (time_idx == 1)
+        document.getElementById("previous").disabled = 'true';
+
     max = visible_overlays.length;
     for (var i = 0; i < max; i++){
 
@@ -260,6 +318,7 @@ $('#date-time').change(function(e) {
 
         map.overlayMapTypes.removeAt(i);
         visible_overlays.splice(i, 1);
+
         visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
 
         //replace keys...
@@ -289,13 +348,44 @@ function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
 
       });
 
+    // Delete any previous overlays and keys so that just one appears at a time
+    map.overlayMapTypes.clear();
+    visible_keys.pop();
+    visible_overlays.pop();
+    visible_overlays_idx -= 1;
+    $("#key-img").attr("src","");
+    $("#key-img").hide();
+    $("#key").hide();
      if (push){
+
          visible_overlays.push(x);
     } else {
         visible_overlays.unshift(x);
     }
+
+    $("#key-img").attr("src",loc+data.keys[idx]);
+          $("#key-img").show();
+          $("#key").show();
       map.overlayMapTypes.insertAt(gmaps_stack_position, x);
       return visible_overlays;
+}
+
+function next_onclick(){
+    index = document.getElementById('date-time').value;
+    document.getElementById("date-time").value = ++index;
+    $("#date-time").change();
+    document.getElementById("previous").removeAttribute("disabled");
+    if (index == (dates-1))
+        document.getElementById("next").disabled = 'true';
+}
+
+function prev_onclick(){
+    index = document.getElementById('date-time').value;
+    document.getElementById("date-time").value = --index;
+    $("#date-time").change();
+    document.getElementById("next").removeAttribute("disabled");
+    if (index == 0)
+        document.getElementById("previous").disabled = 'true';
 }
 
 </script>

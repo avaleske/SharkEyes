@@ -16,6 +16,7 @@ from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+TEST_RUNNER = 'SharkEyesCore.test_runner.CustomTestRunner'
 
 ALLOWED_HOSTS = [
     '.seacast.org',     # Allow domain and subdomains
@@ -31,6 +32,7 @@ INSTALLED_APPS = (
     'pl_download',
     'pl_plot',
     'pl_chop',
+    'SharkEyesCore',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -80,6 +82,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/opt/sharkeyes/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static_files'), )
 
+OVERLAY_KEY_COLOR = '#00001F'
 
 # other files
 NETCDF_STORAGE_DIR = "netcdf"
@@ -87,12 +90,16 @@ UNCHOPPED_STORAGE_DIR = "unchopped"
 VRT_STORAGE_DIR = "vrt_files"
 TILE_STORAGE_DIR = "tiles"
 KEY_STORAGE_DIR = "keys"
+WAVE_WATCH_DIR = "wave_watch_datafiles"
+WAVE_WATCH_STORAGE_DIR = "wave_watch_forecasts"
 
 
 MEDIA_ROOT = "/opt/sharkeyes/media/"
 MEDIA_URL = "/media/"
 
 BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
+WAVE_WATCH_URL = "ftp://cil-www.oce.orst.edu/pub/outgoing/ww3data/"
+FTP_WAVE_WAVE_URL = "cil-wwww.oce.orst.edu"
 
 #some database
 CONN_MAX_AGE = None
@@ -101,6 +108,7 @@ CONN_MAX_AGE = None
 BROKER_HOST = "127.0.0.1"
 BROKER_PORT = 5672
 BROKER_VHOST = "sharkeyes"
+
 
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'

@@ -3,10 +3,12 @@ from matplotlib import pyplot, colors
 import math
 from scipy import ndimage
 import scipy
+from mpl_toolkits.basemap import Basemap
+
 
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
-NUM_COLOR_LEVELS = 21
+NUM_COLOR_LEVELS = 80
 
 
 def get_rho_mask(data_file):
@@ -14,6 +16,56 @@ def get_rho_mask(data_file):
     rho_mask[207:221, 133:135] = 1
     rho_mask[201:202, 133:135] = 1
     return rho_mask
+
+# Wave Model Data Information:
+# Wave Data comes in 3D arrays (number of forecasts, latitude, longitude)
+# As of right now (March 15) there are 85 forecasts in each netCDF file from 12 pm onward by the hour
+# Wave Heights are measured in meters
+# Data points over 1000 usually mark land
+def wave_function(ax, data_file, bmap, key_ax, forecast_index):
+
+    #grab longitude and latitude from netCDF file
+    longs = data_file.variables['longitude'][:]
+    lats = data_file.variables['latitude'][:]
+
+    #get the wave height data from netCDF file
+    all_day = data_file.variables['HTSGW_surface'][:, :, :]
+
+    #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
+    x,y = numpy.meshgrid(longs,lats)
+
+    #obtain all forecasts
+    #heights is measured in meters, if a data point is over 1000 meters it is either not valid or it represents land
+    #so we are masking all data over 1000
+    heights = numpy.ma.masked_greater(all_day[forecast_index][:][:], 1000)
+
+    #get the max and min period wave period for the day: used to set color contours
+    min_period = int(math.floor(numpy.amin(heights)))
+    max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
+
+    #Allocates colors to the data by setting the range of the data and by setting color increments
+    contour_range = max_period - min_period
+    contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS
+    color_levels = []
+    for i in xrange(NUM_COLOR_LEVELS+1):
+        color_levels.append(min_period+1 + i * contour_range_inc)
+
+    #Fill the contours with the colors
+    overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap())
+
+    #Create the color bar
+    cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
+    cbar.ax.tick_params(labelsize=10)
+    cbar.ax.xaxis.label.set_color('white')
+    cbar.ax.xaxis.set_tick_params(labelcolor='white')
+
+    #todo DIVISION by ZERO
+    locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS))[::10]    # we just want every sixth label
+    float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
+    labels = ["%.1f" % num for num in float_labels]
+    cbar.ax.xaxis.set_ticks(locations)
+    cbar.ax.xaxis.set_ticklabels(labels)
+    cbar.set_label("Wave Height (m)")
 
 
 def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
@@ -28,7 +80,7 @@ def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
-    #get the max and min temps for the day
+    #get the max and min temps for the daytem
     all_day = data_file.variables['temp'][:, 29, :, :]
     min_temp = int(math.floor(celsius_to_fahrenheit(numpy.amin(all_day))))
     max_temp = int(math.ceil(celsius_to_fahrenheit(numpy.amax(numpy.ma.masked_greater(all_day, 1000)))))
@@ -53,8 +105,8 @@ def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
     cbar.ax.xaxis.label.set_color('white')
     cbar.ax.xaxis.set_tick_params(labelcolor='white')
 
-    locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS))[::3]    # we just want every third label
-    float_labels = numpy.arange(min_temp, max_temp + 0.01, contour_range_inc)[::3]
+    locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS))[::10]    # we just want every 10th label
+    float_labels = numpy.arange(min_temp, max_temp + 0.01, contour_range_inc)[::10]
     labels = ["%.1f" % num for num in float_labels]
     cbar.ax.xaxis.set_ticks(locations)
     cbar.ax.xaxis.set_ticklabels(labels)
