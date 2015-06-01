@@ -6,11 +6,19 @@
 
         <h2>Forecast Date/Time</h2>
 
-        <select id ="date-time">
-          {% for item in times %}
-          <option value="{{forloop.counter0}}">{{ item }}</option>
-          {% endfor %}
-        </select>
+        <table>
+            <tr>
+              <td class="col-one"><button id="previous" type="button" disabled="true" onclick="prev_onclick()">Prev</button></td>
+                <td><select id ="date-time">
+                  {% for item in times %}
+                  <option value="{{forloop.counter0}}">{{ item }}</option>
+                  {% endfor %}
+                </select></td>
+
+                <td class="col-two"><button id="next" type="button" onclick="next_onclick()">Next</button></td>
+
+            </tr>
+        </table>
 
         <h2>Map Data Layers</h2>
 
