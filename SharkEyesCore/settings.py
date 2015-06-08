@@ -92,6 +92,8 @@ TILE_STORAGE_DIR = "tiles"
 KEY_STORAGE_DIR = "keys"
 WAVE_WATCH_DIR = "wave_watch_datafiles"
 WAVE_WATCH_STORAGE_DIR = "wave_watch_forecasts"
+WIND_DIR = "wind_datafiles"
+WIND_STORAGE_DIR = "wind_forecasts"
 
 
 MEDIA_ROOT = "/opt/sharkeyes/media/"
@@ -100,6 +102,7 @@ MEDIA_URL = "/media/"
 BASE_NETCDF_URL = "http://ingria.coas.oregonstate.edu/opendap/ACTZ/"
 WAVE_WATCH_URL = "ftp://cil-www.oce.orst.edu/pub/outgoing/ww3data/"
 FTP_WAVE_WAVE_URL = "cil-wwww.oce.orst.edu"
+WIND_URL = "http://thredds.ucar.edu/thredds/dodsC/grib/NCEP/NAM/CONUS_12km/conduit/Best"
 
 #some database
 CONN_MAX_AGE = None
