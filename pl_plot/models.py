@@ -14,6 +14,7 @@ from pl_download.models import DataFile, DataFileManager,WaveWatchDataFile
 from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf_file
+from pydap.client import open_url
 import numpy
 import shutil
 
@@ -285,6 +286,53 @@ class OverlayManager(models.Manager):
         # # This prints the dimensions of the wave height data
         # value = numpy.shape(file.variables['HTSGW_surface'][:])
         return overlay_ids
+
+    @staticmethod
+    @shared_task(name='pl_plot.make_wind_plot')
+    def make_wind_plot(overlay_definition_id, time_index=0, file_id =None):
+        zoom_levels_for_wind = [('2-7', 4), ('8-10', 2)]
+        zoom_levels = zoom_levels_for_wind
+
+        if file_id is None:
+            datafile = DataFile.objects.filter(type='WIND').latest('generated_datetime')
+        else:
+            datafile = DataFile.objects.get(pk=file_id)
+
+        generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
+
+        plotter = WindPlotter(datafile.file.name)
+
+        overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
+
+        new_dir = settings.MEDIA_ROOT + settings.UNCHOPPED_STORAGE_DIR + "/" + "Wind_Forecast_" + generated_datetime
+        if not os.path.exists(new_dir):
+            os.makedirs(new_dir)
+            os.chmod(new_dir,0o777)
+        wind_storage_dir = settings.WIND_STORAGE_DIR + "/" + "Wind_Forecast_" + generated_datetime
+
+        tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
+
+        overlay_ids = []
+
+
+        for zoom_level in zoom_levels:
+            plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+                                                                forecast_index=(time_index+104), storage_dir=settings.UNCHOPPED_STORAGE_DIR,
+                                                                generated_datetime=generated_datetime)
+                #time index+104 because there are 13 back-casts using 3 hour intervals so there are 104 unecessary time indexes
+            overlay = Overlay(
+                file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+                key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+                created_datetime=timezone.now(),
+                definition_id=overlay_definition_id,
+                tile_dir=tile_dir,
+                is_tiled=False,
+                zoom_levels=None,
+                applies_at_datetime=timezone.now()
+            )
+
+            overlay.save()
+            overlay_ids.append(overlay.id)
 
     @staticmethod
     @shared_task(name='pl_plot.make_plot')

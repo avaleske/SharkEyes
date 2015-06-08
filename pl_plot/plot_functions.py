@@ -199,6 +199,48 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     key_ax.set_axis_off()
 
 
+def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio):
+    def compute_average(array):
+        avg = numpy.average(array)
+        return numpy.nan if avg > 10**3 else avg
+
+    winds_u = data_file['u-component_of_wind_height_above_ground'][forecast_index, 0, :, :]
+    winds_v = data_file['v-component_of_wind_height_above_ground'][forecast_index, 0, :, :]
+
+    # average nearby points to align grid, and add the edge column/row so it's the right size.
+    right_column = winds_u[0, 0, :, -1:]
+    winds_u_adjusted = ndimage.generic_filter(scipy.vstack((winds_u, right_column)),
+                                                 compute_average, footprint=[[1], [1]], mode='reflect')
+    bottom_row = winds_v[0, 0, -1:, :]
+    winds_v_adjusted = ndimage.generic_filter(scipy.vstack((winds_v, bottom_row)),
+                                                 compute_average, footprint=[[1], [1]], mode='reflect')
+
+    # zoom
+    u_zoomed = numpy.array(winds_u)
+    v_zoomed = numpy.array(winds_v)
+    info = numpy.loadtxt('latlon.g218')
+
+    lats = numpy.reshape(info[:, 2], [614, 428])
+    longs = numpy.reshape(info[:, 3], [614, 428])
+
+    for i in range (0, len(longs)):
+        longs[i] = -longs[i]
+
+
+    x, y = bmap(longs, lats)
+
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
+    overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
+
+    quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white',
+                                 color='white', labelsep=.5, coordinates='axes')
+    quiverkey1 = key_ax.quiverkey(overlay, 3.75, .4, 1*.5144, "1 knot", labelpos='S', labelcolor='white',
+                                  color='white', labelsep=.5, coordinates='axes')
+    quiverkey2 = key_ax.quiverkey(overlay, 6.5, .4, 2*.5144, "2 knots", labelpos='S', labelcolor='white',
+                                  color='white', labelsep=.5, coordinates='axes')
+    key_ax.set_axis_off()
+
+
 def crop_and_downsample(source_array, downsample_ratio, average=True):
     ys, xs = source_array.shape
     cropped_array = source_array[:ys - (ys % int(downsample_ratio)), :xs - (xs % int(downsample_ratio))]
