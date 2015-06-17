@@ -24,14 +24,14 @@
 
         <div id="date2" style="display: none;"><table>
                 <tr>
-                   <td class="col-one"><button id="previous" type="button" onclick="prev_onclick()">Prev</button>
+                   <td class="col-one"><button id="wind-previous" type="button" onclick="wind_prev_onclick()">Prev</button>
                     <td><select id ="wind-date-time">
                        {% for item in windtimes %}
                       <option value="{{forloop.counter0}}">{{ item }}</option>
                       {% endfor %}
                     </select></td>
 
-                    <td class="col-one"><button id="next" type="button" onclick="next_onclick()">Next</button></td>
+                    <td class="col-one"><button id="wind-next" type="button" onclick="wind_next_onclick()">Next</button></td>
 
                 </tr>
             </table>

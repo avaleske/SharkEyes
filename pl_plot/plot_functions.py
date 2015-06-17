@@ -208,12 +208,12 @@ def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio)
     winds_v = data_file['v-component_of_wind_height_above_ground'][forecast_index, 0, :, :]
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
-    right_column = winds_u[0, 0, :, -1:]
-    winds_u_adjusted = ndimage.generic_filter(scipy.vstack((winds_u, right_column)),
-                                                 compute_average, footprint=[[1], [1]], mode='reflect')
-    bottom_row = winds_v[0, 0, -1:, :]
-    winds_v_adjusted = ndimage.generic_filter(scipy.vstack((winds_v, bottom_row)),
-                                                 compute_average, footprint=[[1], [1]], mode='reflect')
+    #right_column = winds_u[0, 0, :, -1:]
+    #winds_u_adjusted = ndimage.generic_filter(scipy.vstack((winds_u, right_column)),
+                                                 #compute_average, footprint=[[1], [1]], mode='reflect')
+    #bottom_row = winds_v[0, 0, -1:, :]
+    #winds_v_adjusted = ndimage.generic_filter(scipy.vstack((winds_v, bottom_row)),
+                                                 #compute_average, footprint=[[1], [1]], mode='reflect')
 
     # zoom
     u_zoomed = numpy.array(winds_u)
@@ -227,7 +227,7 @@ def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio)
         longs[i] = -longs[i]
 
 
-    x, y = bmap(longs, lats)
+    x, y = bmap(longs[50:100], lats[50:100])
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')

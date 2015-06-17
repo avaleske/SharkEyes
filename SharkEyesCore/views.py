@@ -28,7 +28,7 @@ def home(request):
     list_of_wind_times = winddatetimes[:len(winddatetimes)/num_wind_defs]
     print list_of_wind_times
 
-    context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True).exclude(id=4).exclude(id=5), 'times':list_of_times, 'windoverlays': wind_overlays_view_data, 'winddefs': OverlayDefinition.objects.filter(id=5), 'windtimes':list_of_wind_times}
+    context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True).exclude(id=4), 'times':list_of_times, 'windoverlays': wind_overlays_view_data, 'winddefs': OverlayDefinition.objects.filter(id=5), 'windtimes':list_of_wind_times}
 
     return render(request, 'index.html', context)
 

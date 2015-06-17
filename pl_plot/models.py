@@ -182,20 +182,15 @@ class OverlayManager(models.Manager):
         task_list = []
         base_definition_ids = cls.get_all_base_definition_ids()
         for fid in file_ids:
-            print fid
             datafile = DataFile.objects.get(pk=fid)
             if datafile.type == "WIND":
-                print "Wind datafile"
                 plotter = WindPlotter(datafile.file.name)
                 number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
                 for t in xrange(number_of_times):
                     task_list.extend(cls.make_wind_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in [5])
             else:
-                print "Not wind"
                 plotter = Plotter(datafile.file.name)
                 number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
-                print "Number of times"
-                print number_of_times
                 for t in xrange(number_of_times):
                     task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in [1,3])
         return task_list
@@ -309,7 +304,7 @@ class OverlayManager(models.Manager):
 
         generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
 
-        model_date = datafile.model_date.date().strftime('%m_%d_%Y')
+        #model_date = datafile.model_date.date().strftime('%m_%d_%Y')
 
         plotter = WindPlotter(datafile.file.name)
 
@@ -333,7 +328,7 @@ class OverlayManager(models.Manager):
                 tile_dir=tile_dir,
                 is_tiled=False,
                 zoom_levels=None,
-                applies_at_datetime=model_date+timedelta(hours=(time_index*3))
+                applies_at_datetime=generated_datetime #model_date+timedelta(hours=(time_index*3))
             )
 
             overlay.save()
