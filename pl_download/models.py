@@ -183,9 +183,9 @@ class DataFileManager(models.Manager):
 
             datafile = DataFile(
                 type='WIND',
-                download_datetime=current_datetime,
-                generated_datetime=modified_datetime,
-                model_date = timezone.now(),
+                download_datetime=timezone.now(),
+                generated_datetime=current_datetime,
+                model_date = modified_datetime,
                 file=local_filename,
             )
             datafile.save()
@@ -306,7 +306,7 @@ class WaveWatchDataFile(models.Model):
 
 class DataFile(models.Model):
     DATA_FILE_TYPES = (
-        ('NCDF', "NetCDF"),( 'WAVE', "WaveNETCDF"),
+        ('NCDF', "NetCDF"), ('WAVE', "WaveNETCDF"), ('WIND', "WindNETCDF")
     )
     type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
     download_datetime = models.DateTimeField()

@@ -9,8 +9,8 @@ from datetime import datetime, time, tzinfo, timedelta
 from django.utils import timezone
 from celery import shared_task
 from pl_plot import plot_functions
-from pl_plot.plotter import Plotter, WaveWatchPlotter
-from pl_download.models import DataFile, DataFileManager,WaveWatchDataFile
+from pl_plot.plotter import Plotter, WaveWatchPlotter, WindPlotter
+from pl_download.models import DataFile, DataFileManager, WaveWatchDataFile
 from django.db.models.aggregates import Max
 from uuid import uuid4
 from scipy.io import netcdf_file
@@ -66,8 +66,7 @@ class OverlayManager(models.Manager):
 #TODO add any any of the definitions we do want here: maybe EXCLUDE the ones we don't want
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
-            applies_at_datetime__lte=timezone.now()+timedelta(days=4)  ,
-
+            applies_at_datetime__lte=timezone.now()+timedelta(days=4),
             definition_id__in=[1, 3]
         )
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
@@ -185,6 +184,12 @@ class OverlayManager(models.Manager):
         for fid in file_ids:
             print fid
             datafile = DataFile.objects.get(pk=fid)
+            if datafile.type == "WIND":
+                plotter = WindPlotter(datafile.file.name)
+                number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
+                for t in xrange(number_of_times):
+                    task_list.extend(cls.make_wind_plot.subtask(args=(5, t, fid)))
+
             plotter = Plotter(datafile.file.name)
             number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
             for t in xrange(number_of_times):
@@ -300,26 +305,22 @@ class OverlayManager(models.Manager):
 
         generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
 
+        model_date = datafile.model_date.date().strftime('%m_%d_%Y')
+
         plotter = WindPlotter(datafile.file.name)
 
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
-
-        new_dir = settings.MEDIA_ROOT + settings.UNCHOPPED_STORAGE_DIR + "/" + "Wind_Forecast_" + generated_datetime
-        if not os.path.exists(new_dir):
-            os.makedirs(new_dir)
-            os.chmod(new_dir,0o777)
-        wind_storage_dir = settings.WIND_STORAGE_DIR + "/" + "Wind_Forecast_" + generated_datetime
 
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
 
         overlay_ids = []
 
+        time_index = time_index + 104 #time index+104 because there are 13 back-casts using 3 hour intervals so there are 104 unecessary time indexes
 
         for zoom_level in zoom_levels:
             plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
-                                                                forecast_index=(time_index+104), storage_dir=settings.UNCHOPPED_STORAGE_DIR,
+                                                                forecast_index=(time_index), storage_dir=settings.UNCHOPPED_STORAGE_DIR,
                                                                 generated_datetime=generated_datetime)
-                #time index+104 because there are 13 back-casts using 3 hour intervals so there are 104 unecessary time indexes
             overlay = Overlay(
                 file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
                 key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
@@ -328,7 +329,7 @@ class OverlayManager(models.Manager):
                 tile_dir=tile_dir,
                 is_tiled=False,
                 zoom_levels=None,
-                applies_at_datetime=timezone.now()
+                applies_at_datetime=model_date+timedelta(hours=(time_index*3))
             )
 
             overlay.save()

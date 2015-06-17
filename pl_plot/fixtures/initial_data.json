@@ -44,5 +44,16 @@
             "display_name_short": "Waves",
             "function_name": "wave_function"
         }
-    }
+    },
+    {
+          "model": "pl_plot.overlaydefinition",
+          "pk": 5,
+          "fields": {
+              "display_name_long": "Wind",
+              "is_base": true,
+              "type": "V",
+              "display_name_short": "Wind",
+              "function_name": "wind_function"
+          }
+      }
 ]

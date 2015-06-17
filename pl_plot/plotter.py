@@ -89,6 +89,9 @@ class WindPlotter:
         #Gives a netcdf file object with default mode of reading permissions only
         self.data_file = open_url(settings.WIND_URL)
 
+    def get_number_of_model_times(self):
+        return 8
+
     def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime):
 
         fig = pyplot.figure()
