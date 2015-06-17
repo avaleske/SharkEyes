@@ -185,15 +185,21 @@ class OverlayManager(models.Manager):
             print fid
             datafile = DataFile.objects.get(pk=fid)
             if datafile.type == "WIND":
+                print "Wind datafile"
                 plotter = WindPlotter(datafile.file.name)
                 number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
                 for t in xrange(number_of_times):
                     task_list.extend(cls.make_wind_plot.subtask(args=(5, t, fid)))
-
-            plotter = Plotter(datafile.file.name)
-            number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
-            for t in xrange(number_of_times):
-                task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True) for od_id in base_definition_ids)
+            else:
+                print "Not wind"
+                plotter = Plotter(datafile.file.name)
+                number_of_times = plotter.get_number_of_model_times()   # yeah, loading the plotter just for this isn't ideal...
+                print "Number of times"
+                print number_of_times
+                for t in xrange(number_of_times):
+                    for od_id in base_definition_ids:
+                        if od_id != 5:
+                            task_list.extend(cls.make_plot.subtask(args=(od_id, t, fid), immutable=True))
         return task_list
 
 

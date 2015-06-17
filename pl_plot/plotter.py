@@ -90,7 +90,7 @@ class WindPlotter:
         self.data_file = open_url(settings.WIND_URL)
 
     def get_number_of_model_times(self):
-        return 8
+        return 24
 
     def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime):
 

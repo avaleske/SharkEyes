@@ -199,12 +199,14 @@ class DataFileManager(models.Manager):
     @classmethod
     def get_next_few_days_files_from_db(cls):
         next_few_days_of_files = DataFile.objects.filter(
-            model_date__gte=(timezone.now()-timedelta(days=1)).date(),
-            model_date__lte=(timezone.now()+timedelta(days=4)).date()
+            #model_date__gte=(timezone.now()-timedelta(days=1)).date(),
+            #model_date__lte=(timezone.now()+timedelta(days=4)).date()
         )
 
         #Select the most recent within each model date and type (ie wave or SST)
         and_the_newest_for_each_model_date = next_few_days_of_files.values('model_date', 'type').annotate(newest_generation_time=Max('generated_datetime'))
+        print "from pl_download"
+        print and_the_newest_for_each_model_date
 
         # if we expected a lot of new files, this would be bad (we're making a Q object for each file we want, basically)
         q_objects = []
