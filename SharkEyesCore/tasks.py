@@ -29,13 +29,16 @@ def do_pipeline():
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
-    print "Plot task list"
-    print plot_task_list
+    print "Plot tasks:"
+    for each in plot_task_list:
+        print each
 
     # create a task chain of (plot, tile) for each plot, and group them
     job = group(chain(pt, tile_overlay.s()) for pt in plot_task_list)
 
-    print "Whatever else"
+    print "jobs:"
+    #for each in job:
+        #print each
     # and run the group.
     result = job.apply_async()
     return result
