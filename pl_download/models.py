@@ -185,7 +185,7 @@ class DataFileManager(models.Manager):
                 type='WIND',
                 download_datetime=timezone.now(),
                 generated_datetime=current_datetime,
-                model_date = modified_datetime,
+                model_date=current_datetime,
                 file=local_filename,
             )
             datafile.save()
@@ -199,8 +199,8 @@ class DataFileManager(models.Manager):
     @classmethod
     def get_next_few_days_files_from_db(cls):
         next_few_days_of_files = DataFile.objects.filter(
-            #model_date__gte=(timezone.now()-timedelta(days=1)).date(),
-            #model_date__lte=(timezone.now()+timedelta(days=4)).date()
+            model_date__gte=(timezone.now()-timedelta(days=1)).date(),
+            model_date__lte=(timezone.now()+timedelta(days=4)).date()
         )
 
         #Select the most recent within each model date and type (ie wave or SST)

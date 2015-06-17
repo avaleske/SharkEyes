@@ -304,8 +304,6 @@ class OverlayManager(models.Manager):
 
         generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
 
-        #model_date = datafile.model_date.date().strftime('%m_%d_%Y')
-
         plotter = WindPlotter(datafile.file.name)
 
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
@@ -313,8 +311,6 @@ class OverlayManager(models.Manager):
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
 
         overlay_ids = []
-
-        time_index = time_index + 104 #time index+104 because there are 13 back-casts using 3 hour intervals so there are 104 unecessary time indexes
 
         for zoom_level in zoom_levels:
             plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
@@ -328,7 +324,7 @@ class OverlayManager(models.Manager):
                 tile_dir=tile_dir,
                 is_tiled=False,
                 zoom_levels=None,
-                applies_at_datetime=generated_datetime #model_date+timedelta(hours=(time_index*3))
+                applies_at_datetime= datafile.model_date+timedelta(hours=(time_index*3))
             )
 
             overlay.save()
