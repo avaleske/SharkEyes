@@ -104,7 +104,9 @@ class DataFileManager(models.Manager):
         destination_directory = os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR)
 
         #file names might need to be created dynamically in the future if ftp site changes
-        file_name = "outer.nc"
+        #outer.nc is the low-resolution grid, osuww3.nc is the grid with both high- and low-res data compiled into one.
+        #file_name = "outer.nc"
+        file_name = "osuww3.nc"
         #static_file_names = ["shelf1.nc", "shelf2.nc", "shelf3.nc"]
 
         #Connect to FTP site to get the file modification data

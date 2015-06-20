@@ -50,9 +50,15 @@ class WaveWatchPlotter:
         # window cropped by picking lat and lon corners
         bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
                        resolution='h', area_thresh=1.0,
-                       llcrnrlat=lats[0], urcrnrlat=lats[-1],
-                       llcrnrlon=longs[0], urcrnrlon=longs[-1],
-                       ax=ax, epsg=4326)
+                       llcrnrlat=lats[0][0], urcrnrlat=lats[-1][0],
+                       llcrnrlon=longs[0][0], urcrnrlon=longs[-1][-1],
+                      ax=ax, epsg=4326)
+
+        # bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
+        #                resolution='h', area_thresh=1.0,
+        #                llcrnrlat=lats[0], urcrnrlat=lats[-1],
+        #                llcrnrlon=longs[0], urcrnrlon=longs[-1],
+        #                ax=ax, epsg=4326)
 
         plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax)
 
