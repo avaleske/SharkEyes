@@ -47,7 +47,11 @@ h2 {
 }
 
 #date-time{
+    margin-left:5px;
+    margin-right:5px;
+}
 
+#wind-date-time{
     margin-left:5px;
     margin-right:5px;
 }

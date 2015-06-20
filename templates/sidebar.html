@@ -6,20 +6,38 @@
 
         <h2>Forecast Date/Time</h2>
 
-        <table>
-            <tr>
-              <td class="col-one"><button id="previous" type="button" disabled="true" onclick="prev_onclick()">Prev</button></td>
-                <td><select id ="date-time">
-                  {% for item in times %}
-                  <option value="{{forloop.counter0}}">{{ item }}</option>
-                  {% endfor %}
-                </select></td>
+        <div id="date1">
+            <table>
+                <tr>
+                   <td class="col-one"><button id="previous" type="button" onclick="prev_onclick()">Prev</button>
+                    <td><select id ="date-time">
+                      {% for item in times %}
+                      <option value="{{forloop.counter0}}">{{ item }}</option>
+                      {% endfor %}
+                    </select></td>
 
-                <td class="col-two"><button id="next" type="button" onclick="next_onclick()">Next</button></td>
+                    <td class="col-one"><button id="next" type="button" onclick="next_onclick()">Next</button></td>
 
-            </tr>
-        </table>
+                </tr>
+            </table>
+        </div>
 
+
+        <!-- The wind date-time box is hidden behind the normal one until the wind toggle is pressed !-->
+        <div id="date2" style="display: none;"><table>
+                <tr>
+                   <td class="col-one"><button id="wind-previous" type="button" onclick="wind_prev_onclick()">Prev</button>
+                    <td><select id ="wind-date-time">
+                       {% for item in windtimes %}
+                      <option value="{{forloop.counter0}}">{{ item }}</option>
+                      {% endfor %}
+                    </select></td>
+
+                    <td class="col-one"><button id="wind-next" type="button" onclick="wind_next_onclick()">Next</button></td>
+
+                </tr>
+            </table>
+        </div>
         <h2>Map Data Layers</h2>
 
       <table>
@@ -78,7 +96,7 @@
         <tr id="latlong-toggle" class="option">
           <td class="col-one">Lat/Long Lines</td>
           <td class="col-two">
-            <div class="toggle toggle">
+            <div class="toggle">
               <input type="checkbox" class="toggle-checkbox" id="t1"></input>
               <label class="toggle-label" for="t1">
               <div class="toggle-inner"></div>
@@ -112,9 +130,9 @@
         <tr>
             <td class="col-one"><button id="feedback_button">Feedback Comment</button></td>
         </tr>
-        <tr>
-            <td class="col-one"><a href="{% url "SharkEyesCore.views.survey" %}" target="_self">Feedback Survey</a></td>
-        </tr>
+        <!--<tr>
+            <td class="col-one"><a href="" target="_self">Feedback Survey</a></td>
+        </tr>-->
     </table>
 	
 	<table>
