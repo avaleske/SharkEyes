@@ -314,8 +314,8 @@ class OverlayManager(models.Manager):
 
         for zoom_level in zoom_levels:
             plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
-                                                                forecast_index=(time_index), storage_dir=settings.UNCHOPPED_STORAGE_DIR,
-                                                                generated_datetime=generated_datetime)
+                                                                forecast_index=time_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
+                                                                generated_datetime=generated_datetime, downsample_ratio=zoom_level[1])
             overlay = Overlay(
                 file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
                 key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
@@ -324,7 +324,7 @@ class OverlayManager(models.Manager):
                 tile_dir=tile_dir,
                 is_tiled=False,
                 zoom_levels=None,
-                applies_at_datetime= datafile.model_date+timedelta(hours=(time_index*3))
+                applies_at_datetime=(datafile.model_date+timedelta(hours=(time_index*3)))
             )
 
             overlay.save()

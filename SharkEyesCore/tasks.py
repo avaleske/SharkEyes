@@ -19,8 +19,8 @@ def do_pipeline():
     DataFileManager.delete_old_files()
     OverlayManager.delete_old_files()
 
-    #if not DataFileManager.is_new_file_to_download():
-        #return None
+    if not DataFileManager.is_new_file_to_download():
+        return None
 
     DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
 
@@ -29,14 +29,13 @@ def do_pipeline():
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
-    print "Plot tasks:"
-    for each in plot_task_list:
-        print each
+    #print "Plot tasks:"
+    #for each in plot_task_list:
+        #print each
 
     # create a task chain of (plot, tile) for each plot, and group them
     job = group(chain(pt, tile_overlay.s()) for pt in plot_task_list)
 
-    print "jobs:"
     #for each in job:
         #print each
     # and run the group.

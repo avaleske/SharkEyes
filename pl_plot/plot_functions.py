@@ -204,12 +204,15 @@ def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio)
         avg = numpy.average(array)
         return numpy.nan if avg > 10**3 else avg
 
-    winds_u = data_file['u-component_of_wind_height_above_ground'][forecast_index, 0, :, :]
-    winds_v = data_file['v-component_of_wind_height_above_ground'][forecast_index, 0, :, :]
+    #forecast_index+104 because there are 13 days of backcasts that we do not need
+    winds_u = data_file['u-component_of_wind_height_above_ground'][forecast_index+104, 0, :, :]
+    winds_v = data_file['v-component_of_wind_height_above_ground'][forecast_index+104, 0, :, :]
 
+
+    #values come from the text file and allow you to convert from the model's coordinate projection system
     info = numpy.loadtxt('latlon.g218')
-    lats = numpy.reshape(info[:, 2], [614, 428])
-    longs = numpy.reshape(info[:, 3], [614, 428])
+    lats = numpy.reshape(info[:, 2], [614,428])
+    longs = numpy.reshape(info[:, 3], [614,428])
 
     for i in range (0, len(longs)):
         longs[i] = -longs[i]
@@ -217,26 +220,26 @@ def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio)
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     winds_u = numpy.reshape(winds_u, (428, 614))
     right_column = winds_u[:, -1:]
-    #print winds_u.shape
-    #print right_column.shape
-    winds_u_adjusted = ndimage.generic_filter(scipy.vstack((winds_u, right_column)),
+    print winds_u.shape
+    print right_column.shape
+    winds_u_adjusted = ndimage.generic_filter(scipy.hstack((winds_u, right_column)),
                                                  compute_average, footprint=[[1], [1]], mode='reflect')
-    winds_v = numpy.reshape(winds_u, (428, 614))
+    winds_v = numpy.reshape(winds_v, (428, 614))
     bottom_row = winds_v[-1:, :]
     winds_v_adjusted = ndimage.generic_filter(scipy.vstack((winds_v, bottom_row)),
                                                  compute_average, footprint=[[1], [1]], mode='reflect')
 
-    # zoom
-    #u_zoomed = crop_and_downsample(winds_u_adjusted, downsample_ratio)
-    #v_zoomed = crop_and_downsample(winds_v_adjusted, downsample_ratio)
+    #This is for calculating the different zoom levels
+    u_zoomed = crop_and_downsample(winds_u_adjusted, downsample_ratio)
+    v_zoomed = crop_and_downsample(winds_v_adjusted, downsample_ratio)
 
-    x, y = bmap(longs, lats)
+    longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
+    lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
 
-    print x.shape
-    print y.shape
+    x, y = bmap(longs_zoomed, lats_zoomed)
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.quiver(x, y, winds_u, winds_v, ax=ax, color='black')
+    overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
 
     quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white',
                                  color='white', labelsep=.5, coordinates='axes')

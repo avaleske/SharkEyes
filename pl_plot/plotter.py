@@ -86,13 +86,13 @@ class WindPlotter:
         self.load_file(file_name)
 
     def load_file(self, file_name):
-        #Gives a netcdf file object with default mode of reading permissions only
+        #This should have some form of error handling as it can fail
         self.data_file = open_url(settings.WIND_URL)
 
     def get_number_of_model_times(self):
-        return 24
+        return 12
 
-    def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime):
+    def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime, downsample_ratio=None):
 
         fig = pyplot.figure()
         key_fig = pyplot.figure(facecolor=settings.OVERLAY_KEY_COLOR)
@@ -101,11 +101,6 @@ class WindPlotter:
 
         key_ax = key_fig.add_axes([0.1, 0.2, 0.6, 0.05])
 
-        #info = numpy.loadtxt('latlon.g218')
-
-        #lats = numpy.reshape(info[:, 2], [614, 428])
-        #longs = numpy.reshape(info[:, 3], [614, 428])
-
         # window cropped by picking lat and lon corners
         bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
                        resolution='h', area_thresh=1.0,
@@ -113,7 +108,7 @@ class WindPlotter:
                        llcrnrlon=-129, urcrnrlon=-123.7265625,
                        ax=ax, epsg=4326)
 
-        plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax, downsample_ratio=None)
+        plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax, downsample_ratio=downsample_ratio)
 
         plot_filename = "{0}_{1}_{2}_{3}.png".format(plot_function.__name__,forecast_index,generated_datetime, uuid4())
         key_filename = "{0}_key_{1}_{2}.png".format(plot_function.__name__,generated_datetime, uuid4())
