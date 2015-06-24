@@ -99,8 +99,13 @@ def tile_wave_watch_overlay(overlay_id):
 
     #wavewatch co-ords are 41.458 to 47.508N and from 127.8 to 123.758W (see Fig. 1).
    # EPSG:4326 seems to be equivalent to WGS84 (which is Simple Cylindrical)
-    translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.8 47.508 "
-                    "-gcp {0} 0 -123.758 47.508 -gcp {0} {1} -123.758 41.458 {2} {3}").format(
+   # translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.8 47.508 "
+       #             "-gcp {0} 0 -123.758 47.508 -gcp {0} {1} -123.758 41.458 {2} {3}").format(
+        #    str(width), str(height), image.path, vrt_path)
+
+    #using the first and last lat/long from the NetCDF file
+    translate_cmd = ("/usr/local/bin/gdal_translate -of VRT -a_srs EPSG:4326 -gcp 0 0 -127.0 47.5 "
+                    "-gcp {0} 0 -123.75 47.5 -gcp {0} {1} -123.75 41.45 {2} {3}").format(
             str(width), str(height), image.path, vrt_path)
 
 #try removing the -a_srs
@@ -116,7 +121,8 @@ def tile_wave_watch_overlay(overlay_id):
         raise Exception("gdal_translate failed")
 
     # Team 1 says: see if we don't need gdal_translate for this to work...
-    params = ['--profile=mercator', '-z', zoom_levels, '-w', 'none', vrt_path, full_tile_dir]
+    #params = ['--profile=mercator', '-z', zoom_levels, '-w', 'none', vrt_path, full_tile_dir]
+    params = ['--profile=geodetic', '-z', zoom_levels, '-w', 'none', vrt_path, full_tile_dir]
     tile_generator = GDAL2Tiles(params)
     tile_generator.process()
 

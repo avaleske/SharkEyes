@@ -58,9 +58,9 @@ class OverlayManager(models.Manager):
         # Pick how many days into the future and past we want to display overlays for
 
 
-#TODO put in the ISBASE
+#TODO put in the ISBASE set back to -hours = 2
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=4),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
             is_tiled=True,
         )
@@ -101,6 +101,8 @@ class OverlayManager(models.Manager):
         #Get the distinct dates where there is an SST, currents, and wave overlay
         date_overlap = next_few_days_of_overlays.filter(applies_at_datetime__in=list(sst_dates))\
             .filter(applies_at_datetime__in=list(wave_dates)).values_list('applies_at_datetime', flat=True).distinct()
+
+        print "date overlap:"
         for each in date_overlap:
             print each
 
@@ -179,6 +181,42 @@ class OverlayManager(models.Manager):
             Overlay.delete(eachfile)
 
         return True
+
+    @staticmethod
+
+    def get_data(file_id):
+        datafile = DataFile.objects.get(pk=file_id)
+        file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
+        variable_names_in_file = file.variables.keys()
+        print variable_names_in_file
+        # # This prints all the wave height data
+
+
+        # longs = [item for sublist in file.variables['longitude'][:1] for item in sublist]
+        # print "longs:"
+        # for each in longs:
+        #     print each
+        # lats = file.variables['latitude'][:, 0]
+        # print "lats:"
+        # for each in lats:
+        #     print each
+
+        all_day_height = file.variables['HTSGW_surface'][:, :, :]
+        all_day_lat = file.variables['latitude'][:, :]
+        all_day_long = file.variables['longitude'][:, :]
+
+        just_this_forecast_height = all_day_height[0][:1, :]
+        just_this_forecast_lat = all_day_lat[ :,0]
+        just_this_forecast_long= all_day_long[0][ :]
+        print "\n\n\nWAVE HEIGHTS "
+        for each in just_this_forecast_height:
+            print each
+
+        print "\n\n LATS:"
+        print just_this_forecast_lat
+
+        print "\n\n LONGS:"
+        print just_this_forecast_long
 
 
     @staticmethod
