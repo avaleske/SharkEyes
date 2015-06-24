@@ -187,6 +187,9 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
 
     x, y = bmap(longs_zoomed, lats_zoomed)
 
+    print x
+    print y
+
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
 
@@ -208,35 +211,42 @@ def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio)
     winds_u = data_file['u-component_of_wind_height_above_ground'][forecast_index+104, 0, :, :]
     winds_v = data_file['v-component_of_wind_height_above_ground'][forecast_index+104, 0, :, :]
 
-
     #values come from the text file and allow you to convert from the model's coordinate projection system
     info = numpy.loadtxt('latlon.g218')
-    lats = numpy.reshape(info[:, 2], [614,428])
-    longs = numpy.reshape(info[:, 3], [614,428])
+    lats = numpy.reshape(info[:, 2], [428,614])
+    longs = numpy.reshape(info[:, 3], [428,614])
+    #Cutting down plotting region
+    lats = lats[233:311,100:250]
+    longs = longs[233:311,100:250]
 
     for i in range (0, len(longs)):
         longs[i] = -longs[i]
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
     winds_u = numpy.reshape(winds_u, (428, 614))
+    winds_u = winds_u[233:311,100:250]
+    winds_v = numpy.reshape(winds_v, (428, 614))
+    winds_v = winds_v[233:311,100:250]
+
     right_column = winds_u[:, -1:]
-    print winds_u.shape
-    print right_column.shape
     winds_u_adjusted = ndimage.generic_filter(scipy.hstack((winds_u, right_column)),
                                                  compute_average, footprint=[[1], [1]], mode='reflect')
-    winds_v = numpy.reshape(winds_v, (428, 614))
     bottom_row = winds_v[-1:, :]
     winds_v_adjusted = ndimage.generic_filter(scipy.vstack((winds_v, bottom_row)),
-                                                 compute_average, footprint=[[1], [1]], mode='reflect')
+                                                compute_average, footprint=[[1], [1]], mode='reflect')
 
     #This is for calculating the different zoom levels
-    u_zoomed = crop_and_downsample(winds_u_adjusted, downsample_ratio)
-    v_zoomed = crop_and_downsample(winds_v_adjusted, downsample_ratio)
+    u_zoomed = crop_and_downsample(winds_u_adjusted, 1)
+    v_zoomed = crop_and_downsample(winds_v_adjusted, 1)
 
-    longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
-    lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
+    longs_zoomed = crop_and_downsample(longs, 1, False)
+    lats_zoomed = crop_and_downsample(lats, 1, False)
+
 
     x, y = bmap(longs_zoomed, lats_zoomed)
+
+    u_zoomed = u_zoomed[:,:150]
+    v_zoomed = v_zoomed[:78,:]
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
@@ -260,7 +270,7 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
                                                     for j in range(downsample_ratio)]), axis=0)
     else:
         zoomed_array = cropped_array[::downsample_ratio, ::downsample_ratio]
-    return zoomed_array
+    return cropped_array
 
 
 def get_modified_jet_colormap():

@@ -92,6 +92,13 @@ class WindPlotter:
     def get_number_of_model_times(self):
         return 12
 
+    def get_time_at_oceantime_index(self, index):
+        dates = self.data_file['time']
+        dateString = dates.units #dates.units lists how far back the forecast goes (13 days from current)
+        dateString = dateString[11:] #[11:] to get rid of text before the date
+        current_datetime = (datetime.strptime(dateString, "%Y-%m-%dT%H:%M:%SZ")+timedelta(days=13, hours=index)) #should give us the current day
+        return current_datetime
+
     def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime, downsample_ratio=None):
 
         fig = pyplot.figure()
@@ -104,7 +111,7 @@ class WindPlotter:
         # window cropped by picking lat and lon corners
         bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
                        resolution='h', area_thresh=1.0,
-                       llcrnrlat=40.5833284543, urcrnrlat=47.4999927992,
+                       llcrnrlat=40.58332845, urcrnrlat=47.4999928,
                        llcrnrlon=-129, urcrnrlon=-123.7265625,
                        ax=ax, epsg=4326)
 

@@ -67,11 +67,12 @@ class OverlayManager(models.Manager):
         next_few_days_of_overlays = Overlay.objects.filter(
             applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
-            definition_id__in=[1, 3]
         )
         that_are_tiled = next_few_days_of_overlays.filter(is_tiled=True)
         and_the_newest_for_each = that_are_tiled.values('definition', 'applies_at_datetime')\
             .annotate(newest_id=Max('id'))
+        print "and_the_new"
+        print and_the_newest_for_each
         ids_of_these = and_the_newest_for_each.values_list('newest_id', flat=True)
         # (Yay lazy evaluation...)
 
@@ -294,15 +295,13 @@ class OverlayManager(models.Manager):
     @staticmethod
     @shared_task(name='pl_plot.make_wind_plot')
     def make_wind_plot(overlay_definition_id, time_index=0, file_id =None):
-        zoom_levels_for_wind = [('2-7', 4), ('8-10', 2)]
-        zoom_levels = zoom_levels_for_wind
 
         if file_id is None:
             datafile = DataFile.objects.filter(type='WIND').latest('generated_datetime')
         else:
             datafile = DataFile.objects.get(pk=file_id)
 
-        generated_datetime = datafile.generated_datetime.date().strftime('%m_%d_%Y')
+        generated_datetime = datafile.generated_datetime.strftime('%m_%d_%Y')
 
         plotter = WindPlotter(datafile.file.name)
 
@@ -312,23 +311,22 @@ class OverlayManager(models.Manager):
 
         overlay_ids = []
 
-        for zoom_level in zoom_levels:
-            plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
-                                                                forecast_index=time_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
-                                                                generated_datetime=generated_datetime, downsample_ratio=zoom_level[1])
-            overlay = Overlay(
-                file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
-                key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
-                created_datetime=timezone.now(),
-                definition_id=overlay_definition_id,
-                tile_dir=tile_dir,
-                is_tiled=False,
-                zoom_levels=None,
-                applies_at_datetime=(datafile.model_date+timedelta(hours=(time_index*3)))
-            )
+        plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
+                                                            forecast_index=time_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
+                                                            generated_datetime=generated_datetime, downsample_ratio=0)
+        overlay = Overlay(
+            file=os.path.join(settings.UNCHOPPED_STORAGE_DIR, plot_filename),
+            key=os.path.join(settings.KEY_STORAGE_DIR, key_filename),
+            created_datetime=timezone.now(),
+            definition_id=overlay_definition_id,
+            tile_dir=tile_dir,
+            is_tiled=False,
+            zoom_levels=None,
+            applies_at_datetime=datafile.generated_datetime+timedelta(hours=(time_index*3))
+        )
 
-            overlay.save()
-            overlay_ids.append(overlay.id)
+        overlay.save()
+        overlay_ids.append(overlay.id)
 
     @staticmethod
     @shared_task(name='pl_plot.make_plot')
