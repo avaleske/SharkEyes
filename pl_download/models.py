@@ -122,7 +122,6 @@ class DataFileManager(models.Manager):
         # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
            model_date=modified_datetime,
-           #file__startswith="OuterGrid",
            type='WAVE'
         )
         if not matches_old_file:
@@ -232,7 +231,7 @@ class DataFileManager(models.Manager):
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # NETCDF files
-        #delete files whose model date is earlier than how old we want to keep.
+        # delete files whose model date is earlier than how old we want to keep.
         old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)
 
         # Delete the file items from the database, and the actual image files.

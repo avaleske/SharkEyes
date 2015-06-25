@@ -26,24 +26,19 @@ def get_rho_mask(data_file):
 def wave_function(ax, data_file, bmap, key_ax, forecast_index):
 
     #grab longitude and latitude from netCDF file
-    #for old, OuterGrid format
+    #for old, OuterGrid format which was lower resolution
     #longs = data_file.variables['longitude'][:]
     #lats = data_file.variables['latitude'][:]
 
-    #for new format
+    # If we are using the file with merged fields (both high-res and low-res data) provided
+    # by Tuba
     longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
     lats = data_file.variables['latitude'][:, 0]
 
     #get the wave height data from netCDF file
     all_day = data_file.variables['HTSGW_surface'][:, :, :]
-    #print "all day"
-    #for each in all_day:
-     #   print each
 
     just_this_forecast = all_day[forecast_index][:1, :]
-    print "\n\n\njust this forecast"
-    for each in just_this_forecast:
-        print each
 
     #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
     x,y = numpy.meshgrid(longs,lats)
@@ -53,16 +48,12 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     #so we are masking all data over 1000
     #heights = numpy.ma.masked_greater(all_day[forecast_index][:][:], 1000)
     heights = np.ma.masked_array(all_day[forecast_index][:, :],np.isnan(all_day[forecast_index][:,:]))
-    print "\nheights "
-    for each in heights:
-        print each
 
     #get the max and min period wave period for the day: used to set color contours
     min_period = int(math.floor(numpy.amin(heights)))
-    print "\n\nmin = ", min_period
+
     #max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
     max_period = int(math.ceil(numpy.amax(heights)))
-    print "max = ", max_period
 
     #Allocates colors to the data by setting the range of the data and by setting color increments
     contour_range = max_period - min_period

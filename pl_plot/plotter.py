@@ -48,17 +48,14 @@ class WaveWatchPlotter:
         lats = self.data_file.variables['latitude'][:]
 
         # window cropped by picking lat and lon corners
-     #   bmap = Basemap(projection='cea',                         #A cylindrical, conformal projection.
-     #                  resolution='h', area_thresh=1.0,
-      #                 llcrnrlat=lats[0][0], urcrnrlat=lats[-1][0],
-       #                llcrnrlon=longs[0][0], urcrnrlon=longs[-1][-1],
-        #              ax=ax, epsg=4326)
-
+        # We are using the Mercator projection, because that is what Google Maps wants. The inputs should
+        # probably be just plain latitude and longitude, i.e. they should be in unprojected form when they are passed in.
         bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
-                        resolution='h', area_thresh=1.0,
-                        llcrnrlat=lats[0], urcrnrlat=lats[-1],
-                       llcrnrlon=longs[0], urcrnrlon=longs[-1],
+                       resolution='h', area_thresh=1.0,
+                       llcrnrlat=lats[0][0], urcrnrlat=lats[-1][0],
+                       llcrnrlon=longs[0][0], urcrnrlon=longs[-1][-1],
                       ax=ax, epsg=4326)
+
 
         plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax)
 
@@ -72,11 +69,6 @@ class WaveWatchPlotter:
              transparent=True, frameon=False)
         pyplot.close(fig)
 
-       # if forecast_index == 0:
-            #key_fig.savefig(
-            #     os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
-             #    dpi=500, bbox_inches='tight', pad_inches=0,
-             #    transparent=True, facecolor=key_fig.get_facecolor())
         key_fig.savefig(
                  os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
                  dpi=500, bbox_inches='tight', pad_inches=0,
