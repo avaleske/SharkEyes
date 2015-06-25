@@ -105,7 +105,9 @@ class DataFileManager(models.Manager):
         destination_directory = os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR)
 
         #file names might need to be created dynamically in the future if ftp site changes
-        file_name = "outer.nc"
+        #outer.nc is the low-resolution grid, osuww3.nc is the grid with both high- and low-res data compiled into one.
+        #file_name = "outer.nc"
+        file_name = "osuww3.nc"
         #static_file_names = ["shelf1.nc", "shelf2.nc", "shelf3.nc"]
 
         #Connect to FTP site to get the file modification data
@@ -121,7 +123,6 @@ class DataFileManager(models.Manager):
         # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
            model_date=modified_datetime,
-           #file__startswith="OuterGrid",
            type='WAVE'
         )
         if not matches_old_file:
@@ -282,7 +283,7 @@ class DataFileManager(models.Manager):
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # NETCDF files
-        #delete files whose model date is earlier than how old we want to keep.
+        # delete files whose model date is earlier than how old we want to keep.
         old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)
 
         # Delete the file items from the database, and the actual image files.
