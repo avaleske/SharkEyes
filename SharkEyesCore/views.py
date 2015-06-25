@@ -10,7 +10,8 @@ from django.http import HttpResponse
 
 #This is where we associate the Javascript variables (overlays, defs etc) with the Django objects from the database.
 def home(request):
-    overlays_view_data = OverlayManager.get_next_few_days_of_tiled_overlays().exclude(definition_id=5)
+    #overlays_view_data = OverlayManager.get_next_few_days_of_tiled_overlays().exclude(definition_id=5)
+    overlays_view_data = OverlayManager.get_next_few_days_of_tiled_overlays()
     #Wind overlay is different from the main overlay due to the time intervals
     wind_overlays_view_data = overlays_view_data.filter(definition_id=5)
 
