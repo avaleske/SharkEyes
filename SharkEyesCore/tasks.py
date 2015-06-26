@@ -16,13 +16,18 @@ def add(a, b):
 
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
+    print "TASKS: before deleting files"
 
     DataFileManager.delete_old_files()
+    print "TASKS: after deleting Datafiles"
     OverlayManager.delete_old_files()
+    print "TASKS: after deleting Overlays"
 
     wave_watch_files = DataFileManager.get_latest_wave_watch_files()
+    print "TASKS: after getting wave files"
 
     other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
+    print "TASKS: after getting sst/currents files"
 
     # If no new files were returned, don't plot or tile anything.
     if not wave_watch_files and not other_files:
