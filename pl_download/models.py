@@ -77,10 +77,11 @@ class DataFileManager(models.Manager):
         new_file_ids = []
 
         for server_filename, model_date, modified_datetime in files_to_retrieve:
+            print "pl_download: before sst download"
             url = urljoin(settings.BASE_NETCDF_URL, server_filename)
             local_filename = "{0}_{1}.nc".format(model_date, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename)) # this also needs a try/catch
-
+            print "pl_download: after getting sst file"
             datafile = DataFile(
                 type='NCDF',
                 download_datetime=timezone.now(),
@@ -89,6 +90,7 @@ class DataFileManager(models.Manager):
                 file=local_filename,
             )
             datafile.save()
+            print "pl_download: after saving SST to database"
 
             new_file_ids.append(datafile.id)
 
@@ -126,11 +128,14 @@ class DataFileManager(models.Manager):
            type='WAVE'
         )
         if not matches_old_file:
+
+            print "pl_download: starting to get a Wave file"
+
             #Create File Name and Download actual File into media folder
             url = urljoin(settings.WAVE_WATCH_URL, file_name)
             local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
-
+            print "pl_download: got the file"
             #Save the File name into the Database
             datafile = DataFile(
                 type='WAVE',
@@ -141,6 +146,7 @@ class DataFileManager(models.Manager):
             )
 
             datafile.save()
+            print "pl_download: saved item to DB"
 
             new_file_ids.append(datafile.id)
 

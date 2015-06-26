@@ -10,6 +10,12 @@ np.set_printoptions(threshold=np.inf)
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
 NUM_COLOR_LEVELS = 80
+NUM_COLOR_LEVELS_FOR_WAVES = 80
+
+#These heights are in meters
+MIN_WAVE_HEIGHT = 0
+MAX_WAVE_HEIGHT = 6
+METERS_TO_FEET = 3.28
 
 
 def get_rho_mask(data_file):
@@ -50,20 +56,27 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     heights = np.ma.masked_array(all_day[forecast_index][:, :],np.isnan(all_day[forecast_index][:,:]))
 
     #get the max and min period wave period for the day: used to set color contours
-    min_period = int(math.floor(numpy.amin(heights)))
+    #min_period = int(math.floor(numpy.amin(heights)))
+
+    #Min period is now in feet
+    min_period = MIN_WAVE_HEIGHT*METERS_TO_FEET
 
     #max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
-    max_period = int(math.ceil(numpy.amax(heights)))
+    #max_period = int(math.ceil(numpy.amax(heights)))
+    # Max period is now in feet
+    max_period = MAX_WAVE_HEIGHT*METERS_TO_FEET
 
     #Allocates colors to the data by setting the range of the data and by setting color increments
     contour_range = max_period - min_period
-    contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS
+    contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS_FOR_WAVES
+
+    #Now the contour range
     color_levels = []
-    for i in xrange(NUM_COLOR_LEVELS+1):
+    for i in xrange(NUM_COLOR_LEVELS_FOR_WAVES+1):
         color_levels.append(min_period+1 + i * contour_range_inc)
 
     #Fill the contours with the colors
-    overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap())
+    overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap_for_waves())
 
     #Create the color bar
     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
@@ -72,12 +85,16 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     cbar.ax.xaxis.set_tick_params(labelcolor='white')
 
     #todo DIVISION by ZERO
-    locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS))[::10]    # we just want every sixth label
+    locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS_FOR_WAVES))[::10]    # we just want every sixth label
     float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
+
+    print "float  labels"
+    for each in float_labels:
+        print each
     labels = ["%.1f" % num for num in float_labels]
     cbar.ax.xaxis.set_ticks(locations)
     cbar.ax.xaxis.set_ticklabels(labels)
-    cbar.set_label("Wave Height (m)")
+    cbar.set_label("Wave Height (feet)")
 
 
 def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
@@ -300,6 +317,42 @@ def get_modified_jet_colormap():
                   (0.11, .7, .7),
                   (0.34, 1, 1),
                   (0.5, .9, .9),
+                  (0.75, 0, 0),
+                  (1, 0, 0))
+    }
+    return colors.LinearSegmentedColormap('modified_jet', modified_jet_cmap_dict, 256)
+
+
+def get_modified_jet_colormap_for_waves():
+    modified_jet_cmap_dict = {
+        'red': ((0., .0, .0),
+                (0.3, .5, .5),
+                (0.4, .6, .6),
+                (0.45, .8, .8),
+                (0.5, 1, 1),
+                (0.55, 1, 1),
+                (0.6, 1, 1),
+                (0.65, 1, 1),
+                (0.87, 1, 1),
+                (1, 0.4, 0.4)),
+        'green': ((0., .5, .5),
+                   (0.15, .9, .9),
+                   (0.3, 1, 1),
+                   (0.4, 1, 1),
+                   (0.5, 1, 1),
+                   (0.65, .7, .7),
+                   (0.71, .5, .5)
+                   (0.87, .1, .1),
+                   (0.92, 0.0, 0.0),
+                   (0.99, .0, .0),
+                   (1, 0, 0)),
+        'blue': ((0., .5, .5),
+                  (0.15, 0.9, 0.9),
+                  (0.2, .6, .6),
+                  (0.34, .4, .4),
+                  (0.4, .2, .2),
+                  (0.5, .7, .7),
+                  (0.6, .2, .2),
                   (0.75, 0, 0),
                   (1, 0, 0))
     }
