@@ -22,7 +22,8 @@ CELERYEV="$ENV_PYTHON $CELERYD_CHDIR/manage.py celerycam"
 CELERYCTL="$ENV_PYTHON $CELERYD_CHDIR/manage.py celeryctl"
 
 # Extra arguments
-CELERYD_OPTS=" --time-limit=1200 --concurrency=4 --loglevel=DEBUG --events"
+# 45-minute time-out because 20 minutes didn't seem to be enough for WaveWatch file downloads
+CELERYD_OPTS=" --time-limit=2700 --concurrency=4 --loglevel=DEBUG --events"
 
 # Create log/pid dirs, if they don't already exist
 CELERY_CREATE_DIRS=1
