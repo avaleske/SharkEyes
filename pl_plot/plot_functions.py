@@ -10,11 +10,11 @@ np.set_printoptions(threshold=np.inf)
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
 NUM_COLOR_LEVELS = 80
-NUM_COLOR_LEVELS_FOR_WAVES = 80
+NUM_COLOR_LEVELS_FOR_WAVES = 120
 
 #These heights are in meters
 MIN_WAVE_HEIGHT = 0
-MAX_WAVE_HEIGHT = 6
+MAX_WAVE_HEIGHT = 7
 METERS_TO_FEET = 3.28
 
 
@@ -327,30 +327,25 @@ def get_modified_jet_colormap_for_waves():
     modified_jet_cmap_dict = {
         'red': ((0., .0, .0),
                 (0.3, .5, .5),
-                (0.4, .6, .6),
+                (0.4, .7, .7),
                 (0.45, .8, .8),
                 (0.5, 1, 1),
                 (0.55, 1, 1),
                 (0.6, 1, 1),
                 (0.65, 1, 1),
-                (0.87, 1, 1),
+                (0.85, 1, 1),
                 (1, 0.4, 0.4)),
-        'green': ((0., .5, .5),
-                   (0.15, .9, .9),
-                   (0.3, 1, 1),
-
+        'green': ((0., .4, .4),
+                   (0.2, 1, 1),
                    (0.5, 1, 1),
                    (0.65, .7, .7),
-                   (0.71, .5, .5),
-                   (0.87, .1, .1),
-                   (0.92, 0.0, 0.0),
+                   (0.8, .45, .45),
+                   (0.92, 0.1, 0.1),
                    (0.99, .0, .0),
                    (1, 0, 0)),
-        'blue': ((0., .5, .5),
-                  (0.15, 0.9, 0.9),
-                  (0.2, .6, .6),
-                  (0.34, .4, .4),
-                  (0.4, .2, .2),
+        'blue': ((0., .4, .4),
+                  (0.2, 1, 1),
+                  (0.4, .3, .3),
                   (0.5, .7, .7),
                   (0.6, .2, .2),
                   (0.75, 0, 0),
