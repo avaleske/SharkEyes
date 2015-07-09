@@ -65,6 +65,13 @@ def production():
     env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
     env.branch = 'master'
 
+def production_pacifico():
+    env.user = 'developer'
+    hostname = 's-pacifico.coas.oregonstate.edu'
+    port = 22
+    env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
+    env.branch = 'master'
+
 
 def install_prereqs():
     #handle selinux
