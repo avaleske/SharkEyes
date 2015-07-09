@@ -65,24 +65,12 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     longs = all_day_long
     lats = all_day_lat
 
-    print "lats:\n", lats
-    print "\n\n longs:", longs
-
     x, y = bmap(longs, lats)
 
-    print "x length is", len(x)   #391  longs
-    print "y length is", len(y)   #727  lats
-    print "y shape is", y.shape
-    print "x shape is", x.shape
-
-
-
-    yy = np.arange(0, y.shape[0], 10)
-    xx = np.arange(0, x.shape[1], 10)
-    print "yy: ", yy
-    print "xx: ", xx
-    print "x thinned:", x[xx]
-    print "y thinned:", y[yy]
+    x_zoomed = crop_and_downsample_wave(x, 10)
+    y_zoomed = crop_and_downsample_wave(y, 10)
+    print "x thinned:", x_zoomed
+    print "y thinned:", y_zoomed
 
     # latitude is getting thinned correctly
     # longitude is not:  it has 1/10 as many arrays, but each ARRAY is not changing.
@@ -90,16 +78,13 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     # takes out a longitude array when it is removed.
     # but do we also need to thin the Longitude arrays separately?
 
-    points = np.meshgrid(yy, xx)
-
-
 
     #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
     #x,y = numpy.meshgrid(longs,lats)
     #x, y = bmap(longs, lats)
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.quiver(x[xx], y[yy], U_downsampled, V_downsampled, ax=ax, color='black', scale=1000, angles='xy')
+    overlay = bmap.quiver(x_zoomed, y_zoomed, U_downsampled, V_downsampled, ax=ax, color='black')
 
     # #grab longitude and latitude from netCDF file
     # #for old, OuterGrid format which was lower resolution
@@ -422,19 +407,19 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
 
 def crop_and_downsample_wave(source_array, downsample_ratio, average=True):
     print "shape is ", source_array.shape
-   # xs = source_array.shape
+    xs = source_array.shape[0]
 
     # Crop off anything extra: i.e. if downsample ratio is 10, and the height % 10 has a remainder of 1, chop off 1 from the height
- #   cropped_array = source_array[ :xs - (xs % int(downsample_ratio))]
+    cropped_array = source_array[ :xs - (xs % int(downsample_ratio))]
   #  if average:
  #       zoomed_array = scipy.nanmean(numpy.concatenate(
    #         [[cropped_array[i::downsample_ratio, j::downsample_ratio]
   #                                                   for i in range(downsample_ratio)]
   #                                                  for j in range(downsample_ratio)]), axis=0)
   #  else:
-   #     zoomed_array = cropped_array[::downsample_ratio, ::downsample_ratio]
-   # return zoomed_array
-    return source_array
+    zoomed_array = cropped_array[::downsample_ratio]
+    return zoomed_array
+    #return source_array
 
 
 def get_modified_jet_colormap():
