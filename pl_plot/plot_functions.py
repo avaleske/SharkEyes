@@ -37,14 +37,6 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     all_day_lat = data_file.variables['latitude'][:, :]
     all_day_long = data_file.variables['longitude'][:, :]
 
-
-    just_this_forecast_height = all_day_height[0][:1, :]
-    just_this_forecast_dir = all_day_direction[0][:1, :]
-    print "shape of just_this_direction = ", just_this_forecast_dir.shape
-    just_this_forecast_lat = all_day_lat[ :,0]
-    just_this_forecast_long= all_day_long[0][ :]
-
-
     length = 1. # want to make a unit vector
 
     #masked_directions = np.ma.masked_where(np.isnan(all_day_direction[forecast_index][:1,:]),all_day_direction[forecast_index][:1, :])
@@ -52,30 +44,41 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     #print " directions:", directions
     vectors_2d = np.vstack((length * np.cos(directions), length * np.sin(directions))).T
 
-
     #print "whole array of u and v", vectors_2d
-
 
     U = vectors_2d[:, :1].flatten()
     V = vectors_2d[:,1:2].flatten()
 
-    print "U:", U
-
-    print "V:", V
-
+    #print "U:", U
+    #print "V:", V
 
     U_downsampled = crop_and_downsample_wave(U, 10, True)
     V_downsampled = crop_and_downsample_wave(V, 10, True)
 
     #print "U downsampled:", U_downsampled
     #print "V downsampled:", V_downsampled
-    longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
-    lats = data_file.variables['latitude'][:, 0]
+    #longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
+    #lats = data_file.variables['latitude'][:, 0]
+
+    #longs = data_file.variables['longitude'][:, 3]
+    #lats = data_file.variables['latitude'][:, 0]
+    longs = all_day_long
+    lats = all_day_lat
+
+    print "lats:\n", lats
+    print "\n\n longs:", longs
 
     x, y = bmap(longs, lats)
 
+    print "x length is", len(x)   #391  longs
+    print "y length is", len(y)   #727  lats
+    print "y shape is", y.shape
+    print "x shape is", x.shape
+
+
+
     yy = np.arange(0, y.shape[0], 10)
-    xx = np.arange(0, x.shape[1], 10)
+    xx = np.arange(0, len(x), 10)
 
     points = np.meshgrid(yy, xx)
 
@@ -85,10 +88,8 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     #x,y = numpy.meshgrid(longs,lats)
     #x, y = bmap(longs, lats)
 
-
-
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.quiver(x[points], y[points], U[points], V[points], ax=ax, color='black', scale=1000, angles='xy')
+    overlay = bmap.quiver(x, y, U_downsampled, V_downsampled, ax=ax, color='black', scale=1000, angles='xy')
 
     # #grab longitude and latitude from netCDF file
     # #for old, OuterGrid format which was lower resolution
@@ -169,9 +170,9 @@ def wave_direction_function(ax, data_file, bmap, key_ax, time_index):
 
     vectors_2d = np.vstack((length * np.cos(just_this_forecast_dir), length * np.sin(just_this_forecast_dir))).T
 
-    print "U                V               \n"
-    for u, v in vectors_2d:
-        print u, v
+    #print "U                V               \n"
+    #for u, v in vectors_2d:
+        #print u, v
 
 
  #grab longitude and latitude from netCDF file
@@ -317,6 +318,9 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     rho_mask_zoomed = crop_and_downsample(rho_mask, downsample_ratio)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
+
+    print "lats ", lats
+    print "\n\n\nlongs", longs
     longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
     lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
 
