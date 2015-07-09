@@ -78,7 +78,17 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
 
 
     yy = np.arange(0, y.shape[0], 10)
-    xx = np.arange(0, len(x), 10)
+    xx = np.arange(0, x.shape[1], 10)
+    print "yy: ", yy
+    print "xx: ", xx
+    print "x thinned:", x[xx]
+    print "y thinned:", y[yy]
+
+    # latitude is getting thinned correctly
+    # longitude is not:  it has 1/10 as many arrays, but each ARRAY is not changing.
+    # this DOES work because each latitude
+    # takes out a longitude array when it is removed.
+    # but do we also need to thin the Longitude arrays separately?
 
     points = np.meshgrid(yy, xx)
 
@@ -89,7 +99,7 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     #x, y = bmap(longs, lats)
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.quiver(x, y, U_downsampled, V_downsampled, ax=ax, color='black', scale=1000, angles='xy')
+    overlay = bmap.quiver(x[xx], y[yy], U_downsampled, V_downsampled, ax=ax, color='black', scale=1000, angles='xy')
 
     # #grab longitude and latitude from netCDF file
     # #for old, OuterGrid format which was lower resolution
@@ -299,8 +309,8 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
 
-    print "currents u:", currents_u
-    print "currents v:", currents_v
+    #print "currents u:", currents_u
+    #print "\n\n\ncurrents v:", currents_v
     rho_mask = get_rho_mask(data_file)
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
@@ -314,15 +324,19 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     # zoom
     u_zoomed = crop_and_downsample(currents_u_adjusted, downsample_ratio)
     v_zoomed = crop_and_downsample(currents_v_adjusted, downsample_ratio)
+    #print "\n\n*************************\n\nzoomed u:", u_zoomed
+    #print "zoomed v:",  v_zoomed
     rho_mask[rho_mask == 1] = numpy.nan
     rho_mask_zoomed = crop_and_downsample(rho_mask, downsample_ratio)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
-    print "lats ", lats
-    print "\n\n\nlongs", longs
+    #print "lats ", lats
+   # print "\n\n\nlongs", longs
     longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
     lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
+   # print "lats zoomed:", lats_zoomed
+   # print "longs zoomed", longs_zoomed
 
     u_zoomed[rho_mask_zoomed == 1] = numpy.nan
     v_zoomed[rho_mask_zoomed == 1] = numpy.nan
