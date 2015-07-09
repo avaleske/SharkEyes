@@ -7,6 +7,8 @@ from mpl_toolkits.basemap import Basemap
 import numpy as np
 np.set_printoptions(threshold=np.inf)
 
+
+
 # When you add a new function, add it as a new function definition to fixtures/initial_data.json
 
 NUM_COLOR_LEVELS = 80
@@ -30,8 +32,149 @@ def get_rho_mask(data_file):
 # Wave Heights are measured in meters
 # Data points over 1000 usually mark land
 def wave_function(ax, data_file, bmap, key_ax, forecast_index):
+    all_day_height = data_file.variables['HTSGW_surface'][:, :, :]
+    all_day_direction = data_file.variables['DIRPW_surface'][:,:,:]
+    all_day_lat = data_file.variables['latitude'][:, :]
+    all_day_long = data_file.variables['longitude'][:, :]
 
-    #grab longitude and latitude from netCDF file
+
+    just_this_forecast_height = all_day_height[0][:1, :]
+    just_this_forecast_dir = all_day_direction[0][:1, :]
+    print "shape of just_this_direction = ", just_this_forecast_dir.shape
+    just_this_forecast_lat = all_day_lat[ :,0]
+    just_this_forecast_long= all_day_long[0][ :]
+
+
+    length = 1. # want to make a unit vector
+
+    #masked_directions = np.ma.masked_where(np.isnan(all_day_direction[forecast_index][:1,:]),all_day_direction[forecast_index][:1, :])
+    directions = all_day_direction[forecast_index][:1, :]
+    #print " directions:", directions
+    vectors_2d = np.vstack((length * np.cos(directions), length * np.sin(directions))).T
+
+
+    #print "whole array of u and v", vectors_2d
+
+
+    U = vectors_2d[:, :1].flatten()
+    V = vectors_2d[:,1:2].flatten()
+
+    print "U:", U
+
+    print "V:", V
+
+
+    U_downsampled = crop_and_downsample_wave(U, 10, True)
+    V_downsampled = crop_and_downsample_wave(V, 10, True)
+
+    #print "U downsampled:", U_downsampled
+    #print "V downsampled:", V_downsampled
+    longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
+    lats = data_file.variables['latitude'][:, 0]
+
+    x, y = bmap(longs, lats)
+
+    yy = np.arange(0, y.shape[0], 10)
+    xx = np.arange(0, x.shape[1], 10)
+
+    points = np.meshgrid(yy, xx)
+
+
+
+    #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
+    #x,y = numpy.meshgrid(longs,lats)
+    #x, y = bmap(longs, lats)
+
+
+
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
+    overlay = bmap.quiver(x[points], y[points], U[points], V[points], ax=ax, color='black', scale=1000, angles='xy')
+
+    # #grab longitude and latitude from netCDF file
+    # #for old, OuterGrid format which was lower resolution
+    # #longs = data_file.variables['longitude'][:]
+    # #lats = data_file.variables['latitude'][:]
+    #
+    # # If we are using the file with merged fields (both high-res and low-res data) provided
+    # # by Tuba
+    # longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
+    # lats = data_file.variables['latitude'][:, 0]
+    #
+    # #get the wave height data from netCDF file
+    # all_day = data_file.variables['HTSGW_surface'][:, :, :]
+    #
+    # just_this_forecast = all_day[forecast_index][:1, :]
+    #
+    # #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
+    # x,y = numpy.meshgrid(longs,lats)
+    #
+    # #obtain all forecasts
+    # #heights is measured in meters, if a data point is over 1000 meters it is either not valid or it represents land
+    # #so we are masking all data over 1000
+    # #heights = numpy.ma.masked_greater(all_day[forecast_index][:][:], 1000)
+    # heights = np.ma.masked_array(all_day[forecast_index][:, :],np.isnan(all_day[forecast_index][:,:]))
+    #
+    # #get the max and min period wave period for the day: used to set color contours
+    # #min_period = int(math.floor(numpy.amin(heights)))
+    #
+    # #Min period is now in feet
+    # min_period = MIN_WAVE_HEIGHT*METERS_TO_FEET
+    #
+    # #max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
+    # #max_period = int(math.ceil(numpy.amax(heights)))
+    # # Max period is now in feet
+    # max_period = MAX_WAVE_HEIGHT*METERS_TO_FEET
+    #
+    # #Allocates colors to the data by setting the range of the data and by setting color increments
+    # contour_range = max_period - min_period
+    # contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS_FOR_WAVES
+    #
+    # #Now the contour range
+    # color_levels = []
+    # for i in xrange(NUM_COLOR_LEVELS_FOR_WAVES+1):
+    #     color_levels.append(min_period+1 + i * contour_range_inc)
+    #
+    # #Fill the contours with the colors
+    # overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap_for_waves())
+    #
+    # #Create the color bar
+    # cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
+    # cbar.ax.tick_params(labelsize=10)
+    # cbar.ax.xaxis.label.set_color('white')
+    # cbar.ax.xaxis.set_tick_params(labelcolor='white')
+    #
+    # #todo DIVISION by ZERO
+    # locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS_FOR_WAVES))[::10]    # we just want every sixth label
+    # float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
+    #
+    # print "float  labels"
+    # for each in float_labels:
+    #     print each
+    # labels = ["%.1f" % num for num in float_labels]
+    # cbar.ax.xaxis.set_ticks(locations)
+    # cbar.ax.xaxis.set_ticklabels(labels)
+    # cbar.set_label("Wave Height (feet)")
+
+
+
+def wave_direction_function(ax, data_file, bmap, key_ax, time_index):
+
+    #currents_u = data_file.variables['u'][time_index][29]
+    #currents_v = data_file.variables['v'][time_index][29]
+    #rho_mask = get_rho_mask(data_file)
+    length = 1.
+    all_day_direction = file.variables['DIRPW_surface'][:,:,:]
+
+    just_this_forecast_dir = all_day_direction[0][:1, :]
+
+    vectors_2d = np.vstack((length * np.cos(just_this_forecast_dir), length * np.sin(just_this_forecast_dir))).T
+
+    print "U                V               \n"
+    for u, v in vectors_2d:
+        print u, v
+
+
+ #grab longitude and latitude from netCDF file
     #for old, OuterGrid format which was lower resolution
     #longs = data_file.variables['longitude'][:]
     #lats = data_file.variables['latitude'][:]
@@ -40,61 +183,21 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     # by Tuba
     longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
     lats = data_file.variables['latitude'][:, 0]
-
-    #get the wave height data from netCDF file
-    all_day = data_file.variables['HTSGW_surface'][:, :, :]
-
-    just_this_forecast = all_day[forecast_index][:1, :]
-
-    #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
+ #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
     x,y = numpy.meshgrid(longs,lats)
 
-    #obtain all forecasts
-    #heights is measured in meters, if a data point is over 1000 meters it is either not valid or it represents land
-    #so we are masking all data over 1000
-    #heights = numpy.ma.masked_greater(all_day[forecast_index][:][:], 1000)
-    heights = np.ma.masked_array(all_day[forecast_index][:, :],np.isnan(all_day[forecast_index][:,:]))
 
-    #get the max and min period wave period for the day: used to set color contours
-    #min_period = int(math.floor(numpy.amin(heights)))
 
-    #Min period is now in feet
-    min_period = MIN_WAVE_HEIGHT*METERS_TO_FEET
+    bmap.drawmapboundary(linewidth=0.0, ax=ax)
+    overlay = bmap.quiver(x, y, u, v, ax=ax, color='white')
 
-    #max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
-    #max_period = int(math.ceil(numpy.amax(heights)))
-    # Max period is now in feet
-    max_period = MAX_WAVE_HEIGHT*METERS_TO_FEET
-
-    #Allocates colors to the data by setting the range of the data and by setting color increments
-    contour_range = max_period - min_period
-    contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS_FOR_WAVES
-
-    #Now the contour range
-    color_levels = []
-    for i in xrange(NUM_COLOR_LEVELS_FOR_WAVES+1):
-        color_levels.append(min_period+1 + i * contour_range_inc)
-
-    #Fill the contours with the colors
-    overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap_for_waves())
-
-    #Create the color bar
-    cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
-    cbar.ax.tick_params(labelsize=10)
-    cbar.ax.xaxis.label.set_color('white')
-    cbar.ax.xaxis.set_tick_params(labelcolor='white')
-
-    #todo DIVISION by ZERO
-    locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS_FOR_WAVES))[::10]    # we just want every sixth label
-    float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
-
-    print "float  labels"
-    for each in float_labels:
-        print each
-    labels = ["%.1f" % num for num in float_labels]
-    cbar.ax.xaxis.set_ticks(locations)
-    cbar.ax.xaxis.set_ticklabels(labels)
-    cbar.set_label("Wave Height (feet)")
+    quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white',
+                                 color='white', labelsep=.5, coordinates='axes')
+    quiverkey1 = key_ax.quiverkey(overlay, 3.75, .4, 1*.5144, "1 knot", labelpos='S', labelcolor='white',
+                                  color='white', labelsep=.5, coordinates='axes')
+    quiverkey2 = key_ax.quiverkey(overlay, 6.5, .4, 2*.5144, "2 knots", labelpos='S', labelcolor='white',
+                                  color='white', labelsep=.5, coordinates='axes')
+    key_ax.set_axis_off()
 
 
 def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
@@ -184,6 +287,9 @@ def salt_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
     cbar.set_label("Salinity (PSU)")
 
 
+
+
+
 def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
     def compute_average(array):
         avg = numpy.average(array)
@@ -191,6 +297,9 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
 
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
+
+    print "currents u:", currents_u
+    print "currents v:", currents_v
     rho_mask = get_rho_mask(data_file)
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
@@ -281,6 +390,7 @@ def wind_function(ax, data_file, bmap, key_ax, forecast_index, downsample_ratio)
 
 def crop_and_downsample(source_array, downsample_ratio, average=True):
     ys, xs = source_array.shape
+    print "shape is ", source_array.shape
     cropped_array = source_array[:ys - (ys % int(downsample_ratio)), :xs - (xs % int(downsample_ratio))]
     if average:
         zoomed_array = scipy.nanmean(numpy.concatenate(
@@ -290,6 +400,23 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
     else:
         zoomed_array = cropped_array[::downsample_ratio, ::downsample_ratio]
     return zoomed_array
+
+
+def crop_and_downsample_wave(source_array, downsample_ratio, average=True):
+    print "shape is ", source_array.shape
+   # xs = source_array.shape
+
+    # Crop off anything extra: i.e. if downsample ratio is 10, and the height % 10 has a remainder of 1, chop off 1 from the height
+ #   cropped_array = source_array[ :xs - (xs % int(downsample_ratio))]
+  #  if average:
+ #       zoomed_array = scipy.nanmean(numpy.concatenate(
+   #         [[cropped_array[i::downsample_ratio, j::downsample_ratio]
+  #                                                   for i in range(downsample_ratio)]
+  #                                                  for j in range(downsample_ratio)]), axis=0)
+  #  else:
+   #     zoomed_array = cropped_array[::downsample_ratio, ::downsample_ratio]
+   # return zoomed_array
+    return source_array
 
 
 def get_modified_jet_colormap():

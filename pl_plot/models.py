@@ -16,6 +16,7 @@ from uuid import uuid4
 from scipy.io import netcdf_file
 import numpy
 import shutil
+import numpy as np
 
 # This is how long old files (overlay items in the database, and corresponding items in UNCHOPPED folder)
 HOW_LONG_TO_KEEP_FILES = 5
@@ -188,12 +189,33 @@ class OverlayManager(models.Manager):
         #     print each
 
         all_day_height = file.variables['HTSGW_surface'][:, :, :]
+        all_day_direction = file.variables['DIRPW_surface'][:,:,:]
         all_day_lat = file.variables['latitude'][:, :]
         all_day_long = file.variables['longitude'][:, :]
 
         just_this_forecast_height = all_day_height[0][:1, :]
+        just_this_forecast_dir = all_day_direction[0][:1, :]
         just_this_forecast_lat = all_day_lat[ :,0]
         just_this_forecast_long= all_day_long[0][ :]
+
+
+        length = 1. # make a unit vector
+        all_day_direction = file.variables['DIRPW_surface'][:,:,:]
+
+        just_this_forecast_dir = all_day_direction[0][:1, :]
+
+        vectors_2d = np.vstack((length * np.cos(just_this_forecast_dir), length * np.sin(just_this_forecast_dir))).T
+
+        print "U                V               \n"
+        #for u, v in vectors_2d:
+            #print u, v
+        for each in vectors_2d.items():
+            print each
+
+
+        print "\n\n\n\n\n\n\n\nDIRECTION"
+        for each in just_this_forecast_dir:
+            print each
         print "\n\n\nWAVE HEIGHTS "
         for each in just_this_forecast_height:
             print each
