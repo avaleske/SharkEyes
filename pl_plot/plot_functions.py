@@ -40,23 +40,24 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     length = 1. # want to make a unit vector
 
     #masked_directions = np.ma.masked_where(np.isnan(all_day_direction[forecast_index][:1,:]),all_day_direction[forecast_index][:1, :])
-    directions = all_day_direction[forecast_index][:1, :]
-    #print " directions:", directions
-    vectors_2d = np.vstack((length * np.cos(directions), length * np.sin(directions))).T
+    #directions = all_day_direction[forecast_index][:1, :]
+    directions = all_day_direction[forecast_index, :, :]
 
-    #print "whole array of u and v", vectors_2d
+    U = np.cos(directions)
+    V = np.sin(directions)
 
-    U = vectors_2d[:, :1].flatten()
-    V = vectors_2d[:,1:2].flatten()
+    print "U:", U
+    print "V:", V
 
-    #print "U:", U
-    #print "V:", V
+    #TODO need to flip these: off-shore wave look like they are headed East
+    #TODO also need to thin out the arrows more, and re-scale properly.
+    #status: prints arrows, around coastline 
 
-    U_downsampled = crop_and_downsample_wave(U, 10, True)
-    V_downsampled = crop_and_downsample_wave(V, 10, True)
+    U_downsampled = crop_and_downsample_wave(U, 10)
+    V_downsampled = crop_and_downsample_wave(V, 10)
 
     #print "U downsampled:", U_downsampled
-    #print "V downsampled:", V_downsampled
+    #print "\n\n\n\nV downsampled:", V_downsampled
     #longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
     #lats = data_file.variables['latitude'][:, 0]
 
@@ -65,12 +66,18 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     longs = all_day_long
     lats = all_day_lat
 
+
+    #print "lats:", lats
+    #print "longs:", longs
+    print "lats shape:", lats.shape
+    print "longs shape:", longs.shape
+
     x, y = bmap(longs, lats)
 
     x_zoomed = crop_and_downsample_wave(x, 10)
     y_zoomed = crop_and_downsample_wave(y, 10)
-    print "x thinned:", x_zoomed
-    print "y thinned:", y_zoomed
+    #print "x thinned:", x_zoomed
+    #print "y thinned:", y_zoomed
 
     # latitude is getting thinned correctly
     # longitude is not:  it has 1/10 as many arrays, but each ARRAY is not changing.
@@ -294,8 +301,8 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
 
-    #print "currents u:", currents_u
-    #print "\n\n\ncurrents v:", currents_v
+    print "currents u:", currents_u
+    print "\n\n\ncurrents v:", currents_v
     rho_mask = get_rho_mask(data_file)
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.
@@ -309,19 +316,19 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     # zoom
     u_zoomed = crop_and_downsample(currents_u_adjusted, downsample_ratio)
     v_zoomed = crop_and_downsample(currents_v_adjusted, downsample_ratio)
-    #print "\n\n*************************\n\nzoomed u:", u_zoomed
-    #print "zoomed v:",  v_zoomed
+    print "\n\n*************************\n\nzoomed u shape:", u_zoomed.shape
+    print "zoomed v shape:",  v_zoomed.shape
     rho_mask[rho_mask == 1] = numpy.nan
     rho_mask_zoomed = crop_and_downsample(rho_mask, downsample_ratio)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
-    #print "lats ", lats
-   # print "\n\n\nlongs", longs
+    print "lats ", lats
+    print "\n\n\nlongs", longs
     longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
     lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
-   # print "lats zoomed:", lats_zoomed
-   # print "longs zoomed", longs_zoomed
+    print "lats zoomed shape:", lats_zoomed.shape
+    print "longs zoomed shape", longs_zoomed.shape
 
     u_zoomed[rho_mask_zoomed == 1] = numpy.nan
     v_zoomed[rho_mask_zoomed == 1] = numpy.nan
@@ -406,7 +413,7 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
 
 
 def crop_and_downsample_wave(source_array, downsample_ratio, average=True):
-    print "shape is ", source_array.shape
+
     xs = source_array.shape[0]
 
     # Crop off anything extra: i.e. if downsample ratio is 10, and the height % 10 has a remainder of 1, chop off 1 from the height
@@ -417,7 +424,7 @@ def crop_and_downsample_wave(source_array, downsample_ratio, average=True):
   #                                                   for i in range(downsample_ratio)]
   #                                                  for j in range(downsample_ratio)]), axis=0)
   #  else:
-    zoomed_array = cropped_array[::downsample_ratio]
+    zoomed_array = cropped_array[0:1000:downsample_ratio]
     return zoomed_array
     #return source_array
 
