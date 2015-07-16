@@ -5,7 +5,9 @@ from scipy import ndimage
 import scipy
 from mpl_toolkits.basemap import Basemap
 import numpy as np
-np.set_printoptions(threshold=np.inf)
+np.set_printoptions(threshold=np.inf) # This is helpful for testing purposes:
+# it sets print options so that when you print a large array, it doesn't get truncated in the middle
+# and you can see each element of the array.
 
 
 
@@ -13,6 +15,7 @@ np.set_printoptions(threshold=np.inf)
 
 NUM_COLOR_LEVELS = 80
 NUM_COLOR_LEVELS_FOR_WAVES = 80
+WAVE_DIRECTION_DOWNSAMPLE = 20
 
 #These heights are in meters
 MIN_WAVE_HEIGHT = 0
@@ -30,65 +33,37 @@ def get_rho_mask(data_file):
 # Wave Data comes in 3D arrays (number of forecasts, latitude, longitude)
 # As of right now (March 15) there are 85 forecasts in each netCDF file from 12 pm onward by the hour
 # Wave Heights are measured in meters
+# Wave direction is measured in Degrees, where 360 means waves are coming from the north, traveling southward.
+# 350 would mean waves are traveling from the north-west, headed south-east.
 # Data points over 1000 usually mark land
 def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     all_day_height = data_file.variables['HTSGW_surface'][:, :, :]
     all_day_direction = data_file.variables['DIRPW_surface'][:,:,:]
-    all_day_lat = data_file.variables['latitude'][:, :]
-    all_day_long = data_file.variables['longitude'][:, :]
+    lats = data_file.variables['latitude'][:, :]
+    longs = data_file.variables['longitude'][:, :]
 
-    length = 1. # want to make a unit vector
-
-    #masked_directions = np.ma.masked_where(np.isnan(all_day_direction[forecast_index][:1,:]),all_day_direction[forecast_index][:1, :])
-    #directions = all_day_direction[forecast_index][:1, :]
     directions = all_day_direction[forecast_index, :, :]
+    height = all_day_height[forecast_index, :, :]
+    directions_mod = 90.0 - directions + 180.0
 
-    U = np.cos(directions)
-    V = np.sin(directions)
-
-    print "U:", U
-    print "V:", V
-
-    #TODO need to flip these: off-shore wave look like they are headed East
-    #TODO also need to thin out the arrows more, and re-scale properly.
-    #status: prints arrows, around coastline 
-
-    U_downsampled = crop_and_downsample_wave(U, 10)
-    V_downsampled = crop_and_downsample_wave(V, 10)
-
-    #print "U downsampled:", U_downsampled
-    #print "\n\n\n\nV downsampled:", V_downsampled
-    #longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
-    #lats = data_file.variables['latitude'][:, 0]
-
-    #longs = data_file.variables['longitude'][:, 3]
-    #lats = data_file.variables['latitude'][:, 0]
-    longs = all_day_long
-    lats = all_day_lat
+    index = directions_mod > 180
+    directions_mod[index] = directions_mod[index] - 360;
+    index = directions_mod < -180;
+    directions_mod[index] = directions_mod[index] + 360;
 
 
-    #print "lats:", lats
-    #print "longs:", longs
-    print "lats shape:", lats.shape
-    print "longs shape:", longs.shape
+    # The sine and cosine functions expect Radians, so we use the deg2rad function to convert the
+    # directions, which are in Degrees.
+    U = height*np.cos(np.deg2rad(directions_mod))
+    V = height*np.sin(np.deg2rad(directions_mod))
+
+    U_downsampled = crop_and_downsample_wave(U, WAVE_DIRECTION_DOWNSAMPLE)
+    V_downsampled = crop_and_downsample_wave(V, WAVE_DIRECTION_DOWNSAMPLE)
 
     x, y = bmap(longs, lats)
 
-    x_zoomed = crop_and_downsample_wave(x, 10)
-    y_zoomed = crop_and_downsample_wave(y, 10)
-    #print "x thinned:", x_zoomed
-    #print "y thinned:", y_zoomed
-
-    # latitude is getting thinned correctly
-    # longitude is not:  it has 1/10 as many arrays, but each ARRAY is not changing.
-    # this DOES work because each latitude
-    # takes out a longitude array when it is removed.
-    # but do we also need to thin the Longitude arrays separately?
-
-
-    #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
-    #x,y = numpy.meshgrid(longs,lats)
-    #x, y = bmap(longs, lats)
+    x_zoomed = crop_and_downsample_wave(x, WAVE_DIRECTION_DOWNSAMPLE)
+    y_zoomed = crop_and_downsample_wave(y, WAVE_DIRECTION_DOWNSAMPLE)
 
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x_zoomed, y_zoomed, U_downsampled, V_downsampled, ax=ax, color='black')
@@ -158,49 +133,6 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     # cbar.ax.xaxis.set_ticklabels(labels)
     # cbar.set_label("Wave Height (feet)")
 
-
-
-def wave_direction_function(ax, data_file, bmap, key_ax, time_index):
-
-    #currents_u = data_file.variables['u'][time_index][29]
-    #currents_v = data_file.variables['v'][time_index][29]
-    #rho_mask = get_rho_mask(data_file)
-    length = 1.
-    all_day_direction = file.variables['DIRPW_surface'][:,:,:]
-
-    just_this_forecast_dir = all_day_direction[0][:1, :]
-
-    vectors_2d = np.vstack((length * np.cos(just_this_forecast_dir), length * np.sin(just_this_forecast_dir))).T
-
-    #print "U                V               \n"
-    #for u, v in vectors_2d:
-        #print u, v
-
-
- #grab longitude and latitude from netCDF file
-    #for old, OuterGrid format which was lower resolution
-    #longs = data_file.variables['longitude'][:]
-    #lats = data_file.variables['latitude'][:]
-
-    # If we are using the file with merged fields (both high-res and low-res data) provided
-    # by Tuba
-    longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
-    lats = data_file.variables['latitude'][:, 0]
- #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
-    x,y = numpy.meshgrid(longs,lats)
-
-
-
-    bmap.drawmapboundary(linewidth=0.0, ax=ax)
-    overlay = bmap.quiver(x, y, u, v, ax=ax, color='white')
-
-    quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white',
-                                 color='white', labelsep=.5, coordinates='axes')
-    quiverkey1 = key_ax.quiverkey(overlay, 3.75, .4, 1*.5144, "1 knot", labelpos='S', labelcolor='white',
-                                  color='white', labelsep=.5, coordinates='axes')
-    quiverkey2 = key_ax.quiverkey(overlay, 6.5, .4, 2*.5144, "2 knots", labelpos='S', labelcolor='white',
-                                  color='white', labelsep=.5, coordinates='axes')
-    key_ax.set_axis_off()
 
 
 def sst_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio):
@@ -316,19 +248,13 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     # zoom
     u_zoomed = crop_and_downsample(currents_u_adjusted, downsample_ratio)
     v_zoomed = crop_and_downsample(currents_v_adjusted, downsample_ratio)
-    print "\n\n*************************\n\nzoomed u shape:", u_zoomed.shape
-    print "zoomed v shape:",  v_zoomed.shape
     rho_mask[rho_mask == 1] = numpy.nan
     rho_mask_zoomed = crop_and_downsample(rho_mask, downsample_ratio)
     longs = data_file.variables['lon_rho'][:]
     lats = data_file.variables['lat_rho'][:]
 
-    print "lats ", lats
-    print "\n\n\nlongs", longs
     longs_zoomed = crop_and_downsample(longs, downsample_ratio, False)
     lats_zoomed = crop_and_downsample(lats, downsample_ratio, False)
-    print "lats zoomed shape:", lats_zoomed.shape
-    print "longs zoomed shape", longs_zoomed.shape
 
     u_zoomed[rho_mask_zoomed == 1] = numpy.nan
     v_zoomed[rho_mask_zoomed == 1] = numpy.nan
@@ -424,7 +350,7 @@ def crop_and_downsample_wave(source_array, downsample_ratio, average=True):
   #                                                   for i in range(downsample_ratio)]
   #                                                  for j in range(downsample_ratio)]), axis=0)
   #  else:
-    zoomed_array = cropped_array[0:1000:downsample_ratio]
+    zoomed_array = cropped_array[::downsample_ratio, ::downsample_ratio]
     return zoomed_array
     #return source_array
 

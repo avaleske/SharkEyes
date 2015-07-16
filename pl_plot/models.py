@@ -17,6 +17,7 @@ from scipy.io import netcdf_file
 import numpy
 import shutil
 import numpy as np
+import datetime
 
 # This is how long old files (overlay items in the database, and corresponding items in UNCHOPPED folder)
 HOW_LONG_TO_KEEP_FILES = 5
@@ -172,59 +173,45 @@ class OverlayManager(models.Manager):
     # Just a helper function so that you can examine the first forecast (latitude, longitude, and wave height)
     # from the NetCDF file. Pass in the file id of the WaveWatch NetCDF file you want to plot.
     @staticmethod
-    def get_data(file_id):
+    def get_data(forecast_index, file_id):
         datafile = DataFile.objects.get(pk=file_id)
         file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, datafile.file.name))
         variable_names_in_file = file.variables.keys()
         print variable_names_in_file
 
-
-        # longs = [item for sublist in file.variables['longitude'][:1] for item in sublist]
-        # print "longs:"
-        # for each in longs:
-        #     print each
-        # lats = file.variables['latitude'][:, 0]
-        # print "lats:"
-        # for each in lats:
-        #     print each
-
         all_day_height = file.variables['HTSGW_surface'][:, :, :]
         all_day_direction = file.variables['DIRPW_surface'][:,:,:]
         all_day_lat = file.variables['latitude'][:, :]
         all_day_long = file.variables['longitude'][:, :]
-
-        just_this_forecast_height = all_day_height[0][:1, :]
-        just_this_forecast_dir = all_day_direction[0][:1, :]
-        just_this_forecast_lat = all_day_lat[ :,0]
-        just_this_forecast_long= all_day_long[0][ :]
-
-
-        length = 1. # make a unit vector
-        all_day_direction = file.variables['DIRPW_surface'][:,:,:]
-
-        just_this_forecast_dir = all_day_direction[0][:1, :]
-
-        vectors_2d = np.vstack((length * np.cos(just_this_forecast_dir), length * np.sin(just_this_forecast_dir))).T
-
-        print "U                V               \n"
-        #for u, v in vectors_2d:
-            #print u, v
-        for each in vectors_2d.items():
+        all_day_times = file.variables['time'][:]
+        print "times: "
+        for each in all_day_times:
             print each
 
+        basetime = datetime.datetime(1970,1,1,0,0,0)
 
-        print "\n\n\n\n\n\n\n\nDIRECTION"
-        for each in just_this_forecast_dir:
-            print each
-        print "\n\n\nWAVE HEIGHTS "
-        for each in just_this_forecast_height:
-            print each
+        # Check the first value of the forecast
+        forecast_zero = basetime + datetime.timedelta(all_day_times[0]/3600.0/24.0,0,0)
+        print(forecast_zero)
 
-        print "\n\n LATS:"
-        print just_this_forecast_lat
+        directions = all_day_direction[forecast_index, ::10, :]
+        directions_mod = 90.0 - directions + 180.0
+        index = directions_mod > 180
+        directions_mod[index] = directions_mod[index] - 360;
 
-        print "\n\n LONGS:"
-        print just_this_forecast_long
+        index = directions_mod < -180;
+        directions_mod[index] = directions_mod[index] + 360;
+        print "cos 90:", np.cos(np.deg2rad(90))
+        print "sin 90:", np.sin(np.deg2rad(90))
+        print "cos 45:", np.cos(np.deg2rad(45))
+        print "sin 45:", np.sin(np.deg2rad(45))
+        #print "\n\n\n\n\n\n\n\nDIRECTION"
+        #for each in directions:
+            #print each
+
+        #print "\n\n\n\n\n\n\n\nDIRECTIONS MODIFIED"
+        #for each in directions_mod:
+            #print each
 
 
     @staticmethod

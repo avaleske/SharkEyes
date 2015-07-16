@@ -17,7 +17,8 @@ from django.db.models import Q
 from operator import __or__ as OR
 from ftplib import FTP
 from django.db import models
-import shutil
+from scipy.io import netcdf_file
+import datetime
 
 
 CATALOG_XML_NAME = "catalog.xml"
@@ -120,7 +121,7 @@ class DataFileManager(models.Manager):
         ftp_dtm = ftp.sendcmd('MDTM' + " /pub/outgoing/ww3data/" + file_name)
 
         #convert ftp datetime format to a string datetime
-        modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
+        modified_datetime = datetime.datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
 
         # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
@@ -135,13 +136,23 @@ class DataFileManager(models.Manager):
             url = urljoin(settings.WAVE_WATCH_URL, file_name)
             local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
-            print "pl_download: got the file"
+
+            file = netcdf_file(os.path.join(destination_directory, local_filename))
+
+            # The times in the file are UTC in seconds since Jan 1, 1970.
+            all_day_times = file.variables['time'][:]
+
+            basetime = datetime.datetime(1970,1,1,0,0,0)
+
+            # Check the first value of the forecast
+            first_forecast_time = basetime + datetime.timedelta(all_day_times[0]/3600.0/24.0,0,0)
+
             #Save the File name into the Database
             datafile = DataFile(
                 type='WAVE',
                 download_datetime=timezone.now(),
                 generated_datetime=modified_datetime,
-                model_date = modified_datetime,
+                model_date = first_forecast_time,
                 file=local_filename,
             )
 
