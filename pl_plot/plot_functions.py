@@ -264,6 +264,7 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x, y, u_zoomed, v_zoomed, ax=ax, color='black')
 
+    # TODO this key for the knots seems to be hardcoded and completely inaccurate.
     quiverkey = key_ax.quiverkey(overlay, .95, .4, 0.5*.5144, ".5 knots", labelpos='S', labelcolor='white',
                                  color='white', labelsep=.5, coordinates='axes')
     quiverkey1 = key_ax.quiverkey(overlay, 3.75, .4, 1*.5144, "1 knot", labelpos='S', labelcolor='white',

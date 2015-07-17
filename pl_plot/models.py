@@ -170,6 +170,17 @@ class OverlayManager(models.Manager):
 
         return True
 
+
+    @staticmethod
+    def get_currents_data(forecast_index, file_id):
+        datafile = DataFile.objects.get(pk=file_id)
+        data_file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.NETCDF_STORAGE_DIR, datafile.file.name))
+        currents_u = data_file.variables['u'][forecast_index][29]
+        currents_v = data_file.variables['v'][forecast_index][29]
+
+        print "currents u:", 10.0*currents_u
+        print "\n\n\ncurrents v:", 10.0*currents_v
+
     # Just a helper function so that you can examine the first forecast (latitude, longitude, and wave height)
     # from the NetCDF file. Pass in the file id of the WaveWatch NetCDF file you want to plot.
     @staticmethod
@@ -184,9 +195,9 @@ class OverlayManager(models.Manager):
         all_day_lat = file.variables['latitude'][:, :]
         all_day_long = file.variables['longitude'][:, :]
         all_day_times = file.variables['time'][:]
-        print "times: "
-        for each in all_day_times:
-            print each
+        #print "times: "
+        #for each in all_day_times:
+            #print each
 
         basetime = datetime.datetime(1970,1,1,0,0,0)
 
@@ -201,10 +212,11 @@ class OverlayManager(models.Manager):
 
         index = directions_mod < -180;
         directions_mod[index] = directions_mod[index] + 360;
-        print "cos 90:", np.cos(np.deg2rad(90))
-        print "sin 90:", np.sin(np.deg2rad(90))
-        print "cos 45:", np.cos(np.deg2rad(45))
-        print "sin 45:", np.sin(np.deg2rad(45))
+
+        U = 10.*np.cos(np.deg2rad(directions_mod))
+        V = 10.*np.sin(np.deg2rad(directions_mod))
+        print "U:", U[:10, :10]
+        print "\n\n\n\n\n\n\nV:", V[:10, :10]
         #print "\n\n\n\n\n\n\n\nDIRECTION"
         #for each in directions:
             #print each
