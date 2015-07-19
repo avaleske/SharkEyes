@@ -57,6 +57,7 @@ WSGI_APPLICATION = 'SharkEyesCore.apache.wsgi.application'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
+# https://docs.djangoproject.com/en/1.8/topics/i18n/timezones/
 
 LANGUAGE_CODE = 'en-us'
 
