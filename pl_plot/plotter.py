@@ -3,6 +3,7 @@ from scipy.io import netcdf
 import numpy
 from matplotlib import pyplot
 from mpl_toolkits.basemap import Basemap
+from pydap.client import open_url
 import os
 from uuid import uuid4
 from django.conf import settings
@@ -48,11 +49,14 @@ class WaveWatchPlotter:
         lats = self.data_file.variables['latitude'][:]
 
         # window cropped by picking lat and lon corners
+        # We are using the Mercator projection, because that is what Google Maps wants. The inputs should
+        # probably be just plain latitude and longitude, i.e. they should be in unprojected form when they are passed in.
         bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
                        resolution='h', area_thresh=1.0,
-                       llcrnrlat=lats[0], urcrnrlat=lats[-1],
-                       llcrnrlon=longs[0], urcrnrlon=longs[-1],
-                       ax=ax, epsg=4326)
+                       llcrnrlat=lats[0][0], urcrnrlat=lats[-1][0],
+                       llcrnrlon=longs[0][0], urcrnrlon=longs[-1][-1],
+                      ax=ax, epsg=4326)
+
 
         plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax)
 
@@ -66,12 +70,56 @@ class WaveWatchPlotter:
              transparent=True, frameon=False)
         pyplot.close(fig)
 
-       # if forecast_index == 0:
-            #key_fig.savefig(
-            #     os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
-             #    dpi=500, bbox_inches='tight', pad_inches=0,
-             #    transparent=True, facecolor=key_fig.get_facecolor())
         key_fig.savefig(
+                 os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
+                 dpi=500, bbox_inches='tight', pad_inches=0,
+                 transparent=True, facecolor=key_fig.get_facecolor())
+        pyplot.close(key_fig)
+        return plot_filename, key_filename
+
+class WindPlotter:
+    data_file = None
+
+    def __init__(self, file_name):
+        self.load_file(file_name)
+
+    def load_file(self, file_name):
+        #This should have some form of error handling as it can fail
+        self.data_file = open_url(settings.WIND_URL)
+
+    def get_number_of_model_times(self):
+        return 12
+
+    def make_plot(self, plot_function, forecast_index,storage_dir, generated_datetime, downsample_ratio=None):
+
+        fig = pyplot.figure()
+        key_fig = pyplot.figure(facecolor=settings.OVERLAY_KEY_COLOR)
+
+        ax = fig.add_subplot(111)  # one subplot in the figure
+
+        key_ax = key_fig.add_axes([0.1, 0.2, 0.6, 0.05])
+
+        # window cropped by picking lat and lon corners
+        bmap = Basemap(projection='merc',                         #A cylindrical, conformal projection.
+                       resolution='h', area_thresh=1.0,
+                       llcrnrlat=40.5833284543, urcrnrlat=47.4999927992,
+                       llcrnrlon=-129, urcrnrlon=-123.7265625,
+                       ax=ax, epsg=4326)
+
+        plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax, downsample_ratio=downsample_ratio)
+
+        plot_filename = "{0}_{1}_{2}_{3}.png".format(plot_function.__name__,forecast_index,generated_datetime, uuid4())
+        key_filename = "{0}_key_{1}_{2}.png".format(plot_function.__name__,generated_datetime, uuid4())
+
+
+        fig.savefig(
+             os.path.join(settings.MEDIA_ROOT, storage_dir, plot_filename),
+             dpi=1200, bbox_inches='tight', pad_inches=0,
+             transparent=True, frameon=False)
+        pyplot.close(fig)
+
+        if forecast_index == 0:
+            key_fig.savefig(
                  os.path.join(settings.MEDIA_ROOT, settings.KEY_STORAGE_DIR, key_filename),
                  dpi=500, bbox_inches='tight', pad_inches=0,
                  transparent=True, facecolor=key_fig.get_facecolor())

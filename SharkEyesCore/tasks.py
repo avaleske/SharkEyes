@@ -13,62 +13,49 @@ def add(a, b):
     #time.sleep(5)
     return a + b
 
+
 @shared_task(name='sharkeyescore.pipeline')
 def do_pipeline():
+    print "TASKS: before deleting files"
 
     DataFileManager.delete_old_files()
+    print "TASKS: after deleting Datafiles"
     OverlayManager.delete_old_files()
+    print "TASKS: after deleting Overlays"
 
-    if not DataFileManager.is_new_file_to_download():
+    wave_watch_files = DataFileManager.get_latest_wave_watch_files()
+    print "TASKS: after getting wave files"
+
+    other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
+    print "TASKS: after getting sst/currents files"
+
+    # If no new files were returned, don't plot or tile anything.
+    if not wave_watch_files and not other_files:
         return None
-
-    DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
 
     # get the list of plotting tasks based on the files we just downloaded.
     plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
 
-    # create a task chain of (plot, tile) for each plot, and group them
-    job = group(chain(pt, tile_overlay.s()) for pt in plot_task_list)
+    list_of_chains = []
 
-    # and run the group.
+    for pt in plot_task_list:
+
+        if pt.args[0] != 4:
+            # chaining passes the result of first function to second function
+            list_of_chains.append(chain(pt, tile_overlay.s()))
+
+        else:
+            #Use the Wavewatch tiler for Wavewatch files
+            list_of_chains.append(chain(pt, tile_wave_watch_overlay.s()))
+
+    job = group(item for item in list_of_chains)
+    print "jobs:"
+    for each in job:
+        print each
+     #and run the group.
     result = job.apply_async()
     return result
 
-
-#WAVE file setup below
-    #DataFileManager.delete_old_files()
-   # OverlayManager.delete_old_files()
-
-  #  wave_watch_files = DataFileManager.get_latest_wave_watch_files()
-
-   # other_files = DataFileManager.fetch_new_files()   # not calling as a task so it runs inline
-
-    # If no new files were returned, don't plot or tile anything.
-   # if not wave_watch_files and not other_files:
-   #     return None
-
-    # get the list of plotting tasks based on the files we just downloaded.
-   # plot_task_list = OverlayManager.get_tasks_for_base_plots_for_next_few_days()
-
-   # list_of_chains = []
-
-   # for pt in plot_task_list:
-
-     #   if pt.args[0] != 4:
-            # chaining passes the result of first function to second function
-          #  list_of_chains.append(chain(pt, tile_overlay.s()))
-
-       # else:
-            #Use the Wavewatch tiler for Wavewatch files
-           # list_of_chains.append(chain(pt, tile_wave_watch_overlay.s()))
-
-   # job = group(item for item in list_of_chains)
-   # print "jobs:"
-    #for each in job:
-    #    print each
-     #and run the group.
-    #result = job.apply_async()
-    #return result
 
 
 @shared_task(name='sharkeyescore.spacer_task')

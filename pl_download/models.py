@@ -3,6 +3,7 @@ from django.conf import settings
 from celery import shared_task
 from urlparse import urljoin
 from django.utils import timezone
+from pydap.client import open_url
 import urllib
 import os
 from uuid import uuid4
@@ -76,10 +77,11 @@ class DataFileManager(models.Manager):
         new_file_ids = []
 
         for server_filename, model_date, modified_datetime in files_to_retrieve:
+            print "pl_download: before sst download"
             url = urljoin(settings.BASE_NETCDF_URL, server_filename)
             local_filename = "{0}_{1}.nc".format(model_date, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename)) # this also needs a try/catch
-
+            print "pl_download: after getting sst file"
             datafile = DataFile(
                 type='NCDF',
                 download_datetime=timezone.now(),
@@ -88,6 +90,7 @@ class DataFileManager(models.Manager):
                 file=local_filename,
             )
             datafile.save()
+            print "pl_download: after saving SST to database"
 
             new_file_ids.append(datafile.id)
 
@@ -104,7 +107,9 @@ class DataFileManager(models.Manager):
         destination_directory = os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR)
 
         #file names might need to be created dynamically in the future if ftp site changes
-        file_name = "outer.nc"
+        #outer.nc is the low-resolution grid, osuww3.nc is the grid with both high- and low-res data compiled into one.
+        #file_name = "outer.nc"
+        file_name = "osuww3.nc"
         #static_file_names = ["shelf1.nc", "shelf2.nc", "shelf3.nc"]
 
         #Connect to FTP site to get the file modification data
@@ -120,15 +125,17 @@ class DataFileManager(models.Manager):
         # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
            model_date=modified_datetime,
-           #file__startswith="OuterGrid",
            type='WAVE'
         )
         if not matches_old_file:
+
+            print "pl_download: starting to get a Wave file"
+
             #Create File Name and Download actual File into media folder
             url = urljoin(settings.WAVE_WATCH_URL, file_name)
             local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
-
+            print "pl_download: got the file"
             #Save the File name into the Database
             datafile = DataFile(
                 type='WAVE',
@@ -139,6 +146,7 @@ class DataFileManager(models.Manager):
             )
 
             datafile.save()
+            print "pl_download: saved item to DB"
 
             new_file_ids.append(datafile.id)
 
@@ -149,6 +157,50 @@ class DataFileManager(models.Manager):
         #Must have already downloaded this file
         else:
             ftp.quit()
+            return []
+
+    @staticmethod
+    @shared_task(name='pl_download.get_latest_wind_files')
+    def get_latest_wind_files():
+
+        #TODO: set up a check to see if new files are available
+        #list of the new file ids created in this function
+        new_file_ids = []
+
+        #directory of where files will be saved at
+        destination_directory = os.path.join(settings.MEDIA_ROOT, settings.WIND_DIR)
+
+        url = settings.WIND_URL
+
+        dataset = open_url(url) #yay thredds servers
+
+        dates = dataset['time']
+        dateString = dates.units #dates.units lists how far back the forecast goes (13 days from current)
+        dateString = dateString[11:] #[11:] to get rid of text before the date
+        modified_datetime = datetime.strptime(dateString, "%Y-%m-%dT%H:%M:%SZ").date() #strip date
+        current_datetime = (datetime.strptime(dateString, "%Y-%m-%dT%H:%M:%SZ")+timedelta(days=13)).date() #should give us the current day
+
+        local_filename = "{0}_{1}.nc".format("WIND", modified_datetime, uuid4())
+
+        matches_old_file = DataFile.objects.filter(
+           model_date=current_datetime,
+           type='WIND'
+        )
+        if not matches_old_file:
+
+            datafile = DataFile(
+                type='WIND',
+                download_datetime=timezone.now(),
+                generated_datetime=current_datetime,
+                model_date=current_datetime,
+                file=local_filename,
+            )
+            datafile.save()
+
+            new_file_ids.append(datafile.id)
+
+            return new_file_ids
+        else:
             return []
 
     @classmethod
@@ -237,7 +289,7 @@ class DataFileManager(models.Manager):
         how_old_to_keep = timezone.datetime.now()-timedelta(days=HOW_LONG_TO_KEEP_FILES)
 
         # NETCDF files
-        #delete files whose model date is earlier than how old we want to keep.
+        # delete files whose model date is earlier than how old we want to keep.
         old_netcdf_files = DataFile.objects.filter(model_date__lte=how_old_to_keep)
 
         # Delete the file items from the database, and the actual image files.
@@ -261,7 +313,7 @@ class WaveWatchDataFile(models.Model):
 
 class DataFile(models.Model):
     DATA_FILE_TYPES = (
-        ('NCDF', "NetCDF"),( 'WAVE', "WaveNETCDF"),
+        ('NCDF', "NetCDF"), ('WAVE', "WaveNETCDF"), ('WIND', "WindNETCDF")
     )
     type = models.CharField(max_length=10, choices=DATA_FILE_TYPES, default='NCDF')
     download_datetime = models.DateTimeField()

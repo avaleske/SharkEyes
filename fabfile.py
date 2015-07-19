@@ -30,6 +30,7 @@ python_packages = ['numpy==1.8',
                    'south==0.8.4',
                    'defusedxml==0.4.1',
                    'pygdal==1.10.1.0',
+                   'pydap'
                    ]
 
 # these aren't used everywhere yet...
@@ -65,13 +66,20 @@ def production():
     env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
     env.branch = 'master'
 
-def production_pacifico():
+
+def production_pacifico_master():
     env.user = 'developer'
     hostname = 's-pacifico.coas.oregonstate.edu'
     port = 22
     env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
     env.branch = 'master'
 
+def production_pacifico_staging():
+    env.user = 'developer'
+    hostname = 's-pacifico.coas.oregonstate.edu'
+    port = 22
+    env.hosts = env.hosts = ["%s:%s" % (hostname,port)]
+    env.branch = 'staging'
 
 def install_prereqs():
     #handle selinux
