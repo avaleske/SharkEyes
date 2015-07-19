@@ -79,11 +79,10 @@ class DataFileManager(models.Manager):
         new_file_ids = []
 
         for server_filename, model_date, modified_datetime in files_to_retrieve:
-            print "pl_download: before sst download"
             url = urljoin(settings.BASE_NETCDF_URL, server_filename)
             local_filename = "{0}_{1}.nc".format(model_date, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename)) # this also needs a try/catch
-            print "pl_download: after getting sst file"
+
             datafile = DataFile(
                 type='NCDF',
                 download_datetime=timezone.now(),
@@ -92,7 +91,6 @@ class DataFileManager(models.Manager):
                 file=local_filename,
             )
             datafile.save()
-            print "pl_download: after saving SST to database"
 
             new_file_ids.append(datafile.id)
 
@@ -101,7 +99,6 @@ class DataFileManager(models.Manager):
     @staticmethod
     @shared_task(name='pl_download.get_latest_wave_watch_files')
     def get_latest_wave_watch_files():
-
         #list of the new file ids created in this function
         new_file_ids = []
 
@@ -126,54 +123,44 @@ class DataFileManager(models.Manager):
 
         naive_datetime = parser.parse(initial_datetime)
         modified_datetime = timezone.make_aware(naive_datetime, timezone.utc)
-        print "modified datetime:", modified_datetime
 
         # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
-            #todo change this because the modified datetime will be different
-           model_date=modified_datetime,
-           type='WAVE'
+            #NOTE: this assumes that the file contains one day of hindcasts, so the model date is one day BEHIND
+            # the date on which we download the file.
+            # This is prone to fail. However, when we actually save the record in the database,
+            # THAT model_date is guarenteed to be correct.
+            model_date=datetime.datetime.date( modified_datetime - timedelta(days=1)),
+            type='WAVE'
         )
         if not matches_old_file:
-
-            print "pl_download: starting to get a Wave file"
-
             #Create File Name and Download actual File into media folder
             url = urljoin(settings.WAVE_WATCH_URL, file_name)
+
+            # The date in local_filename is actually 1 day LATER than the file actually applies at
             local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
-
             file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, local_filename))
-            variable_names_in_file = file.variables.keys()
-            print variable_names_in_file
-
             all_day_times = file.variables['time'][:]
-        #print "times: "
-        #for each in all_day_times:
-            #print each
 
+            # The time variable is # of seconds since start of time epoch, so we convert to UTC
             basetime = datetime.datetime(1970,1,1,0,0,0)
 
-        # Check the first value of the forecast
+            # Check the first value of the forecast, and set the model_date accordingly.
             forecast_zero = basetime + datetime.timedelta(all_day_times[0]/3600.0/24.0,0,0)
-            print(forecast_zero)
             model_date = forecast_zero
 
-
-            print "pl_download: got the file"
             #Save the File name into the Database
             datafile = DataFile(
                 type='WAVE',
-                download_datetime=timezone.now(),
+                download_datetime=timezone.now(), # This is UTC, as should be all the items saved into a Django database
                 generated_datetime=modified_datetime,
                 model_date = model_date,
                 file=local_filename,
             )
 
             datafile.save()
-            print "pl_download: saved item to DB"
-
             new_file_ids.append(datafile.id)
 
             #quit ftp connection cause we accessed all the data we need
