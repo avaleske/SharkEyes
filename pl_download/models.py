@@ -5,6 +5,7 @@ from urlparse import urljoin
 from django.utils import timezone
 from pydap.client import open_url
 import urllib
+from scipy.io import netcdf_file
 import os
 from uuid import uuid4
 from urlparse import urljoin
@@ -18,6 +19,7 @@ from operator import __or__ as OR
 from ftplib import FTP
 from django.db import models
 import shutil
+import datetime
 
 
 CATALOG_XML_NAME = "catalog.xml"
@@ -120,10 +122,15 @@ class DataFileManager(models.Manager):
         ftp_dtm = ftp.sendcmd('MDTM' + " /pub/outgoing/ww3data/" + file_name)
 
         #convert ftp datetime format to a string datetime
-        modified_datetime = datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
+        initial_datetime = datetime.datetime.strptime(ftp_dtm[4:], "%Y%m%d%H%M%S").strftime("%Y-%m-%d")
+
+        naive_datetime = parser.parse(initial_datetime)
+        modified_datetime = timezone.make_aware(naive_datetime, timezone.utc)
+        print "modified datetime:", modified_datetime
 
         # check if we've downloaded it before: does DataFile contain a Wavewatch entry whose model_date matches this one?
         matches_old_file = DataFile.objects.filter(
+            #todo change this because the modified datetime will be different
            model_date=modified_datetime,
            type='WAVE'
         )
@@ -135,13 +142,32 @@ class DataFileManager(models.Manager):
             url = urljoin(settings.WAVE_WATCH_URL, file_name)
             local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
+
+
+            file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, local_filename))
+            variable_names_in_file = file.variables.keys()
+            print variable_names_in_file
+
+            all_day_times = file.variables['time'][:]
+        #print "times: "
+        #for each in all_day_times:
+            #print each
+
+            basetime = datetime.datetime(1970,1,1,0,0,0)
+
+        # Check the first value of the forecast
+            forecast_zero = basetime + datetime.timedelta(all_day_times[0]/3600.0/24.0,0,0)
+            print(forecast_zero)
+            model_date = forecast_zero
+
+
             print "pl_download: got the file"
             #Save the File name into the Database
             datafile = DataFile(
                 type='WAVE',
                 download_datetime=timezone.now(),
                 generated_datetime=modified_datetime,
-                model_date = modified_datetime,
+                model_date = model_date,
                 file=local_filename,
             )
 
