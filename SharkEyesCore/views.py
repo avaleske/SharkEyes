@@ -29,7 +29,8 @@ def home(request):
 
     # Team 2 says: at this time we want SST (1), currents (3), and Wave (4) only. Modify this as
     # you add new models.
-    num_defs = len(OverlayDefinition.objects.filter(is_base=True, id__in=[1,3,4]))
+    # TODO add in the wave Direction (6)
+    num_defs = len(OverlayDefinition.objects.filter(is_base=True, id__in=[1,3,4, 6]))
 
 
     list_of_times = datetimes[:len(datetimes)/num_defs]
@@ -39,8 +40,8 @@ def home(request):
 
     #context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True).exclude(id=4), 'times':list_of_times, 'windoverlays': wind_overlays_view_data, 'winddefs': OverlayDefinition.objects.filter(id=5), 'windtimes':list_of_wind_times}
 
-
-    context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True, id__in=[1,3,4]), 'times':list_of_times }
+    # TODO add in the wave direction (6)
+    context = {'overlays': overlays_view_data, 'defs': OverlayDefinition.objects.filter(is_base=True, id__in=[1,3,4, 6]), 'times':list_of_times }
 
     return render(request, 'index.html', context)
 

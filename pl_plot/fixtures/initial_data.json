@@ -38,11 +38,11 @@
         "model": "pl_plot.overlaydefinition",
         "pk": 4,
         "fields": {
-            "display_name_long": "Waves",
+            "display_name_long": "Wave Height",
             "is_base": true,
             "type": "FC",
-            "display_name_short": "Waves",
-            "function_name": "wave_function"
+            "display_name_short": "Wave Height",
+            "function_name": "wave_height_function"
         }
     },
     {
@@ -55,5 +55,16 @@
               "display_name_short": "Wind",
               "function_name": "wind_function"
           }
-      }
+      },
+      {
+        "model": "pl_plot.overlaydefinition",
+        "pk": 6,
+        "fields": {
+            "display_name_long": "Wave Direction",
+            "is_base": true,
+            "type": "V",
+            "display_name_short": "Wave Direction",
+            "function_name": "wave_direction_function"
+        }
+    }
 ]

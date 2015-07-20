@@ -18,7 +18,7 @@ from django.db.models import Q
 from operator import __or__ as OR
 from ftplib import FTP
 from django.db import models
-import shutil
+from scipy.io import netcdf_file
 import datetime
 
 
@@ -67,7 +67,7 @@ class DataFileManager(models.Manager):
             if not server_filename.startswith('ocean_his'):
                 continue
             date_string_from_filename = server_filename.split('_')[-1]
-            model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
+            model_date = datetime.datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
             modified_datetime = extract_modified_datetime_from_xml(elem)
 
             for day_to_retrieve in days_to_retrieve:
@@ -141,22 +141,23 @@ class DataFileManager(models.Manager):
             local_filename = "{0}_{1}_{2}.nc".format("OuterGrid", modified_datetime, uuid4())
             urllib.urlretrieve(url=url, filename=os.path.join(destination_directory, local_filename))
 
+
             file = netcdf_file(os.path.join(settings.MEDIA_ROOT, settings.WAVE_WATCH_DIR, local_filename))
+
+            # The times in the file are UTC in seconds since Jan 1, 1970.
             all_day_times = file.variables['time'][:]
 
-            # The time variable is # of seconds since start of time epoch, so we convert to UTC
             basetime = datetime.datetime(1970,1,1,0,0,0)
 
-            # Check the first value of the forecast, and set the model_date accordingly.
-            forecast_zero = basetime + datetime.timedelta(all_day_times[0]/3600.0/24.0,0,0)
-            model_date = forecast_zero
+            # Check the first value of the forecast
+            first_forecast_time = basetime + datetime.timedelta(all_day_times[0]/3600.0/24.0,0,0)
 
             #Save the File name into the Database
             datafile = DataFile(
                 type='WAVE',
                 download_datetime=timezone.now(), # This is UTC, as should be all the items saved into a Django database
                 generated_datetime=modified_datetime,
-                model_date = model_date,
+                model_date = first_forecast_time,
                 file=local_filename,
             )
 
