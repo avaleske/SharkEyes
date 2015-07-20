@@ -29,14 +29,7 @@ def get_rho_mask(data_file):
     rho_mask[201:202, 133:135] = 1
     return rho_mask
 
-# Wave Model Data Information:
-# Wave Data comes in 3D arrays (number of forecasts, latitude, longitude)
-# As of right now (March 15) there are 85 forecasts in each netCDF file from 12 pm onward by the hour
-# Wave Heights are measured in meters
-# Wave direction is measured in Degrees, where 360 means waves are coming from the north, traveling southward.
-# 350 would mean waves are traveling from the north-west, headed south-east.
-# Data points over 1000 usually mark land
-def wave_function(ax, data_file, bmap, key_ax, forecast_index):
+def wave_direction_function(ax, data_file, bmap, key_ax, forecast_index):
     all_day_height = data_file.variables['HTSGW_surface'][:, :, :]
     all_day_direction = data_file.variables['DIRPW_surface'][:,:,:]
     lats = data_file.variables['latitude'][:, :]
@@ -68,70 +61,76 @@ def wave_function(ax, data_file, bmap, key_ax, forecast_index):
     bmap.drawmapboundary(linewidth=0.0, ax=ax)
     overlay = bmap.quiver(x_zoomed, y_zoomed, U_downsampled, V_downsampled, ax=ax, color='black')
 
-    # #grab longitude and latitude from netCDF file
-    # #for old, OuterGrid format which was lower resolution
-    # #longs = data_file.variables['longitude'][:]
-    # #lats = data_file.variables['latitude'][:]
-    #
-    # # If we are using the file with merged fields (both high-res and low-res data) provided
-    # # by Tuba
-    # longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
-    # lats = data_file.variables['latitude'][:, 0]
-    #
-    # #get the wave height data from netCDF file
-    # all_day = data_file.variables['HTSGW_surface'][:, :, :]
-    #
-    # just_this_forecast = all_day[forecast_index][:1, :]
-    #
-    # #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
-    # x,y = numpy.meshgrid(longs,lats)
-    #
-    # #obtain all forecasts
-    # #heights is measured in meters, if a data point is over 1000 meters it is either not valid or it represents land
-    # #so we are masking all data over 1000
-    # #heights = numpy.ma.masked_greater(all_day[forecast_index][:][:], 1000)
-    # heights = np.ma.masked_array(all_day[forecast_index][:, :],np.isnan(all_day[forecast_index][:,:]))
-    #
-    # #get the max and min period wave period for the day: used to set color contours
-    # #min_period = int(math.floor(numpy.amin(heights)))
-    #
-    # #Min period is now in feet
-    # min_period = MIN_WAVE_HEIGHT*METERS_TO_FEET
-    #
-    # #max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
-    # #max_period = int(math.ceil(numpy.amax(heights)))
-    # # Max period is now in feet
-    # max_period = MAX_WAVE_HEIGHT*METERS_TO_FEET
-    #
-    # #Allocates colors to the data by setting the range of the data and by setting color increments
-    # contour_range = max_period - min_period
-    # contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS_FOR_WAVES
-    #
-    # #Now the contour range
-    # color_levels = []
-    # for i in xrange(NUM_COLOR_LEVELS_FOR_WAVES+1):
-    #     color_levels.append(min_period+1 + i * contour_range_inc)
-    #
-    # #Fill the contours with the colors
-    # overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap_for_waves())
-    #
-    # #Create the color bar
-    # cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
-    # cbar.ax.tick_params(labelsize=10)
-    # cbar.ax.xaxis.label.set_color('white')
-    # cbar.ax.xaxis.set_tick_params(labelcolor='white')
-    #
-    # #todo DIVISION by ZERO
-    # locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS_FOR_WAVES))[::10]    # we just want every sixth label
-    # float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
-    #
-    # print "float  labels"
-    # for each in float_labels:
-    #     print each
-    # labels = ["%.1f" % num for num in float_labels]
-    # cbar.ax.xaxis.set_ticks(locations)
-    # cbar.ax.xaxis.set_ticklabels(labels)
-    # cbar.set_label("Wave Height (feet)")
+
+# Wave Model Data Information:
+# Wave Data comes in 3D arrays (number of forecasts, latitude, longitude)
+# As of right now (March 15) there are 85 forecasts in each netCDF file from 12 pm onward by the hour
+# Wave Heights are measured in meters
+# Wave direction is measured in Degrees, where 360 means waves are coming from the north, traveling southward.
+# 350 would mean waves are traveling from the north-west, headed south-east.
+# Data points over 1000 usually mark land
+def wave_height_function(ax, data_file, bmap, key_ax, forecast_index):
+
+     #grab longitude and latitude from netCDF file if we are using the old OuterGrid format which was lower resolution
+     #longs = data_file.variables['longitude'][:]
+     #lats = data_file.variables['latitude'][:]
+
+     # If we are using the file with merged fields (both high-res and low-res data) provided
+     # by Tuba and Gabriel
+     longs = [item for sublist in data_file.variables['longitude'][:1] for item in sublist]
+     lats = data_file.variables['latitude'][:, 0]
+
+     #get the wave height data from netCDF file
+     all_day = data_file.variables['HTSGW_surface'][:, :, :]
+
+     just_this_forecast = all_day[forecast_index][:1, :]
+
+     #convert/mesh the latitude and longitude data into 2D arrays to be used by contourf below
+     x,y = numpy.meshgrid(longs,lats)
+
+     #obtain all forecasts
+     #heights is measured in meters, if a data point is over 1000 meters it is either not valid or it represents land
+     #so we are masking all data over 1000
+     #heights = numpy.ma.masked_greater(all_day[forecast_index][:][:], 1000)
+     heights = np.ma.masked_array(all_day[forecast_index][:, :],np.isnan(all_day[forecast_index][:,:]))
+
+     #get the max and min period wave period for the day: used to set color contours
+     #min_period = int(math.floor(numpy.amin(heights))) # This was used when we determined min period for a certain day
+
+     #Min period is now in feet
+     min_period = MIN_WAVE_HEIGHT*METERS_TO_FEET
+
+     #max_period = int(math.ceil(numpy.amax(numpy.ma.masked_greater(heights, 1000))))
+     #max_period = int(math.ceil(numpy.amax(heights)))
+     # Max period is now in feet
+     max_period = MAX_WAVE_HEIGHT*METERS_TO_FEET
+
+     #Allocates colors to the data by setting the range of the data and by setting color increments
+     contour_range = max_period - min_period
+     contour_range_inc = float(contour_range)/NUM_COLOR_LEVELS_FOR_WAVES
+
+     #Now the contour range
+     color_levels = []
+     for i in xrange(NUM_COLOR_LEVELS_FOR_WAVES+1):
+         color_levels.append(min_period+1 + i * contour_range_inc)
+
+     #Fill the contours with the colors
+     overlay = bmap.contourf(x, y, heights, color_levels, ax=ax, extend='both', cmap=get_modified_jet_colormap_for_waves())
+
+     #Create the color bar
+     cbar = pyplot.colorbar(overlay, orientation='horizontal', cax=key_ax)
+     cbar.ax.tick_params(labelsize=10)
+     cbar.ax.xaxis.label.set_color('white')
+     cbar.ax.xaxis.set_tick_params(labelcolor='white')
+
+     #todo DIVISION by ZERO sometimes causes a warning
+     locations = numpy.arange(0, 1.01, 1.0/(NUM_COLOR_LEVELS_FOR_WAVES))[::10]    # we just want every 10th label
+     float_labels = numpy.arange(min_period, max_period + 0.01, contour_range_inc)[::10]
+
+     labels = ["%.1f" % num for num in float_labels]
+     cbar.ax.xaxis.set_ticks(locations)
+     cbar.ax.xaxis.set_ticklabels(labels)
+     cbar.set_label("Wave Height (feet)")
 
 
 
@@ -339,6 +338,7 @@ def crop_and_downsample(source_array, downsample_ratio, average=True):
     return zoomed_array
 
 
+# Wave files are in a different format, so they need a separate downsampling function
 def crop_and_downsample_wave(source_array, downsample_ratio, average=True):
 
     xs = source_array.shape[0]

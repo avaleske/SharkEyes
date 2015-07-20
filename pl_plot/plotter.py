@@ -58,6 +58,7 @@ class WaveWatchPlotter:
                       ax=ax, epsg=4326)
 
 
+        # TODO this will call the correct function based on what type of definition this was called by
         plot_function(ax=ax, data_file=self.data_file, forecast_index=forecast_index, bmap=bmap, key_ax=key_ax)
 
         plot_filename = "{0}_{1}_{2}_{3}.png".format(plot_function.__name__,forecast_index,generated_datetime, uuid4())

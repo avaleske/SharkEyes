@@ -66,7 +66,7 @@ class DataFileManager(models.Manager):
             if not server_filename.startswith('ocean_his'):
                 continue
             date_string_from_filename = server_filename.split('_')[-1]
-            model_date = datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
+            model_date = datetime.datetime.strptime(date_string_from_filename, "%d-%b-%Y.nc").date()   # this could fail, need error handling badly
             modified_datetime = extract_modified_datetime_from_xml(elem)
 
             for day_to_retrieve in days_to_retrieve:

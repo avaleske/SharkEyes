@@ -58,14 +58,23 @@ class OverlayManager(models.Manager):
 
         # Pick how many days into the future and past we want to display overlays for
 #TODO put in the ISBASE
+        #TODO set back to -time hours = 2
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
             is_tiled=True,
         )
 
         next_few_days_of_sst_overlays = next_few_days_of_overlays.filter(definition_id__in=[1, 3])
-        next_few_days_of_wave_overlays = next_few_days_of_overlays.filter(definition_id=4)
+        next_few_days_of_wave_overlays = next_few_days_of_overlays.filter(definition_id__in=[4, 6])
+
+        print "sst overlays:"
+        for each in next_few_days_of_sst_overlays:
+            print each.applies_at_datetime
+
+        print "wave overlays:"
+        for each in next_few_days_of_wave_overlays:
+            print each.applies_at_datetime
 
         # Get the newest overlay for each Model type and time. This assumes that for a certain model date,
         # a larger ID value
@@ -88,10 +97,15 @@ class OverlayManager(models.Manager):
 
         wave_dates = newest_wave_overlays_to_display.values_list( 'applies_at_datetime', flat=True)
         sst_dates = newest_sst_overlays_to_display.values_list( 'applies_at_datetime', flat=True)
+        print "wave dates:", wave_dates
+        print "sst_dates", sst_dates
 
         #Get the distinct dates where there is an SST, currents, and also a wave overlay
         date_overlap = next_few_days_of_overlays.filter(applies_at_datetime__in=list(sst_dates))\
             .filter(applies_at_datetime__in=list(wave_dates)).values_list('applies_at_datetime', flat=True).distinct()
+        print "date overlap:"
+        for each in date_overlap:
+            print each
 
 
         # Now get the actual overlays where there is an overlap
@@ -100,6 +114,9 @@ class OverlayManager(models.Manager):
 
         #Join the two sets
         all_items_to_display = overlapped_sst_items_to_display | overlapped_wave_items_to_display
+        print "all items to display:"
+        for each in all_items_to_display:
+            print each
 
         # Send the items back to the SharkEyesCore/views.py file, which preps the main page to be loaded.
         return all_items_to_display
@@ -117,8 +134,9 @@ class OverlayManager(models.Manager):
         #Add the SST and currents plot commands
         task_list = [cls.make_plot.s(od_id, time_index, file_id, immutable=True) for od_id in [1, 3]]
 
-        #Add the wave watch plot command
-        task_list.append(cls.make_wave_watch_plot.s(4, time_index, file_id, immutable=True) )
+        #Add the commands to plot wave Height (4) and Direction (6)
+        task_list.append(cls.make_wave_watch_plot.s(4, time_index, file_id, immutable=True))
+        task_list.append(cls.make_wave_watch_plot.s(6, time_index, file_id, immutable=True))
         job = task_list
         return job
 
@@ -138,7 +156,8 @@ class OverlayManager(models.Manager):
                     # Only plot every 4th index to match up with the SST forecast.
                     # WaveWatch has forecasts for every hour but at this time we don't need them all.
                     if t % 4 == 0:
-                        task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True) )
+                        task_list.append(cls.make_wave_watch_plot.subtask(args=(4, t, fid), immutable=True))
+                        task_list.append(cls.make_wave_watch_plot.subtask(args=(6, t, fid), immutable=True))
 
             else:
                 plotter = Plotter(datafile.file.name)
@@ -229,6 +248,7 @@ class OverlayManager(models.Manager):
     @staticmethod
     @shared_task(name='pl_plot.make_wave_watch_plot')
     def make_wave_watch_plot(overlay_definition_id, time_index=0, file_id =None):
+        # TODO set the zoom levels for the wave Direction, similar to currents
         overlay_ids = []
 
         #grab the latest forecast file
@@ -274,6 +294,7 @@ class OverlayManager(models.Manager):
         overlay_definition = OverlayDefinition.objects.get(pk=overlay_definition_id)
 
 
+        # TODO this will determine the correct Wave function to call based on the name of the function in initial_data
         plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
                         forecast_index=time_index, storage_dir=settings.UNCHOPPED_STORAGE_DIR,
                         generated_datetime=generated_datetime)
