@@ -1,6 +1,5 @@
 from celery import shared_task
 from pl_plot.models import Overlay
-from pl_plot.models import Wave_Watch_Overlay
 from pl_chop import gdal2tiles
 from uuid import uuid4
 import os
