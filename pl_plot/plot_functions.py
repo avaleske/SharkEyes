@@ -231,9 +231,6 @@ def currents_function(ax, data_file, bmap, key_ax, time_index, downsample_ratio)
 
     currents_u = data_file.variables['u'][time_index][29]
     currents_v = data_file.variables['v'][time_index][29]
-
-    print "currents u:", currents_u
-    print "\n\n\ncurrents v:", currents_v
     rho_mask = get_rho_mask(data_file)
 
     # average nearby points to align grid, and add the edge column/row so it's the right size.

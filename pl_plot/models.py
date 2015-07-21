@@ -357,6 +357,7 @@ class OverlayManager(models.Manager):
         tile_dir = "tiles_{0}_{1}".format(overlay_definition.function_name, uuid4())
         overlay_ids = []
         for zoom_level in zoom_levels:
+            # Make a plot with downsampling of 4, and with 2
             plot_filename, key_filename = plotter.make_plot(getattr(plot_functions, overlay_definition.function_name),
                                                             time_index=time_index, downsample_ratio=zoom_level[1])
 
@@ -445,18 +446,4 @@ class Overlay(models.Model):
 def get_upload_path(instance,filename):
     return os.path.join(
         settings.WAVE_WATCH_STORAGE_DIR + "/" + "Wave_Height_Forecast_" + instance.created_datetime)
-
-
-#note: we are NOT using this right now.
-# in future it will be better to use Overlay for all new models,
-# rather than adding different types of overlays for each model.
-class Wave_Watch_Overlay(models.Model):
-    definition = models.ForeignKey(OverlayDefinition)
-    created_datetime = models.DateTimeField()
-    tile_dir = models.CharField(max_length=240, null=True)
-    applies_at_datetime = models.DateTimeField(null=False)
-    zoom_levels = models.CharField(max_length=50, null=True)
-    is_tiled = models.BooleanField(default=False)
-    #file = models.ImageField(upload_to=get_upload_path, null=True, max_length=500)      #get_upload_path was defined in order to allow for dynamic path creation
-    key = models.ImageField(upload_to=settings.KEY_STORAGE_DIR, null=True)
 
