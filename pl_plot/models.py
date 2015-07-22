@@ -60,7 +60,7 @@ class OverlayManager(models.Manager):
 #TODO put in the ISBASE
         #TODO set back to -time hours = 2
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=2),
+            applies_at_datetime__gte=timezone.now()-timedelta(days=4),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
             is_tiled=True,
         )
@@ -339,6 +339,8 @@ class OverlayManager(models.Manager):
     @staticmethod
     @shared_task(name='pl_plot.make_plot')
     def make_plot(overlay_definition_id, time_index=0, file_id=None):
+
+        # zoom level 2 is zoomed-out, 10 is most zoomed-in. So we are thining the less-zoomed maps MORE (4)
         zoom_levels_for_currents = [('2-7', 4), ('8-10', 2)]  # Team 1 says this is a hack. Team 2 is unsure why it is a hack.
         zoom_levels_for_others = [(None, None)]
 

@@ -61,12 +61,11 @@ function initialize() {
         streetViewControl: false,
         overviewMapControl: false,
         //draggableCursor: 'crosshair',
+          // Use the default Hand cursor
         draggableCursor: '',
         mapTypeId: google.maps.MapTypeId.HYBRID
       }
       map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
-    //todo uncomment
-     // map.fitBounds(mapBounds);
       grid = new Graticule(map, true); // lat long lines
       // cursor lat/long coordinates updated on mousemove * mousedown
       google.maps.event.addListener(map, 'mousemove', function(event) {
@@ -170,6 +169,8 @@ $("#latlong-toggle").click(function(e) {
         grid.hide();
     }
 });
+
+// ******** Main logic here, for stacking the overlays and turning them on and off ********
 visible_keys = [];
 visible_overlays = [];
 //add to our stack of overlays
@@ -178,44 +179,46 @@ $(".overlay-toggle").click(function(e) {
     //grab toggle + visible state
     var toggle = $(this).find('.toggle-checkbox');
     previous_state = !(toggle.prop("checked"));
-    //this implement exclusive toggles
-    //so that if one toggle gets turned on the others get turned of
-    if(toggle.prop("checked")){
-        for (overlay in data.defs) {
-             var id = "#" + data.defs[overlay] + ".toggle-checkbox";
-            if (data.defs[overlay] != $(this).attr('id')){
-                $(id).prop("checked", false);
-            }
-        }
-    }
+
     //locate corresponding overlay in 'data' by 2d indexing
     defs_idx = data.defs.indexOf(this.id); //
     idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
-    //turn overlay on
-    if (previous_state == false){
-        //Implement this again when we want to stack overlays on top of each other
-        //if it's a vector.. push normally; if it isn't... always put it at the bottom
-     /*    if (data.types[idx] == "V"){
-              //uncomment this and add comment for why
-            visible_overlays = insert_overlay(visible_overlays, visible_overlays_idx,idx, true);
-            visible_keys.push(data.keys[idx]);
-        } else {
-            visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
-            visible_keys.unshift(data.keys[idx]);
+
+    // Controls the appearance/state of the TOGGLES only, not the overlays
+    if(toggle.prop("checked")){
+        // Look through all the checkboxes and turn off any "conflicts" (of another vector on at the same time,
+        // or another FC on at the same time
+        for (overlay in data.defs) {
+            var id = "#" + data.defs[overlay] + ".toggle-checkbox";
+            // If the toggle we are looking at in the loop != the toggle we are trying to turn on
+            if (data.defs[overlay] != $(this).attr('id')){
+                if (data.types[overlay] == "V" && data.types[idx] =="V") {
+                    // Uncheck the toggle box because we can't have two Vectors on at same time
+                    $(id).prop("checked", false);
+                }
+                else if (data.types[overlay] == "FC" && data.types[idx] =="FC") {
+                    // Uncheck the toggle box because we can't have two Filled Contour maps on at same time
+                    $(id).prop("checked", false);
+                }
+            }
         }
-*/
-        visible_overlays = insert_overlay(visible_overlays, 0, idx, false);
-        visible_keys.unshift(data.keys[idx]);
-          visible_overlays_idx += 1;
-        //HERE
-     /*     $("#key-img").attr("src",loc+data.keys[idx]);
-          $("#key-img").show();
-          $("#key").show();  */
+    }
+
+    // Turning an overlay on
+    if (previous_state == false){
+        //if it's a vector.. push normally; if it isn't... always put it at the bottom
+         if (data.types[idx] == "V"){
+             var isVector = true
+        } else  if(data.types[idx] == "FC"){
+            var isVector = false
+        }
+        visible_overlays = insert_overlay(visible_overlays, idx, isVector);
+
     } else{ //turn overlay off
         if (visible_keys.length > 1){
             //which key/overlay are we removing?
+            // look thru the visible keys, get the index of the idx we are thinking about turning off
             to_remove = visible_keys.indexOf(data.keys[idx]);
-            // At position "to_remove" remove "1" item
             visible_keys.splice(to_remove, 1);
             visible_overlays.splice(to_remove, 1);
             map.overlayMapTypes.removeAt(to_remove);
@@ -232,6 +235,7 @@ $(".overlay-toggle").click(function(e) {
             $("#key").hide();
             map.overlayMapTypes.removeAt(0);
         }
+
     }
 });
 // update function for date-time selector
@@ -257,7 +261,12 @@ $('#date-time').change(function(e) {
         }
     old_idx = time_idx;
 });
-function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
+
+
+// This function inserts an overlay, updates the list of visible overlays and keys, and
+// removes any overlays that conflict with the new one. Can stack Vectors and Filled Contours, but
+// not vectors and vectors, or color maps and colormaps.
+function insert_overlay(visible_overlays,  idx, isVector){
     var x = new google.maps.ImageMapType({
       getTileUrl: function(coord, zoom) {
         var proj = map.getProjection();
@@ -274,25 +283,80 @@ function insert_overlay(visible_overlays, gmaps_stack_position,idx,push){
       isPng: true,
       opacity: .8
       });
-    // Delete any previous overlays and keys so that just one appears at a time
-    map.overlayMapTypes.clear();
-    visible_keys.pop();
-    visible_overlays.pop();
-    visible_overlays_idx -= 1;
-    $("#key-img").attr("src","");
-    $("#key-img").hide();
-    $("#key").hide();
-     if (push){
-         visible_overlays.push(x);
-    } else {
+
+    if (isVector){
+        // Look thru all the visible keys, and cross-check their type to determine if it conflicts.
+        // The visible overlays themselves are not accesible.
+        for (i in visible_keys) {
+            if (data.types[data.keys.indexOf(visible_keys[i])] == "V" && data.types[idx] =="V" ) {
+                // Remove one item from a list
+                if (visible_keys.length > 1){
+                    // index of the visible key we are looking at
+                    to_remove = i;
+                    visible_keys.splice(to_remove, 1);
+                    visible_overlays.splice(to_remove, 1);
+                    map.overlayMapTypes.removeAt(to_remove);
+                    //the last one in the list is now shown - with current offset
+                    $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+                    visible_overlays_idx -= 1;
+                // hide key-img when empty;
+                }
+                // Remove a single item
+                else{
+                    visible_keys.pop();
+                    visible_overlays.pop();
+                    visible_overlays_idx -= 1;
+                    $("#key-img").attr("src","");
+                    $("#key-img").hide();
+                    $("#key").hide();
+                    map.overlayMapTypes.removeAt(0);
+                }
+            }
+        }// end of loop looking thru the visible overlays
+
+        // insert our new Vector overlay on TOP
+        visible_overlays.push(x);
+        visible_keys.push(data.keys[idx]);
+        map.overlayMapTypes.insertAt(visible_overlays_idx, x);
+    } // End of Vector insertion
+    else{
+        for (i in visible_keys) {
+            if (data.types[data.keys.indexOf(visible_keys[i])] == "FC" && data.types[idx] =="FC" ) {
+                if (visible_keys.length > 1){
+                    to_remove = i;
+                    visible_keys.splice(to_remove, 1);
+                    visible_overlays.splice(to_remove, 1);
+                    map.overlayMapTypes.removeAt(to_remove);
+                    //the last one in the list is now shown - with current offset
+                    $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
+                    visible_overlays_idx -= 1;
+                // hide key-img when empty;
+                } else{
+                    visible_keys.pop();
+                    visible_overlays.pop();
+                    visible_overlays_idx -= 1;
+                    $("#key-img").attr("src","");
+                    $("#key-img").hide();
+                    $("#key").hide();
+                    map.overlayMapTypes.removeAt(0);
+                  }
+            }
+        }
+
+        // insert our new FC overlay on the bottom
         visible_overlays.unshift(x);
+        visible_keys.unshift(data.keys[idx]);
+        map.overlayMapTypes.insertAt(0, x);
     }
+
+    // Turn on the key, increment the index of what visible overlay we are at
     $("#key-img").attr("src",loc+data.keys[idx]);
-          $("#key-img").show();
-          $("#key").show();
-      map.overlayMapTypes.insertAt(gmaps_stack_position, x);
-      return visible_overlays;
+    $("#key-img").show();
+    $("#key").show();
+    visible_overlays_idx += 1;
+    return visible_overlays;
 }
+
 function next_onclick(){
     index = document.getElementById('date-time').value;
     document.getElementById("date-time").value = ++index;
