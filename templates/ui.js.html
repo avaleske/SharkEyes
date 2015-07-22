@@ -6,9 +6,9 @@
 var data = {'keys':[], 'tiles':[], 'defs':[], 'types':[]};
 // Overlays come from the sharkeyescore/views.py file.
 {% for item in overlays %}
-data.keys.push("{{item.key}}");
-data.tiles.push("{{item.tile_dir}}");
-data.types.push("{{item.definition.type}}");
+    data.keys.push("{{item.key}}");
+    data.tiles.push("{{item.tile_dir}}");
+    data.types.push("{{item.definition.type}}");
 {% endfor %}
 {% for item in defs %}
 data.defs.push("{{item.function_name}}");
@@ -180,23 +180,29 @@ $(".overlay-toggle").click(function(e) {
     var toggle = $(this).find('.toggle-checkbox');
     previous_state = !(toggle.prop("checked"));
 
+
     //locate corresponding overlay in 'data' by 2d indexing
+    // defs_idx runs 0..3 if we have 4 models
     defs_idx = data.defs.indexOf(this.id); //
+
+    // Lots of definitions (one for each model and each datetime
     idx = defs_idx*data.keys.length/data.defs.length+time_idx - 1;
 
     // Controls the appearance/state of the TOGGLES only, not the overlays
     if(toggle.prop("checked")){
         // Look through all the checkboxes and turn off any "conflicts" (of another vector on at the same time,
         // or another FC on at the same time
+
         for (overlay in data.defs) {
+            modified_id = overlay*data.keys.length/data.defs.length+time_idx - 1;
             var id = "#" + data.defs[overlay] + ".toggle-checkbox";
             // If the toggle we are looking at in the loop != the toggle we are trying to turn on
             if (data.defs[overlay] != $(this).attr('id')){
-                if (data.types[overlay] == "V" && data.types[idx] =="V") {
+                if (data.types[modified_id] == "V" && data.types[idx] =="V") {
                     // Uncheck the toggle box because we can't have two Vectors on at same time
                     $(id).prop("checked", false);
                 }
-                else if (data.types[overlay] == "FC" && data.types[idx] =="FC") {
+                else if (data.types[modified_id] == "FC" && data.types[idx] =="FC") {
                     // Uncheck the toggle box because we can't have two Filled Contour maps on at same time
                     $(id).prop("checked", false);
                 }
