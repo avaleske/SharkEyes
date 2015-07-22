@@ -60,7 +60,7 @@ class OverlayManager(models.Manager):
 #TODO put in the ISBASE
         #TODO set back to -time hours = 2
         next_few_days_of_overlays = Overlay.objects.filter(
-            applies_at_datetime__gte=timezone.now()-timedelta(days=4),
+            applies_at_datetime__gte=timezone.now()-timedelta(hours=2),
             applies_at_datetime__lte=timezone.now()+timedelta(days=4),
             is_tiled=True,
         )

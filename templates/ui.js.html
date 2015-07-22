@@ -254,7 +254,7 @@ $('#date-time').change(function(e) {
         to_change_idx = data.keys.indexOf(visible_keys[i]);
         map.overlayMapTypes.removeAt(i);
         visible_overlays.splice(i, 1);
-        visible_overlays = insert_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
+        visible_overlays = update_overlay(visible_overlays, i,to_change_idx+delta_idx,true);
         //replace keys...
         visible_keys[i] = data.keys[to_change_idx+delta_idx];
         $("#key-img").attr("src",loc+visible_keys[(visible_keys.length-1 + key_selector_offset)%visible_keys.length]);
@@ -262,7 +262,32 @@ $('#date-time').change(function(e) {
     old_idx = time_idx;
 });
 
-
+// Just to update overlays which have already been turned on and conflict-checked by the Insert Overlay function
+function update_overlay(visible_overlays, gmaps_stack_position,idx,push){
+    var x = new google.maps.ImageMapType({
+      getTileUrl: function(coord, zoom) {
+        var proj = map.getProjection();
+        var tileSize = 256 / Math.pow(2,zoom);
+        var tileBounds = new google.maps.LatLngBounds(
+                proj.fromPointToLatLng(new google.maps.Point(coord.x*tileSize, (coord.y+1)*tileSize)),
+          proj.fromPointToLatLng(new google.maps.Point((coord.x+1)*tileSize, coord.y*tileSize))
+            );
+            if (mapBounds.intersects(tileBounds) && (zoom >= mapMinZoom) && (zoom <= mapMaxZoom))
+          return loc+"tiles/"+data.tiles[idx]+"/" +
+          + zoom + "/" + coord.x + "/" + (Math.pow(2,zoom)-coord.y-1) + ".png";
+      },
+      tileSize: new google.maps.Size(256, 256),
+      isPng: true,
+      opacity: .8
+      });
+     if (push){
+         visible_overlays.push(x);
+    } else {
+        visible_overlays.unshift(x);
+    }
+      map.overlayMapTypes.insertAt(gmaps_stack_position, x);
+      return visible_overlays;
+}
 // This function inserts an overlay, updates the list of visible overlays and keys, and
 // removes any overlays that conflict with the new one. Can stack Vectors and Filled Contours, but
 // not vectors and vectors, or color maps and colormaps.
