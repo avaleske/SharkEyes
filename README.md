@@ -1,10 +1,12 @@
 ##Seacast.org
 (formerly Project Sharkeyes)
 
+###This project has been moved to the repository at [github.com/seacast/SharkEyes](https://github.com/seacast/SharkEyes)
+
 ###About
 Seacast.org is a Django site created by students at Oregon State University for the College of Earth, Oceanic, and Atmospheric Sciences. It takes oceanic models and uses Matplotlib, Basemap, and Celery to plot them as Google Maps overlays, with the goal of helping Oregon's coastal fisherman find fish more easily.
 
-We just deployed a staging server at [staging.sharkeyes.org](http://staging.sharkeyes.org), and we just deployed to production.
+We just deployed a staging server at [staging.seacast.org](http://staging.seacast.org), and we've deployed to production at [seacast.org](http://seacast.org).
 
 Mobile:
 
